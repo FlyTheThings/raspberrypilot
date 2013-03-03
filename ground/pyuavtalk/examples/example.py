@@ -190,7 +190,7 @@ if __name__ == '__main__':
         demo = UavtalkDemo()
         demo.setup(port)
 
-        if option == "o":        
+        if option == "o": 
             demo.showAttitudeViaObserver()      # will not return
         elif option == "w":        
             demo.showAttitudeViaWait()          # will not return
@@ -198,16 +198,16 @@ if __name__ == '__main__':
             demo.showAttitudeViaGet()           # will not return
         if option == "s":        
             demo.driveServo()                   # will not return
-            
+       
     except KeyboardInterrupt:
         pass
     except Exception,e:
+        print e
         print
         print "An error occured: ", e
         print
         traceback.print_exc()
     
-    print
     
     try:
         demo.stop()
