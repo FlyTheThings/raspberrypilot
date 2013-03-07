@@ -184,7 +184,7 @@ if __name__ == '__main__':
         sys.exit(2)
 
     # Log everything, and send it to stderr.
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.WARNING)
 
     try:
         demo = UavtalkDemo()
