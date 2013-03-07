@@ -38,7 +38,7 @@ $(DATAFIELDS)
 # Object $(NAME) definition
 class $(NAME)(UAVObject):
 	# Object constants
-	OBJID = $(UOBJID)
+	OBJID = $(OBJID)
 
 	# Constructor
 	def __init__(self):
@@ -46,6 +46,10 @@ class $(NAME)(UAVObject):
 
 		# Create object fields
 $(DATAFIELDINIT)
+
+		# Associated Data
+		self.singleInst = $(ISSINGLEINST)
+		
 		# Read field data
 		self.read()
 		self.metadata.read()
