@@ -130,7 +130,11 @@ initTask(void *parameters)
 	PIOS_Board_Init();
 	
 	/* Initialize modules */
-	MODULE_INITIALISE_ALL;
+	//MODULE_INITIALISE_ALL;
+	{ for (initmodule_t *fn = __module_initcall_start; fn < __module_initcall_end; fn++) \
+										if (fn->fn_minit) \
+											(fn->fn_minit)(); }
+
 	
 	/* terminate this task */
 	vTaskDelete(NULL);

@@ -141,7 +141,7 @@ SRC += $(PIOSCOMMON)/pios_flash_jedec.c
 SRC += $(PIOSCOMMON)/pios_flashfs_objlist.c
 SRC += $(PIOSCOMMON)/printf-stdarg.c
 SRC += $(PIOSCOMMON)/pios_usb_desc_hid_cdc.c
-SRC += $(PIOSCOMMON)/pios_usb_desc_hid_only.c
+#SRC += $(PIOSCOMMON)/pios_usb_desc_hid_only.c
 
 include ./UAVObjects.inc
 SRC += $(UAVOBJSRC)
