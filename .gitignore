@@ -83,4 +83,4 @@ androidgcs/bin/
 androidgcs/gen/
 /.cproject
 /.project
-/.metadata
+.metadata
