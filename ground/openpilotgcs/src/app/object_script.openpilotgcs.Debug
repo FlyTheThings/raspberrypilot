@@ -1,0 +1,12 @@
+INPUT(
+./debug/qtsingleapplication.o
+./debug/qtlocalpeer.o
+./debug/qtlockedfile.o
+./debug/qtlockedfile_win.o
+./debug/main.o
+./debug/gcssplashscreen.o
+./debug/moc_qtsingleapplication.o
+./debug/moc_qtlocalpeer.o
+./debug/moc_gcssplashscreen.o
+./debug/qrc_appresources.o
+);

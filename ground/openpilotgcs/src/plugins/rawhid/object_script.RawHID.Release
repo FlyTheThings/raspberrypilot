@@ -1,0 +1,12 @@
+INPUT(
+./release/rawhidplugin.o
+./release/rawhid.o
+./release/usbsignalfilter.o
+./release/pjrc_rawhid_win.o
+./release/usbmonitor_win.o
+./release/moc_rawhidplugin.o
+./release/moc_rawhid.o
+./release/moc_pjrc_rawhid.o
+./release/moc_usbmonitor.o
+./release/moc_usbsignalfilter.o
+);

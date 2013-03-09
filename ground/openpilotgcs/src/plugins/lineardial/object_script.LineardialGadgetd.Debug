@@ -1,0 +1,14 @@
+INPUT(
+./debug/lineardialplugin.o
+./debug/lineardialgadget.o
+./debug/lineardialgadgetfactory.o
+./debug/lineardialgadgetwidget.o
+./debug/lineardialgadgetconfiguration.o
+./debug/lineardialgadgetoptionspage.o
+./debug/moc_lineardialgadget.o
+./debug/moc_lineardialgadgetwidget.o
+./debug/moc_lineardialgadgetfactory.o
+./debug/moc_lineardialgadgetconfiguration.o
+./debug/moc_lineardialgadgetoptionspage.o
+./debug/qrc_lineardial.o
+);

@@ -55,6 +55,7 @@ FLASH_TOOL = OPENOCD
 
 # List of modules to include
 #MODULES = Sensors Attitude/revolution ManualControl Stabilization Altitude/revolution Actuator GPS FirmwareIAP 
+MODULES =  ManualControl  Stabilization Actuator GPS
 #MODULES += AltitudeHold
 #MODULES += CameraStab
 MODULES += Telemetry
@@ -127,6 +128,9 @@ SRC += $(FLIGHTLIB)/WorldMagModel.c
 SRC += $(FLIGHTLIB)/insgps13state.c
 SRC += $(FLIGHTLIB)/taskmonitor.c
 
+SRC += $(MATHLIB)/sin_lookup.c
+SRC += $(MATHLIB)/pid.c
+
 ## PIOS Hardware (STM32F4xx)
 include $(PIOS)/STM32F4xx/library.mk
 
@@ -146,7 +150,8 @@ SRC += $(PIOSCOMMON)/pios_usb_desc_hid_cdc.c
 #SRC += $(PIOSCOMMON)/pios_usb_desc_hid_only.c
 #SRC += $(PIOSCOMMON)/pios_usb_util.c
 
-include ./UAVObjects.inc
+#include ./UAVObjects.inc
+include $(OUTDIR)/../uavobject-synthetics/flight/Makefile.inc
 SRC += $(UAVOBJSRC)
 
 # List C source files here which must be compiled in ARM-Mode (no -mthumb).

@@ -1,0 +1,14 @@
+INPUT(
+./release/dialplugin.o
+./release/dialgadget.o
+./release/dialgadgetfactory.o
+./release/dialgadgetwidget.o
+./release/dialgadgetconfiguration.o
+./release/dialgadgetoptionspage.o
+./release/moc_dialgadget.o
+./release/moc_dialgadgetwidget.o
+./release/moc_dialgadgetfactory.o
+./release/moc_dialgadgetconfiguration.o
+./release/moc_dialgadgetoptionspage.o
+./release/qrc_dial.o
+);

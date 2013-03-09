@@ -1,0 +1,25 @@
+CREATE ../build/libcore.a
+ADDMOD objs/opmaps.o
+ADDMOD objs/pureimagecache.o
+ADDMOD objs/pureimage.o
+ADDMOD objs/rawtile.o
+ADDMOD objs/memorycache.o
+ADDMOD objs/cache.o
+ADDMOD objs/languagetype.o
+ADDMOD objs/providerstrings.o
+ADDMOD objs/cacheitemqueue.o
+ADDMOD objs/tilecachequeue.o
+ADDMOD objs/alllayersoftype.o
+ADDMOD objs/urlfactory.o
+ADDMOD objs/placemark.o
+ADDMOD objs/point.o
+ADDMOD objs/size.o
+ADDMOD objs/kibertilecache.o
+ADDMOD objs/diagnostics.o
+ADDMOD objs/moc_maptype.o
+ADDMOD objs/moc_accessmode.o
+ADDMOD objs/moc_languagetype.o
+ADDMOD objs/moc_tilecachequeue.o
+ADDMOD objs/moc_urlfactory.o
+ADDMOD objs/moc_geodecoderstatus.o
+SAVE

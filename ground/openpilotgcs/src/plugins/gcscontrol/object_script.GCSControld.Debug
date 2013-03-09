@@ -1,0 +1,16 @@
+INPUT(
+./debug/gcscontrolgadget.o
+./debug/gcscontrolgadgetconfiguration.o
+./debug/gcscontrolgadgetoptionspage.o
+./debug/gcscontrolgadgetwidget.o
+./debug/gcscontrolgadgetfactory.o
+./debug/gcscontrolplugin.o
+./debug/joystickcontrol.o
+./debug/moc_gcscontrolgadget.o
+./debug/moc_gcscontrolgadgetconfiguration.o
+./debug/moc_gcscontrolgadgetoptionspage.o
+./debug/moc_joystickcontrol.o
+./debug/moc_gcscontrolgadgetwidget.o
+./debug/moc_gcscontrolgadgetfactory.o
+./debug/qrc_gcscontrol.o
+);

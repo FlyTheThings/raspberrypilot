@@ -1,0 +1,12 @@
+INPUT(
+./release/uavtalk.o
+./release/uavtalkplugin.o
+./release/telemetrymonitor.o
+./release/telemetrymanager.o
+./release/telemetry.o
+./release/moc_uavtalk.o
+./release/moc_uavtalkplugin.o
+./release/moc_telemetrymonitor.o
+./release/moc_telemetrymanager.o
+./release/moc_telemetry.o
+);

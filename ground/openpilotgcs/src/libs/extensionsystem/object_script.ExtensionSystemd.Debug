@@ -1,0 +1,16 @@
+INPUT(
+./debug/pluginerrorview.o
+./debug/plugindetailsview.o
+./debug/iplugin.o
+./debug/pluginmanager.o
+./debug/pluginspec.o
+./debug/pluginview.o
+./debug/optionsparser.o
+./debug/moc_pluginerrorview.o
+./debug/moc_plugindetailsview.o
+./debug/moc_iplugin.o
+./debug/moc_pluginmanager.o
+./debug/moc_pluginspec_p.o
+./debug/moc_pluginview.o
+./debug/qrc_pluginview.o
+);

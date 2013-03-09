@@ -1,0 +1,12 @@
+INPUT(
+./debug/loggingplugin.o
+./debug/logfile.o
+./debug/logginggadgetwidget.o
+./debug/logginggadget.o
+./debug/logginggadgetfactory.o
+./debug/moc_loggingplugin.o
+./debug/moc_logfile.o
+./debug/moc_logginggadgetwidget.o
+./debug/moc_logginggadget.o
+./debug/moc_logginggadgetfactory.o
+);

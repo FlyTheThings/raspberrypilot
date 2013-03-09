@@ -1,0 +1,13 @@
+INPUT(
+./release/main.o
+./release/uavobjectparser.o
+./release/generator_io.o
+./release/uavobjectgeneratorjava.o
+./release/uavobjectgeneratorflight.o
+./release/uavobjectgeneratorgcs.o
+./release/uavobjectgeneratormatlab.o
+./release/uavobjectgeneratorpython.o
+./release/uavobjectgeneratorpythonground.o
+./release/uavobjectgeneratorwireshark.o
+./release/generator_common.o
+);

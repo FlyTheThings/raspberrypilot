@@ -1,0 +1,13 @@
+INPUT(
+./release/pfdqmlplugin.o
+./release/pfdqmlgadget.o
+./release/pfdqmlgadgetfactory.o
+./release/pfdqmlgadgetwidget.o
+./release/pfdqmlgadgetconfiguration.o
+./release/pfdqmlgadgetoptionspage.o
+./release/moc_pfdqmlgadget.o
+./release/moc_pfdqmlgadgetwidget.o
+./release/moc_pfdqmlgadgetfactory.o
+./release/moc_pfdqmlgadgetconfiguration.o
+./release/moc_pfdqmlgadgetoptionspage.o
+);

@@ -1,0 +1,15 @@
+INPUT(
+./release/uavobjectwidgetutilsplugin.o
+./release/configtaskwidget.o
+./release/mixercurvewidget.o
+./release/mixercurvepoint.o
+./release/mixercurveline.o
+./release/smartsavebutton.o
+./release/popupwidget.o
+./release/moc_uavobjectwidgetutilsplugin.o
+./release/moc_configtaskwidget.o
+./release/moc_mixercurvewidget.o
+./release/moc_mixercurvepoint.o
+./release/moc_smartsavebutton.o
+./release/moc_popupwidget.o
+);

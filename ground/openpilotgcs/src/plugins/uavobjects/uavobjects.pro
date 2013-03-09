@@ -25,7 +25,11 @@ OTHER_FILES += UAVObjects.pluginspec
 # Add in all of the synthetic/generated uavobject files
 HEADERS += $$UAVOBJECT_SYNTHETICS/accessorydesired.h \
     $$UAVOBJECT_SYNTHETICS/baroaltitude.h \
+    $$UAVOBJECT_SYNTHETICS/airspeedactual.h \
+    $$UAVOBJECT_SYNTHETICS/airspeedsensor.h \
+    $$UAVOBJECT_SYNTHETICS/airspeedsettings.h \
     $$UAVOBJECT_SYNTHETICS/attitudeactual.h \
+    $$UAVOBJECT_SYNTHETICS/attitudesimulated.h \
     $$UAVOBJECT_SYNTHETICS/altholdsmoothed.h \
     $$UAVOBJECT_SYNTHETICS/altitudeholddesired.h \
     $$UAVOBJECT_SYNTHETICS/altitudeholdsettings.h \
@@ -70,6 +74,8 @@ HEADERS += $$UAVOBJECT_SYNTHETICS/accessorydesired.h \
     $$UAVOBJECT_SYNTHETICS/i2cstats.h \
     $$UAVOBJECT_SYNTHETICS/flightbatterysettings.h \
     $$UAVOBJECT_SYNTHETICS/taskinfo.h \
+    $$UAVOBJECT_SYNTHETICS/fixedwingpathfollowersettings.h \
+    $$UAVOBJECT_SYNTHETICS/fixedwingpathfollowerstatus.h \
     $$UAVOBJECT_SYNTHETICS/flightplanstatus.h \
     $$UAVOBJECT_SYNTHETICS/flightplansettings.h \
     $$UAVOBJECT_SYNTHETICS/flightplancontrol.h \
@@ -88,11 +94,27 @@ HEADERS += $$UAVOBJECT_SYNTHETICS/accessorydesired.h \
     $$UAVOBJECT_SYNTHETICS/pipxstatus.h \
     $$UAVOBJECT_SYNTHETICS/waypoint.h \
     $$UAVOBJECT_SYNTHETICS/waypointactive.h \
-    $$UAVOBJECT_SYNTHETICS/pathaction.h
+    $$UAVOBJECT_SYNTHETICS/pathaction.h \
+    $$UAVOBJECT_SYNTHETICS/groundtruth.h \
+    $$UAVOBJECT_SYNTHETICS/magbias.h \
+    $$UAVOBJECT_SYNTHETICS/mpu6000settings.h \
+    $$UAVOBJECT_SYNTHETICS/oplinksettings.h \
+    $$UAVOBJECT_SYNTHETICS/oplinkstatus.h \
+    $$UAVOBJECT_SYNTHETICS/osdsettings.h \
+    $$UAVOBJECT_SYNTHETICS/overosyncsettings.h \
+    $$UAVOBJECT_SYNTHETICS/pathdesired.h \
+    $$UAVOBJECT_SYNTHETICS/pathstatus.h \
+    $$UAVOBJECT_SYNTHETICS/revosettings.h \
+    $$UAVOBJECT_SYNTHETICS/vtolpathfollowersettings.h
+
 
 SOURCES += $$UAVOBJECT_SYNTHETICS/accessorydesired.cpp \
     $$UAVOBJECT_SYNTHETICS/baroaltitude.cpp \
+    $$UAVOBJECT_SYNTHETICS/airspeedactual.cpp \
+    $$UAVOBJECT_SYNTHETICS/airspeedsensor.cpp \
+    $$UAVOBJECT_SYNTHETICS/airspeedsettings.cpp \
     $$UAVOBJECT_SYNTHETICS/attitudeactual.cpp \
+    $$UAVOBJECT_SYNTHETICS/attitudesimulated.cpp \
     $$UAVOBJECT_SYNTHETICS/altholdsmoothed.cpp \
     $$UAVOBJECT_SYNTHETICS/altitudeholddesired.cpp \
     $$UAVOBJECT_SYNTHETICS/altitudeholdsettings.cpp \
@@ -137,6 +159,8 @@ SOURCES += $$UAVOBJECT_SYNTHETICS/accessorydesired.cpp \
     $$UAVOBJECT_SYNTHETICS/i2cstats.cpp \
     $$UAVOBJECT_SYNTHETICS/flightbatterysettings.cpp \
     $$UAVOBJECT_SYNTHETICS/taskinfo.cpp \
+    $$UAVOBJECT_SYNTHETICS/fixedwingpathfollowersettings.cpp \
+    $$UAVOBJECT_SYNTHETICS/fixedwingpathfollowerstatus.cpp \
     $$UAVOBJECT_SYNTHETICS/flightplanstatus.cpp \
     $$UAVOBJECT_SYNTHETICS/flightplansettings.cpp \
     $$UAVOBJECT_SYNTHETICS/flightplancontrol.cpp \
@@ -156,4 +180,15 @@ SOURCES += $$UAVOBJECT_SYNTHETICS/accessorydesired.cpp \
     $$UAVOBJECT_SYNTHETICS/pipxstatus.cpp \
     $$UAVOBJECT_SYNTHETICS/waypoint.cpp \
     $$UAVOBJECT_SYNTHETICS/waypointactive.cpp \
-    $$UAVOBJECT_SYNTHETICS/pathaction.cpp
+    $$UAVOBJECT_SYNTHETICS/pathaction.cpp \
+    $$UAVOBJECT_SYNTHETICS/groundtruth.cpp \
+    $$UAVOBJECT_SYNTHETICS/magbias.cpp \
+    $$UAVOBJECT_SYNTHETICS/mpu6000settings.cpp \
+    $$UAVOBJECT_SYNTHETICS/oplinksettings.cpp \
+    $$UAVOBJECT_SYNTHETICS/oplinkstatus.cpp \
+    $$UAVOBJECT_SYNTHETICS/osdsettings.cpp \
+    $$UAVOBJECT_SYNTHETICS/overosyncsettings.cpp \
+    $$UAVOBJECT_SYNTHETICS/pathdesired.cpp \
+    $$UAVOBJECT_SYNTHETICS/pathstatus.cpp \
+    $$UAVOBJECT_SYNTHETICS/revosettings.cpp \
+    $$UAVOBJECT_SYNTHETICS/vtolpathfollowersettings.cpp

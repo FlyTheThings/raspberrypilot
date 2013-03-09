@@ -1,0 +1,13 @@
+INPUT(
+./debug/qmlviewplugin.o
+./debug/qmlviewgadget.o
+./debug/qmlviewgadgetfactory.o
+./debug/qmlviewgadgetwidget.o
+./debug/qmlviewgadgetconfiguration.o
+./debug/qmlviewgadgetoptionspage.o
+./debug/moc_qmlviewgadget.o
+./debug/moc_qmlviewgadgetwidget.o
+./debug/moc_qmlviewgadgetfactory.o
+./debug/moc_qmlviewgadgetconfiguration.o
+./debug/moc_qmlviewgadgetoptionspage.o
+);

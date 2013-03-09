@@ -1,0 +1,14 @@
+INPUT(
+./debug/notifyplugin.o
+./debug/notifypluginoptionspage.o
+./debug/notifyitemdelegate.o
+./debug/notifytablemodel.o
+./debug/notificationitem.o
+./debug/notifylogging.o
+./debug/moc_notifyplugin.o
+./debug/moc_notifypluginoptionspage.o
+./debug/moc_notifyitemdelegate.o
+./debug/moc_notifytablemodel.o
+./debug/moc_notificationitem.o
+./debug/qrc_res.o
+);

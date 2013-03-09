@@ -1,0 +1,14 @@
+INPUT(
+./release/modelviewplugin.o
+./release/modelviewgadgetconfiguration.o
+./release/modelviewgadget.o
+./release/modelviewgadgetfactory.o
+./release/modelviewgadgetwidget.o
+./release/modelviewgadgetoptionspage.o
+./release/moc_modelviewgadgetconfiguration.o
+./release/moc_modelviewgadget.o
+./release/moc_modelviewgadgetwidget.o
+./release/moc_modelviewgadgetfactory.o
+./release/moc_modelviewgadgetoptionspage.o
+./release/qrc_modelview.o
+);
