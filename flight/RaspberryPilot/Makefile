@@ -73,6 +73,8 @@ PIOSINC = $(PIOS)/inc
 OPMODULEDIR = ../Modules
 FLIGHTLIB = ../Libraries
 FLIGHTLIBINC = ../Libraries/inc
+MATHLIB = ../Libraries/math
+MATHLIBINC = ../Libraries/math
 PIOSSTM32F4XX = $(PIOS)/STM32F4xx
 PIOSCOMMON = $(PIOS)/Common
 PIOSBOARDS = $(PIOS)/Boards
@@ -142,6 +144,7 @@ SRC += $(PIOSCOMMON)/pios_flashfs_objlist.c
 SRC += $(PIOSCOMMON)/printf-stdarg.c
 SRC += $(PIOSCOMMON)/pios_usb_desc_hid_cdc.c
 #SRC += $(PIOSCOMMON)/pios_usb_desc_hid_only.c
+#SRC += $(PIOSCOMMON)/pios_usb_util.c
 
 include ./UAVObjects.inc
 SRC += $(UAVOBJSRC)
@@ -183,6 +186,7 @@ EXTRAINCDIRS  += $(OPUAVOBJ)
 EXTRAINCDIRS  += $(OPUAVOBJINC)
 EXTRAINCDIRS  += $(UAVOBJSYNTHDIR)
 EXTRAINCDIRS  += $(FLIGHTLIBINC)
+EXTRAINCDIRS  += $(MATHLIBINC)
 EXTRAINCDIRS  += $(PIOSSTM32F4XX)
 EXTRAINCDIRS  += $(PIOSCOMMON)
 EXTRAINCDIRS  += $(PIOSBOARDS)
@@ -192,7 +196,7 @@ EXTRAINCDIRS  += $(OPUAVSYNTHDIR)
 EXTRAINCDIRS  += $(BOOTINC)
 EXTRAINCDIRS  += $(HWDEFSINC)
 
-EXTRAINCDIRS += ${foreach MOD, ${MODULES} ${PYMODULES}, $(OPMODULEDIR)/${MOD}/inc} ${OPMODULEDIR}/System/inc
+EXTRAINCDIRS += ${foreach MOD, ${OPTMODULES} ${MODULES} ${PYMODULES}, $(OPMODULEDIR)/${MOD}/inc} ${OPMODULEDIR}/System/inc
 # List any extra directories to look for library files here.
 # Also add directories where the linker should search for
 # includes from linker-script to the list
@@ -255,6 +259,8 @@ CDEFS += -DSYSCLK_FREQ=$(SYSCLK_FREQ)
 CDEFS += -DUSE_STDPERIPH_DRIVER
 CDEFS += -DUSE_$(BOARD)
 
+# Declare all non-optional modules as built-in to force inclusion
+CDEFS += $(foreach MOD, $(notdir $(MODULES)), -DMODULE_$(MOD)_BUILTIN)
 # Place project-specific -D and/or -U options for
 # Assembler with preprocessor here.
 #ADEFS = -DUSE_IRQ_ASM_WRAPPER
@@ -364,7 +370,7 @@ endif
 
 
 # Link: create ELF output file from object files.
-$(eval $(call LINK_TEMPLATE, $(OUTDIR)/$(TARGET).elf, $(ALLOBJ)))
+$(eval $(call LINK_TEMPLATE, $(OUTDIR)/$(TARGET).elf, $(ALLOBJ), $(ALLLIB)))
 
 # Assemble: create object files from assembler source files.
 $(foreach src, $(ASRC), $(eval $(call ASSEMBLE_TEMPLATE, $(src))))
