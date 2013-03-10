@@ -86,3 +86,5 @@ androidgcs/gen/
 /.cproject
 /.project
 .metadata
+*.pyc
+*.~*
