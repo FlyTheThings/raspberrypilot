@@ -111,10 +111,10 @@ class UavTalkRecThread(threading.Thread):
         self.stop = False
         
     def run(self):
-        #self.uavTalk.serial.open()
+        #self.uavTalk.stream.open()
         self.stop = False
         while not self.stop:
-            rx = self.uavTalk.serial.read(1)
+            rx = self.uavTalk.stream.read(1)
             if len(rx) > 0:
                 rx = ord(rx)
 #                if (rx == SYNC):
@@ -204,8 +204,8 @@ class UavTalkRecThread(threading.Thread):
 
 class UavTalk(object):
 
-    def __init__(self, serial):
-        self.serial = serial
+    def __init__(self, stream):
+        self.stream = stream
         self.objMan = None
         self.txLock = threading.Lock()
         
@@ -228,8 +228,11 @@ class UavTalk(object):
         if rxType == TYPE_OBJ_ACK:
             logging.debug("Sending ACK for Obj %s", obj)
             self.sendObjectAck(obj)
+        elif rxType == TYPE_OBJ_REQ:
+            logging.warn("unimplemented Received request for Obj %s", obj)
             
-        self.objMan.objUpdate(obj, rxData)
+            
+        self.objMan.objUpdate(obj, rxData, updater = self)
          
     def sendObjReq(self, obj):
         self._sendpacket(TYPE_OBJ_REQ, obj.objId)
@@ -238,6 +241,7 @@ class UavTalk(object):
         self._sendpacket(TYPE_ACK, obj.objId)
         
     def sendObject(self, obj, reqAck=False):
+        logging.debug("sendObject %s" % obj)
         if reqAck:
             type = TYPE_OBJ_ACK
         else:
@@ -261,13 +265,13 @@ class UavTalk(object):
         
         crc = Crc()
         crc.addList(header)
-        self.serial.write("".join(map(chr,header)))
+        self.stream.write("".join(map(chr,header)))
         
         if data != None:
             crc.addList(data)
-            self.serial.write("".join(map(chr,data)))
+            self.stream.write("".join(map(chr,data)))
         
-        self.serial.write(chr(crc.read()))
+        self.stream.write(chr(crc.read()))
         
         self.txLock.release()
         

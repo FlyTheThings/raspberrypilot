@@ -55,7 +55,7 @@ FLASH_TOOL = OPENOCD
 
 # List of modules to include
 #MODULES = Sensors Attitude/revolution ManualControl Stabilization Altitude/revolution Actuator GPS FirmwareIAP 
-MODULES =  ManualControl  Stabilization Actuator GPS
+#MODULES =  ManualControl  Stabilization Actuator GPS
 #MODULES += AltitudeHold
 #MODULES += CameraStab
 MODULES += Telemetry
@@ -147,8 +147,8 @@ SRC += $(PIOSCOMMON)/pios_flash_jedec.c
 SRC += $(PIOSCOMMON)/pios_flashfs_objlist.c
 SRC += $(PIOSCOMMON)/printf-stdarg.c
 SRC += $(PIOSCOMMON)/pios_usb_desc_hid_cdc.c
-#SRC += $(PIOSCOMMON)/pios_usb_desc_hid_only.c
-#SRC += $(PIOSCOMMON)/pios_usb_util.c
+SRC += $(PIOSCOMMON)/pios_usb_desc_hid_only.c
+SRC += $(PIOSCOMMON)/pios_usb_util.c
 
 #include ./UAVObjects.inc
 include $(OUTDIR)/../uavobject-synthetics/flight/Makefile.inc

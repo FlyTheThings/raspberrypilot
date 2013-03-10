@@ -552,6 +552,9 @@ static int32_t receiveObject(UAVTalkConnectionData *connection, uint8_t type, ui
 			}
 			else
 			{
+				// this is an important change for raspberry pilot, it is needed to simplify routing of uav talk packets
+				// on the raspberry pi
+				sendNack(connection, objId);
 				ret = -1;
 			}
 			break;
@@ -567,6 +570,9 @@ static int32_t receiveObject(UAVTalkConnectionData *connection, uint8_t type, ui
 				}
 				else
 				{
+					// this is an important change for raspberry pilot, it is needed to simplify routing of uav talk packets
+					// on the raspberry pi
+					sendNack(connection, objId);
 					ret = -1;
 				}
 			}

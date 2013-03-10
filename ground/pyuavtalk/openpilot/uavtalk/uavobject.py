@@ -121,9 +121,10 @@ class UAVObjectField:
 class Observer(object):
 	def __init__(self, obj, method):
 		self.methodToCall = getattr(obj, method)
+		self.obj = obj
 		
-	def call(self, *args):
-		self.methodToCall(args)			
+	def call(self, obj):
+		self.methodToCall(obj)			
 		  
 class UAVObject:
 	def __init__(self, objId, name=None):
@@ -132,13 +133,15 @@ class UAVObject:
 		self.instId = 0
 		self.fields = []
 		self.observers = []
+		self.last_updater = None
 		self.updateEvent = threading.Condition()
 		self.updateCnt = 0
 		self.name = name
 		self.objMan = None
 		
-	def updated(self):
-		self.objMan.objLocallyUpdated(self)	
+	def updated(self,updater = None):
+		self.last_updater = updater
+		self.objMan.objUpdated(self)
 	
 	
 	def waitUpdate(self, timeout=5):

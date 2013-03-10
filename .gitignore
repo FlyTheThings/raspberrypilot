@@ -64,6 +64,8 @@ ground/uavobjgenerator/uavobjgenerator.pro.user
 ground/uavobjects/uavobjects.pro.user
 ground/ground.pro.user
 
+ground/pyuavtalk/build
+
 GPATH
 GRTAGS
 GSYMS

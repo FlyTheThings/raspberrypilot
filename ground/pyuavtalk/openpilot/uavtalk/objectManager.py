@@ -35,16 +35,13 @@ from openpilot.uavtalk.uavobject import *
 
 
 
-class TimeoutException(Exception): 
+class objManagerTimeoutException(Exception): 
     pass 
 
 class ObjManager(object):
     
-    def __init__(self, uavTalk):
+    def __init__(self):
         self.objs = {}
-        self.uavTalk = uavTalk
-        uavTalk.setObjMan(self)
-        
         
     def addObj(self, obj):
         obj.objMan = self
@@ -93,24 +90,15 @@ class ObjManager(object):
         o = Observer(observerObj, observerMethod)
         obj.observers.append(o)
         
-    def objUpdate(self, obj, rxData):
-        obj.deserialize(rxData)
-        obj.updateCnt += 1
-        for observer in obj.observers:
-            observer.call(obj)
-        obj.updateEvent.acquire()
-        obj.updateEvent.notifyAll()
-        obj.updateEvent.release()
-        
-    def requestObjUpdate(self, obj):
+    def requestObjUpdate(self, obj, requestor=None):
         logging.debug("Requesting %s" % obj)
-        self.uavTalk.sendObjReq(obj)
-        
-    def waitObjUpdate(self, obj, request=True, timeout=.5):
+        logging.debug("Need to forward request to relevant interfaces")
+        #self.uavTalk.sendObjReq(obj)
+        raise
+    
+    def waitObjUpdate(self, obj, timeout=.5, requestor=None):
         logging.debug("Waiting for %s " % obj)
         cnt = obj.updateCnt
-        if request:
-            self.requestObjUpdate(obj)
         obj.updateEvent.acquire()
         obj.updateEvent.wait(timeout)
         obj.updateEvent.release()
@@ -120,35 +108,27 @@ class ObjManager(object):
             s = "Timeout waiting for %s" % obj
             logging.debug(s)
             raise TimeoutException(s)
-        
-    def objLocallyUpdated(self, obj):
-        # TODO: should check meta-data what to do
-        self.uavTalk.sendObject(obj)
-        
-    def requestAllObjUpdate(self):
-        for objId, obj in self.objs.items():
-            if not obj.isMetaData():
-                #print "GetMeta %s" % obj
-                try:
-                    logging.debug("Getting %s" % obj)
-                    self.waitObjUpdate(obj, request=True, timeout=.1)
-                    logging.debug("  Getting %s" % obj.metadata)
-                    self.waitObjUpdate(obj.metadata, request=True, timeout=.1)
-                except TimeoutException:
-                    logging.debug("  TIMEOUT")
-                    pass
                     
-    def disableAllAutomaticUpdates(self):
+    def objUpdate(self, obj, rxData, updater):
+        obj.deserialize(rxData)
+        self.objUpdated(obj)
+        
+    def objUpdated(self, obj):
+        logging.debug("objUpdated %s, triggering observers and events" % obj)
+        obj.updateCnt += 1
+        for observer in obj.observers:
+            observer.call(obj)
+        obj.updateEvent.acquire()
+        obj.updateEvent.notifyAll()
+        obj.updateEvent.release()
+        
 
-        objsToExclude = [self.getObjByName("GCSTelemetryStats"), self.getObjByName("FlightTelemetryStats"), self.getObjByName("ObjectPersistence")]
-        for i in xrange(len(objsToExclude)):
-            objsToExclude[i] = objsToExclude[i].metadata.objId
-            
-        for objId, obj in self.objs.items():
-            if obj.isMetaData() and obj.updateCnt>0:
-                if obj.objId not in objsToExclude:
-                    #print "Disabling automatic updates for %s" % (obj)
-                    #print obj.telemetryUpdateMode.value
-                    obj.telemetryUpdateMode.value = UAVMetaDataObject.UpdateMode.MANUAL
-                    self.uavTalk.sendObject(obj)
-                    
+        
+
+        
+
+        
+
+     
+    
+                

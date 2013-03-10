@@ -34,6 +34,10 @@ import objectManager
 import uavobject
 import time
 
+class ConnectionTimeoutException(Exception): 
+    pass 
+    
+    
 class ConnectionManager(object):
     
     def __init__(self, uavTalk, objMan):
@@ -49,6 +53,55 @@ class ConnectionManager(object):
         import flighttelemetrystats
         self.statusFieldClss = flighttelemetrystats.StatusField
         
+    def requestObjUpdate(self, obj, requestor=None):
+        logging.debug("Requesting %s" % obj)
+        self.uavTalk.sendObjReq(obj)
+    
+    def waitObjUpdate(self, obj, request=True, timeout=.5):
+        logging.debug("Waiting for %s " % obj)
+        cnt = obj.updateCnt
+        if request:
+            self.requestObjUpdate(obj)
+        obj.updateEvent.acquire()
+        obj.updateEvent.wait(timeout)
+        obj.updateEvent.release()
+        timeout = (cnt == obj.updateCnt)
+        logging.debug("-> Waiting for %s Done. " % (obj))
+        if timeout:
+            s = "Timeout waiting for %s" % obj
+            logging.debug(s)
+            raise ConnectionTimeoutException(s)
+            
+    def requestAllObjUpdate(self):
+        for objId, obj in self.objs.items():
+            if not obj.isMetaData():
+                #print "GetMeta %s" % obj
+                try:
+                    logging.debug("Getting %s" % obj)
+                    self.waitObjUpdate(obj, request=True, timeout=.1)
+                    logging.debug("  Getting %s" % obj.metadata)
+                    self.waitObjUpdate(obj.metadata, request=True, timeout=.1)
+                except ConnectionTimeoutException:
+                    logging.debug("  TIMEOUT")
+                    pass
+                    
+    def disableAllAutomaticUpdates(self):
+        objsToExclude = [self.getObjByName("GCSTelemetryStats"), self.getObjByName("FlightTelemetryStats"), self.getObjByName("ObjectPersistence")]
+        for i in xrange(len(objsToExclude)):
+            objsToExclude[i] = objsToExclude[i].metadata.objId
+            
+        for objId, obj in self.objs.items():
+            if obj.isMetaData() and obj.updateCnt>0:
+                if obj.objId not in objsToExclude:
+                    #print "Disabling automatic updates for %s" % (obj)
+                    #print obj.telemetryUpdateMode.value
+                    obj.telemetryUpdateMode.value = UAVMetaDataObject.UpdateMode.MANUAL
+                    self.uavTalk.sendObject(obj)
+                    
+    def objLocallyUpdated(self, obj):
+        # TODO: should check meta-data what to do
+        self.uavTalk.sendObject(obj)
+        raise
         
     def connect(self):
         timeout = True
@@ -56,25 +109,25 @@ class ConnectionManager(object):
         startTime = time.clock()
         while not self.connected:
             try:
-                self.objMan.waitObjUpdate(self.ftsObj, request=timeout, timeout=2)
+                self.waitObjUpdate(self.ftsObj, request=timeout, timeout=5)
                 timeout = False
                 self._onFtsChange()
                 if self.connected:
-                    self.objMan.waitObjUpdate(self.ftsObj.metadata)
+                    self.waitObjUpdate(self.ftsObj.metadata)
                     self.ftsObj.metadata.telemetryUpdateMode.value = uavobject.UAVMetaDataObject.UpdateMode.PERIODIC
                     self.ftsObj.metadata.telemetryUpdatePeriod.value = 1000
                     self.ftsObj.metadata.updated()
-                    self.objMan.regObjectObserver(self.ftsObj, self, "_onFtsChange")
+                    raise
+                    self.regObjectObserver(self.ftsObj, self, "_onFtsChange")
                 else:
                     pass
-            except objectManager.TimeoutException:
+            except ConnectionTimeoutException:
                 timeout = True
                 self.connected = False
                 logging.warning("Connecting TO")
                 pass
         logging.debug("Connected in %.1fs" % (time.clock()-startTime))   
         
-            
     def _onFtsChange(self, args=None):
         connected = False
         logging.debug("FTS State=%d TxFail=%3d RxFail=%3d TxRetry=%3d" % \
