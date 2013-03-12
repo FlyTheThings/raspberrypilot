@@ -1,0 +1,1 @@
+This is the location for board layouts and schematics.
