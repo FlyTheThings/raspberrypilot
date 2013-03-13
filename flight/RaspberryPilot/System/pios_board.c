@@ -417,20 +417,35 @@ void PIOS_Board_Init(void) {
 	uint8_t hwsettings_rv_telemetryport;
 	HwSettingsRV_TelemetryPortGet(&hwsettings_rv_telemetryport);
 
-	switch (hwsettings_rv_telemetryport){
-		case HWSETTINGS_RV_TELEMETRYPORT_DISABLED:
-			break;
-		case HWSETTINGS_RV_TELEMETRYPORT_TELEMETRY:
-			PIOS_Board_configure_com(&pios_usart_telem_cfg, PIOS_COM_TELEM_RF_RX_BUF_LEN, PIOS_COM_TELEM_RF_TX_BUF_LEN, &pios_usart_com_driver, &pios_com_telem_rf_id);
-			break;
-		case HWSETTINGS_RV_TELEMETRYPORT_COMAUX:
-			PIOS_Board_configure_com(&pios_usart_telem_cfg, PIOS_COM_AUX_RX_BUF_LEN, PIOS_COM_AUX_TX_BUF_LEN, &pios_usart_com_driver, &pios_com_aux_id);
-			break;
-		case HWSETTINGS_RV_TELEMETRYPORT_COMBRIDGE:
-			PIOS_Board_configure_com(&pios_usart_telem_cfg, PIOS_COM_BRIDGE_RX_BUF_LEN, PIOS_COM_BRIDGE_TX_BUF_LEN, &pios_usart_com_driver, &pios_com_bridge_id);
-			break;
-			
-	} /* 	hwsettings_rv_telemetryport */
+
+	//configure the loop back com device
+	uint8_t * a_buffer = (uint8_t *) pvPortMalloc(PIOS_COM_TELEM_RF_RX_BUF_LEN);
+	PIOS_Assert(a_buffer);
+	uint8_t * b_buffer = (uint8_t *) pvPortMalloc(PIOS_COM_TELEM_RF_TX_BUF_LEN);
+	PIOS_Assert(b_buffer);
+	uint32_t pios_com_loopback_id;
+	PIOS_com_loopback_Init(&pios_com_loopback_id, a_buffer, PIOS_COM_TELEM_RF_RX_BUF_LEN, b_buffer, PIOS_COM_TELEM_RF_TX_BUF_LEN);
+
+
+	// configure the telemetry serial port
+	uint32_t pios_telem_usart_id;
+	if (PIOS_USART_Init(&pios_telem_usart_id, &pios_usart_telem_cfg)) {
+		PIOS_Assert(0);
+	}
+
+	uint8_t * rx_buffer = (uint8_t *) pvPortMalloc(PIOS_COM_TELEM_RF_RX_BUF_LEN);
+	PIOS_Assert(rx_buffer);
+	uint8_t * tx_buffer = (uint8_t *) pvPortMalloc(PIOS_COM_TELEM_RF_TX_BUF_LEN);
+	PIOS_Assert(tx_buffer);
+
+	if (PIOS_COM_Init(&pios_com_telem_rf_id, &pios_usart_com_driver, pios_telem_usart_id,
+			rx_buffer, PIOS_COM_TELEM_RF_RX_BUF_LEN,
+			tx_buffer, PIOS_COM_TELEM_RF_TX_BUF_LEN)) {
+		PIOS_Assert(0);
+	}
+
+
+
 
 
 	

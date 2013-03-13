@@ -50,6 +50,8 @@ static void PIOS_com_loopback_RegisterRxCallback_b(uint32_t com_loopback_id, pio
 static void PIOS_com_loopback_RegisterTxCallback_b(uint32_t com_loopback_id, pios_com_callback tx_out_cb, uint32_t context);
 static void PIOS_com_loopback_TxStart_b(uint32_t com_loopback_id, uint16_t tx_bytes_avail);
 static void PIOS_com_loopback_RxStart_b(uint32_t com_loopback_id, uint16_t rx_bytes_avail);
+static void PIOS_com_loopback_tx(uint16_t tx_bytes_avail,pios_com_callback tx_out_cb,uint32_t tx_out_context,uint8_t *buffer,uint16_t buffer_len,bool rx_started,pios_com_callback rx_in_cb,uint32_t rx_in_context);
+
 
 const struct pios_com_driver pios_com_loopback_com_a_driver = {
 	.set_baud   = PIOS_com_loopback_ChangeBaud,
@@ -74,13 +76,13 @@ enum pios_com_loopback_dev_magic {
 struct pios_com_loopback_dev {
 	enum pios_com_loopback_dev_magic     magic;
 
-	bool rx_a_started;
-	bool rx_b_started;
+	bool rx_started_a;
+	bool rx_started_b;
 
-	uint8_t *com_loopback_a_buffer;
-	uint16_t com_loopback_a_buffer_len;
-	uint8_t *com_loopback_b_buffer;
-	uint16_t com_loopback_b_buffer_len;
+	uint8_t *buffer_a;
+	uint16_t buffer_len_a;
+	uint8_t *buffer_b;
+	uint16_t buffer_len_b;
 
 	pios_com_callback rx_in_cb_a;
 	uint32_t rx_in_context_a;
@@ -108,10 +110,10 @@ static struct pios_com_loopback_dev * PIOS_com_loopback_alloc(void)
 
 	com_loopback_dev->rx_started_a = 0;
 	com_loopback_dev->rx_started_b = 0;
-	com_loopback_dev->a_buffer = 0;
-	com_loopback_dev->a_buffer_len = 0;
-	com_loopback_dev->b_buffer = 0;
-	com_loopback_dev->b_buffer_len = 0;
+	com_loopback_dev->buffer_a = 0;
+	com_loopback_dev->buffer_len_a = 0;
+	com_loopback_dev->buffer_b = 0;
+	com_loopback_dev->buffer_len_b = 0;
 
 	com_loopback_dev->rx_in_cb_a = 0;
 	com_loopback_dev->rx_in_context_b = 0;
@@ -166,7 +168,7 @@ static void PIOS_com_loopback_RxStart_a(uint32_t com_loopback_id, uint16_t rx_by
 	bool valid = PIOS_com_loopback_validate(com_loopback_dev);
 	PIOS_Assert(valid);
 
-	pios_com_loopback_dev->rx_started_a = true;
+	com_loopback_dev->rx_started_a = true;
 }
 static void PIOS_com_loopback_RxStart_b(uint32_t com_loopback_id, uint16_t rx_bytes_avail)
 {
@@ -175,7 +177,7 @@ static void PIOS_com_loopback_RxStart_b(uint32_t com_loopback_id, uint16_t rx_by
 	bool valid = PIOS_com_loopback_validate(com_loopback_dev);
 	PIOS_Assert(valid);
 	
-	pios_com_loopback_dev->rx_started_b = true;
+	com_loopback_dev->rx_started_b = true;
 }
 
 
@@ -186,9 +188,18 @@ static void PIOS_com_loopback_TxStart_a(uint32_t com_loopback_id, uint16_t tx_by
 	bool valid = PIOS_com_loopback_validate(com_loopback_dev);
 	PIOS_Assert(valid);
 	
-	PIOS_com_loopback_tx (tx_bytes_avail, tx_out_cb_a, tx_out_context_a, com_loopback_dev->buffer_b, com_loopback_dev->buffer_len_b, com_loopback_dev->rx_started_b, com_loopback_dev->rx_in_cb_b, com_loopback_dev->rx_in_context_b)
+	PIOS_com_loopback_tx (tx_bytes_avail, com_loopback_dev->tx_out_cb_a, com_loopback_dev->tx_out_context_a, com_loopback_dev->buffer_b, com_loopback_dev->buffer_len_b, com_loopback_dev->rx_started_b, com_loopback_dev->rx_in_cb_b, com_loopback_dev->rx_in_context_b);
 }
 
+static void PIOS_com_loopback_TxStart_b(uint32_t com_loopback_id, uint16_t tx_bytes_avail)
+{
+	struct pios_com_loopback_dev * com_loopback_dev = (struct pios_com_loopback_dev *)com_loopback_id;
+
+	bool valid = PIOS_com_loopback_validate(com_loopback_dev);
+	PIOS_Assert(valid);
+
+	PIOS_com_loopback_tx (tx_bytes_avail, com_loopback_dev->tx_out_cb_b, com_loopback_dev->tx_out_context_b, com_loopback_dev->buffer_a, com_loopback_dev->buffer_len_a, com_loopback_dev->rx_started_a, com_loopback_dev->rx_in_cb_a, com_loopback_dev->rx_in_context_a);
+}
 
 static void PIOS_com_loopback_tx(uint16_t tx_bytes_avail,pios_com_callback tx_out_cb,uint32_t tx_out_context,uint8_t *buffer,uint16_t buffer_len,bool rx_started,pios_com_callback rx_in_cb,uint32_t rx_in_context)
 {
@@ -199,22 +210,24 @@ static void PIOS_com_loopback_tx(uint16_t tx_bytes_avail,pios_com_callback tx_ou
 	uint16_t tx_headroom;
 
 	 do {
-		bytes_to_send = (com_loopback_dev->tx_out_cb_a)(tx_out_context, buffer, buffer_len, &tx_headroom, &tx_need_yield);
-		if (com_loopback_dev->rx_in_cb_b & rx_started) {
-			(void) (com_loopback_dev->rx_in_?_cb)(com_loopback_dev->rx_in_b_context, buffer, bytes_to_send, NULL, &rx_need_yield);
+		bytes_to_send = (tx_out_cb)(tx_out_context, buffer, buffer_len, &tx_headroom, &tx_need_yield);
+		if (rx_in_cb) {
+			if (rx_started) {
+				(void) (rx_in_cb)(rx_in_context, buffer, bytes_to_send, NULL, &rx_need_yield);
 #if defined(PIOS_INCLUDE_FREERTOS)
-			if (rx_need_yield) {
-				vPortYield();
+				if (rx_need_yield) {
+					taskYIELD();
 				}
 #endif	/* PIOS_INCLUDE_FREERTOS */
+			}
 		}
 
-	} while (bytes_to_send + headroom)
+	} while (bytes_to_send + tx_headroom);
 
 	// this yields only after transfer is done since its purpose is to allow the writer to refill the buffer
 #if defined(PIOS_INCLUDE_FREERTOS)
 	if (tx_need_yield) {
-		vPortYield();
+		taskYIELD();
 	}
 #endif	/* PIOS_INCLUDE_FREERTOS */
 
@@ -250,22 +263,22 @@ static void PIOS_com_loopback_ChangeBaud(uint32_t com_loopback_id, uint32_t baud
 	// nothing to do, loopback doesn't have a baudrate
 }
 
-static void PIOS_com_loopback_RegisterRxCallback(uint32_t com_loopback_id, pios_com_callback rx_in_cb, uint32_t context)
+static void PIOS_com_loopback_RegisterRxCallback_a(uint32_t com_loopback_id, pios_com_callback rx_in_cb, uint32_t context)
 {
 	struct pios_com_loopback_dev * com_loopback_dev = (struct pios_com_loopback_dev *)com_loopback_id;
 
 	bool valid = PIOS_com_loopback_validate(com_loopback_dev);
 	PIOS_Assert(valid);
-	
-	/* 
+
+	/*
 	 * Order is important in these assignments since ISR uses _cb
 	 * field to determine if it's ok to dereference _cb and _context
 	 */
-	com_loopback_dev->rx_in_context = context;
-	com_loopback_dev->rx_in_cb = rx_in_cb;
+	com_loopback_dev->rx_in_context_a = context;
+	com_loopback_dev->rx_in_cb_a = rx_in_cb;
 }
 
-static void PIOS_com_loopback_RegisterTxCallback(uint32_t com_loopback_id, pios_com_callback tx_out_cb, uint32_t context)
+static void PIOS_com_loopback_RegisterRxCallback_b(uint32_t com_loopback_id, pios_com_callback rx_in_cb, uint32_t context)
 {
 	struct pios_com_loopback_dev * com_loopback_dev = (struct pios_com_loopback_dev *)com_loopback_id;
 
@@ -276,8 +289,39 @@ static void PIOS_com_loopback_RegisterTxCallback(uint32_t com_loopback_id, pios_
 	 * Order is important in these assignments since ISR uses _cb
 	 * field to determine if it's ok to dereference _cb and _context
 	 */
-	com_loopback_dev->tx_out_context = context;
-	com_loopback_dev->tx_out_cb = tx_out_cb;
+	com_loopback_dev->rx_in_context_b = context;
+	com_loopback_dev->rx_in_cb_b = rx_in_cb;
+}
+
+
+static void PIOS_com_loopback_RegisterTxCallback_a(uint32_t com_loopback_id, pios_com_callback tx_out_cb, uint32_t context)
+{
+	struct pios_com_loopback_dev * com_loopback_dev = (struct pios_com_loopback_dev *)com_loopback_id;
+
+	bool valid = PIOS_com_loopback_validate(com_loopback_dev);
+	PIOS_Assert(valid);
+
+	/*
+	 * Order is important in these assignments since ISR uses _cb
+	 * field to determine if it's ok to dereference _cb and _context
+	 */
+	com_loopback_dev->tx_out_context_a = context;
+	com_loopback_dev->tx_out_cb_a = tx_out_cb;
+}
+
+static void PIOS_com_loopback_RegisterTxCallback_b(uint32_t com_loopback_id, pios_com_callback tx_out_cb, uint32_t context)
+{
+	struct pios_com_loopback_dev * com_loopback_dev = (struct pios_com_loopback_dev *)com_loopback_id;
+
+	bool valid = PIOS_com_loopback_validate(com_loopback_dev);
+	PIOS_Assert(valid);
+	
+	/* 
+	 * Order is important in these assignments since ISR uses _cb
+	 * field to determine if it's ok to dereference _cb and _context
+	 */
+	com_loopback_dev->tx_out_context_b = context;
+	com_loopback_dev->tx_out_cb_b = tx_out_cb;
 }
 
 #endif

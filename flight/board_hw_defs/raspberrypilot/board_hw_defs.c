@@ -571,6 +571,7 @@ uint32_t pios_spi_overo_id = 0;
 
 
 #include <pios_usart_priv.h>
+#include <pios_com_loopback_priv.h>
 
 #ifdef PIOS_INCLUDE_COM_TELEM
 /*
