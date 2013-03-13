@@ -267,6 +267,8 @@ uint32_t pios_com_gps_id = 0;
 uint32_t pios_com_telem_usb_id = 0;
 uint32_t pios_com_telem_rf_id = 0;
 uint32_t pios_com_bridge_id = 0;
+uint32_t pios_com_loop_a_id = 0;
+uint32_t pios_com_loop_b_id = 0;
 
 /* 
  * Setup a com port based on the passed cfg, driver and buffer sizes. tx size of -1 make the port rx only
@@ -426,6 +428,25 @@ void PIOS_Board_Init(void) {
 	uint32_t pios_com_loopback_id;
 	PIOS_com_loopback_Init(&pios_com_loopback_id, a_buffer, PIOS_COM_TELEM_RF_RX_BUF_LEN, b_buffer, PIOS_COM_TELEM_RF_TX_BUF_LEN);
 
+	// make two com ports using the loopback device
+	uint8_t * rx_buffer_loopback_a = (uint8_t *) pvPortMalloc(PIOS_COM_TELEM_RF_RX_BUF_LEN);
+	PIOS_Assert(rx_buffer_loopback_a);
+	uint8_t * tx_buffer_loopbac_a = (uint8_t *) pvPortMalloc(PIOS_COM_TELEM_RF_TX_BUF_LEN);
+	PIOS_Assert(tx_buffer_loopbac_a);
+	if (PIOS_COM_Init(&pios_com_loop_a_id, &pios_com_loopback_com_driver_a, pios_com_loopback_id,
+			rx_buffer_loopback_a, PIOS_COM_TELEM_RF_RX_BUF_LEN,
+			tx_buffer_loopbac_a, PIOS_COM_TELEM_RF_TX_BUF_LEN)) {
+		PIOS_Assert(0);
+	}
+	uint8_t * rx_buffer_loopback_b = (uint8_t *) pvPortMalloc(PIOS_COM_TELEM_RF_RX_BUF_LEN);
+	PIOS_Assert(rx_buffer_loopback_b);
+	uint8_t * tx_buffer_loopbac_b = (uint8_t *) pvPortMalloc(PIOS_COM_TELEM_RF_TX_BUF_LEN);
+	PIOS_Assert(tx_buffer_loopbac_b);
+	if (PIOS_COM_Init(&pios_com_loop_b_id, &pios_com_loopback_com_driver_a, pios_com_loopback_id,
+			rx_buffer_loopback_b, PIOS_COM_TELEM_RF_RX_BUF_LEN,
+			tx_buffer_loopbac_b, PIOS_COM_TELEM_RF_TX_BUF_LEN)) {
+		PIOS_Assert(0);
+	}
 
 	// configure the telemetry serial port
 	uint32_t pios_telem_usart_id;

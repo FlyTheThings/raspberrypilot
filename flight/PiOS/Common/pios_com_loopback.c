@@ -53,7 +53,7 @@ static void PIOS_com_loopback_RxStart_b(uint32_t com_loopback_id, uint16_t rx_by
 static void PIOS_com_loopback_tx(uint16_t tx_bytes_avail,pios_com_callback tx_out_cb,uint32_t tx_out_context,uint8_t *buffer,uint16_t buffer_len,bool rx_started,pios_com_callback rx_in_cb,uint32_t rx_in_context);
 
 
-const struct pios_com_driver pios_com_loopback_com_a_driver = {
+const struct pios_com_driver pios_com_loopback_com_driver_a = {
 	.set_baud   = PIOS_com_loopback_ChangeBaud,
 	.tx_start   = PIOS_com_loopback_TxStart_a,
 	.rx_start   = PIOS_com_loopback_RxStart_a,
@@ -61,7 +61,7 @@ const struct pios_com_driver pios_com_loopback_com_a_driver = {
 	.bind_rx_cb = PIOS_com_loopback_RegisterTxCallback_a,
 };
 
-const struct pios_com_driver pios_com_loopback_com_b_driver = {
+const struct pios_com_driver pios_com_loopback_com_driver_b = {
 	.set_baud   = PIOS_com_loopback_ChangeBaud,
 	.tx_start   = PIOS_com_loopback_TxStart_b,
 	.rx_start   = PIOS_com_loopback_RxStart_b,
