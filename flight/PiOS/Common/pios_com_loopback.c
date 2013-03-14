@@ -57,16 +57,16 @@ const struct pios_com_driver pios_com_loopback_com_driver_a = {
 	.set_baud   = PIOS_com_loopback_ChangeBaud,
 	.tx_start   = PIOS_com_loopback_TxStart_a,
 	.rx_start   = PIOS_com_loopback_RxStart_a,
-	.bind_tx_cb = PIOS_com_loopback_RegisterRxCallback_a,
-	.bind_rx_cb = PIOS_com_loopback_RegisterTxCallback_a,
+	.bind_tx_cb = PIOS_com_loopback_RegisterTxCallback_a,
+	.bind_rx_cb = PIOS_com_loopback_RegisterRxCallback_a,
 };
 
 const struct pios_com_driver pios_com_loopback_com_driver_b = {
 	.set_baud   = PIOS_com_loopback_ChangeBaud,
 	.tx_start   = PIOS_com_loopback_TxStart_b,
 	.rx_start   = PIOS_com_loopback_RxStart_b,
-	.bind_tx_cb = PIOS_com_loopback_RegisterRxCallback_b,
-	.bind_rx_cb = PIOS_com_loopback_RegisterTxCallback_b,
+	.bind_tx_cb = PIOS_com_loopback_RegisterTxCallback_b,
+	.bind_rx_cb = PIOS_com_loopback_RegisterRxCallback_b,
 };
 
 enum pios_com_loopback_dev_magic {
@@ -193,6 +193,8 @@ static void PIOS_com_loopback_TxStart_a(uint32_t com_loopback_id, uint16_t tx_by
 
 static void PIOS_com_loopback_TxStart_b(uint32_t com_loopback_id, uint16_t tx_bytes_avail)
 {
+	PIOS_Assert(tx_bytes_avail);
+
 	struct pios_com_loopback_dev * com_loopback_dev = (struct pios_com_loopback_dev *)com_loopback_id;
 
 	bool valid = PIOS_com_loopback_validate(com_loopback_dev);
@@ -213,16 +215,18 @@ static void PIOS_com_loopback_tx(uint16_t tx_bytes_avail,pios_com_callback tx_ou
 		bytes_to_send = (tx_out_cb)(tx_out_context, buffer, buffer_len, &tx_headroom, &tx_need_yield);
 		if (rx_in_cb) {
 			if (rx_started) {
-				(void) (rx_in_cb)(rx_in_context, buffer, bytes_to_send, NULL, &rx_need_yield);
+				while (bytes_to_send) {
+					bytes_to_send -= (rx_in_cb)(rx_in_context, buffer, bytes_to_send, NULL, &rx_need_yield);
 #if defined(PIOS_INCLUDE_FREERTOS)
-				if (rx_need_yield) {
-					taskYIELD();
-				}
+					if (rx_need_yield) {
+						taskYIELD();
+					}
 #endif	/* PIOS_INCLUDE_FREERTOS */
+				}
 			}
 		}
 
-	} while (bytes_to_send + tx_headroom);
+	} while (tx_headroom);
 
 	// this yields only after transfer is done since its purpose is to allow the writer to refill the buffer
 #if defined(PIOS_INCLUDE_FREERTOS)
