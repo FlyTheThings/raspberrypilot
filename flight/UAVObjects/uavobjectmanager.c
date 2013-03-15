@@ -625,6 +625,66 @@ unlock_exit:
 }
 
 /**
+ * Unpack an object from a byte array
+ * Unlike UAVObjUnpack unpack, this method sets the update flags and follows flight access rules
+ * \param[in] obj The object handle
+ * \param[in] instId The instance ID
+ * \param[in] dataIn The byte array
+ * \return 0 if success or -1 if failure
+ */
+int32_t UAVObjUnpackLocal(UAVObjHandle obj_handle, uint16_t instId,
+		const uint8_t * dataIn)
+{
+	PIOS_Assert(obj_handle);
+
+	// Lock
+	xSemaphoreTakeRecursive(mutex, portMAX_DELAY);
+
+	int32_t rc = -1;
+
+	if (UAVObjIsMetaobject(obj_handle)) {
+		if (instId != 0) {
+			goto unlock_exit;
+		}
+		memcpy(MetaDataPtr((struct UAVOMeta *)obj_handle), dataIn, MetaNumBytes);
+	} else {
+		struct UAVOData *obj;
+		InstanceHandle instEntry;
+
+		// Cast handle to object
+		obj = (struct UAVOData *) obj_handle;
+
+				// Check access level
+		if (UAVObjReadOnly(obj_handle)) {
+			goto unlock_exit;
+		}
+		// Get the instance
+		instEntry = getInstance(obj, instId);
+
+		// If the instance does not exist create it and any other instances before it
+		if (instEntry == NULL) {
+			instEntry = createInstance(obj, instId);
+			if (instEntry == NULL) {
+				goto unlock_exit;
+			}
+		}
+		// Set the data
+		memcpy(InstanceData(instEntry), dataIn, obj->instance_size);
+	}
+
+	// Fire event
+	sendEvent((struct UAVOBase*)obj_handle, instId, EV_UPDATED);
+	rc = 0;
+
+unlock_exit:
+	xSemaphoreGiveRecursive(mutex);
+	return rc;
+}
+
+
+
+
+/**
  * Pack an object to a byte array
  * \param[in] obj The object handle
  * \param[in] instId The instance ID
