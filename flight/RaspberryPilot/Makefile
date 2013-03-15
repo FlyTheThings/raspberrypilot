@@ -57,7 +57,7 @@ FLASH_TOOL = OPENOCD
 #MODULES = Sensors Attitude/revolution ManualControl Stabilization Altitude/revolution Actuator GPS FirmwareIAP 
 #MODULES =  ManualControl  Stabilization Actuator GPS
 #MODULES += AltitudeHold
-MODULES += uavLink
+MODULES += serialBridge
 MODULES += Telemetry
 #MODULES += OveroSync
 
