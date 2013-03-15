@@ -76,6 +76,7 @@ static int32_t transmitData(uint8_t * data, int32_t length);
 static void processObjEvent(UAVObjEvent * ev);
 static void updateUavlinkStats();
 static void compUavlinkBridgeStatsUpdated();
+static int32_t forwardStream();
 
 /**
  * Initialise the uavlinkbridge module
@@ -143,9 +144,6 @@ int32_t UavlinkbridgeInitialize(void)
 MODULE_INITCALL(UavlinkbridgeInitialize, UavlinkbridgeStart)
 
 
-
-
-
 /**
  * Processes queue events
 */
@@ -183,26 +181,7 @@ static void processObjEvent(UAVObjEvent * ev)
 				if (success == -1) {
 					++txErrors;
 				}
-			} else if (ev->event == EV_UPDATE_REQ) {
-				// Request object update from computer (with retries)
-				while (retries < MAX_RETRIES && success == -1) {
-					success = UAVLinkSendObjectRequest(uavLinkCon, ev->obj, ev->instId, REQ_TIMEOUT_MS);	// call blocks until update is received or timeout
-					++retries;
-				}
-				// Update stats
-				txRetries += (retries - 1);
-				if (success == -1) {
-					++txErrors;
-				}
 			}
-			// If this is a metaobject then make necessary uavlinkbridge updates
-			//if (UAVObjIsMetaobject(ev->obj)) {
-			//	updateObject(UAVObjGetLinkedObj(ev->obj), EV_NONE);	// linked object will be the actual object the metadata are for
-			//}
-		}
-		if((updateMode == UPDATEMODE_THROTTLED) && !UAVObjIsMetaobject(ev->obj)) {
-			// If this is UPDATEMODE_THROTTLED, the event mask changes on every event.
-			//updateObject(ev->obj, ev->event);
 		}
 
 	}
@@ -281,6 +260,17 @@ static void uavlinkbridgeRxTask(void *parameters)
 	}
 }
 
+
+/**
+ * Forwards an encapsulated stream from uavlink to its destination
+ * \return -1 on failure
+ * \return number of bytes transmitted on success
+ */
+static int32_t forwardStream() {
+
+
+}
+
 /**
  * Transmit data buffer to the modem or USB port.
  * \param[in] data Data buffer to send
@@ -309,25 +299,6 @@ static int32_t transmitData(uint8_t * data, int32_t length)
 	}
 }
 
-
-
-/**
- * Set update period of object (it must be already setup for periodic updates)
- * \param[in] obj The object to update
- * \param[in] updatePeriodMs The update period in ms, if zero then periodic updates are disabled
- * \return 0 Success
- * \return -1 Failure
-static int32_t setUpdatePeriod(UAVObjHandle obj, int32_t updatePeriodMs)
-{
-	UAVObjEvent ev;
-
-	// Add object for periodic updates
-	ev.obj = obj;
-	ev.instId = UAVOBJ_ALL_INSTANCES;
-	ev.event = EV_UPDATED_PERIODIC;
-	return EventPeriodicQueueUpdate(&ev, queue, updatePeriodMs);
-}
-*/
 
 /**
  * Called each time the computer uavlinkbridge stats object is updated.
