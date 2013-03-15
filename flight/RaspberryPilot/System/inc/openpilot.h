@@ -42,6 +42,7 @@
 #include "alarms.h"
 #include "taskmonitor.h"
 #include "uavtalk.h"
+#include "uavlink.h"
 
 /* Global Functions */
 void OpenPilotInit(void);

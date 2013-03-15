@@ -546,7 +546,7 @@ static int32_t receiveObject(UAVLinkConnectionData *connection, uint8_t type, ui
 			if (obj && (instId != UAVOBJ_ALL_INSTANCES))
 			{
 				// Unpack object, if the instance does not exist it will be created!
-				UAVObjUnpack(obj, instId, data);
+				UAVObjUnpackLocal(obj, instId, data);
 				// Check if an ack is pending
 				updateAck(connection, obj, instId);
 			}
@@ -560,7 +560,7 @@ static int32_t receiveObject(UAVLinkConnectionData *connection, uint8_t type, ui
 			if (obj && (instId != UAVOBJ_ALL_INSTANCES))
 			{
 				// Unpack object, if the instance does not exist it will be created!
-				if ( UAVObjUnpack(obj, instId, data) == 0 )
+				if ( UAVObjUnpackLocal(obj, instId, data) == 0 )
 				{
 					// Transmit ACK
 					sendObject(connection, obj, instId, UAVLINK_TYPE_ACK);

@@ -105,7 +105,9 @@ HEADERS += $$UAVOBJECT_SYNTHETICS/accessorydesired.h \
     $$UAVOBJECT_SYNTHETICS/pathdesired.h \
     $$UAVOBJECT_SYNTHETICS/pathstatus.h \
     $$UAVOBJECT_SYNTHETICS/revosettings.h \
-    $$UAVOBJECT_SYNTHETICS/vtolpathfollowersettings.h
+    $$UAVOBJECT_SYNTHETICS/vtolpathfollowersettings.h \
+    $$UAVOBJECT_SYNTHETICS/compuavlinkstats.h \
+    $$UAVOBJECT_SYNTHETICS/flightuavlinkstats.h
 
 
 SOURCES += $$UAVOBJECT_SYNTHETICS/accessorydesired.cpp \
@@ -191,4 +193,6 @@ SOURCES += $$UAVOBJECT_SYNTHETICS/accessorydesired.cpp \
     $$UAVOBJECT_SYNTHETICS/pathdesired.cpp \
     $$UAVOBJECT_SYNTHETICS/pathstatus.cpp \
     $$UAVOBJECT_SYNTHETICS/revosettings.cpp \
-    $$UAVOBJECT_SYNTHETICS/vtolpathfollowersettings.cpp
+    $$UAVOBJECT_SYNTHETICS/vtolpathfollowersettings.cpp \
+    $$UAVOBJECT_SYNTHETICS/compuavlinkstats.cpp \
+    $$UAVOBJECT_SYNTHETICS/flightuavlinkstats.cpp
