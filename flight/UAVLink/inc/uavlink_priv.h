@@ -62,6 +62,7 @@ typedef struct {
     uint32_t objId;
     uint16_t instId;
     uint32_t length;
+    uint8_t streamId;
     uint8_t instanceLength;
     uint8_t cs;
     int32_t rxCount;
@@ -95,6 +96,7 @@ typedef struct {
 #define UAVLINK_TYPE_OBJ_ACK   (UAVLINK_TYPE_VER | 0x02)
 #define UAVLINK_TYPE_ACK       (UAVLINK_TYPE_VER | 0x03)
 #define UAVLINK_TYPE_NACK      (UAVLINK_TYPE_VER | 0x04)
+#define UAVLINK_TYPE_STREAM    (UAVLINK_TYPE_VER | 0x05)
 
 //macros
 #define CHECKCONHANDLE(handle,variable,failcommand) \

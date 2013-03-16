@@ -29,6 +29,13 @@
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
+/*
+ * Added to uavtalk is a stream packet type
+ * Sync(1) StreamType(1) Length(2) Streamid(1) data(n) checksum(2)
+ *
+ *
+ *
+ */
 #include "openpilot.h"
 #include "uavlink_priv.h"
 
@@ -324,9 +331,21 @@ UAVLinkRxState UAVLinkProcessInputStreamQuiet(UAVLinkConnection connectionHandle
 			
 			iproc->rxCount = 0;
 			iproc->objId = 0;
-			iproc->state = UAVLINK_STATE_OBJID;
+			if (iproc->type == UAVLINK_TYPE_STREAM)
+			{
+				iproc->state = UAVLINK_STATE_STREAMID;
+			} else {
+				iproc->state = UAVLINK_STATE_OBJID;
+			}
 			break;
 			
+		case UAVLINK_STATE_STREAMID:
+			// update the CRC
+			iproc->cs = PIOS_CRC_updateByte(iproc->cs, rxbyte);
+			iproc->streamId = rxbyte;
+			iproc->length = iproc->packet_size - iproc->rxPacketLength;
+			iproc->state = UAVLINK_STATE_DATA;
+			break;
 		case UAVLINK_STATE_OBJID:
 			
 			// update the CRC
@@ -450,10 +469,18 @@ UAVLinkRxState UAVLinkProcessInputStreamQuiet(UAVLinkConnection connectionHandle
 				break;
 			}
 
-			connection->stats.rxObjectBytes += iproc->length;
-			connection->stats.rxObjects++;
+			if (iproc->type == UAVLINK_TYPE_STREAM) 
+			{
+				connection->stats.rxStreamBytes += iproc->length;
+				connection->stats.rxStreamPackets++;
+				iproc->state = UAVLINK_STATE_STREAM_COMPLETE;
+			} else {
+				connection->stats.rxObjectBytes += iproc->length;
+				connection->stats.rxObjects++;
+				iproc->state = UAVLINK_STATE_COMPLETE;
+			}
+				
 
-			iproc->state = UAVLINK_STATE_COMPLETE;
 			break;
 			
 		default:
@@ -464,7 +491,39 @@ UAVLinkRxState UAVLinkProcessInputStreamQuiet(UAVLinkConnection connectionHandle
 	// Done
 	return iproc->state;
 }
-			
+
+/*
+ * Returns a StreamId of the completed stream packet
+ * Returns -1 on error
+ */
+int16_t UAVLinkGetStreamId(UAVLinkConnection connectionHandle)
+{
+	UAVLinkConnectionData *connection;
+    CHECKCONHANDLE(connectionHandle,connection,return -1);
+
+	UAVLinkInputProcessor *iproc = &connection->iproc;
+	if(iproc->state != UAVLINK_STATE_STREAM_COMPLETE) {
+		return -1;
+	}
+	else {
+		return iproc->streamId;
+	}
+}
+
+int16_t UAVLinkForwardStream(UAVLinkConnection connectionHandle,UAVLinkOutputStream outputStream)
+{
+	UAVLinkConnectionData *connection;
+    CHECKCONHANDLE(connectionHandle,connection,return -1);
+	UAVLinkInputProcessor *iproc = &connection->iproc;
+	if(iproc->state != UAVLINK_STATE_STREAM_COMPLETE) {
+		return -1;
+	}
+	else {
+		return (outputStream)(connection->rxBuffer, iproc->length);
+	}
+
+
+}
 /**
  * Process an byte from the telemetry stream.
  * \param[in] connection UAVLinkConnection to be used
@@ -760,6 +819,61 @@ static int32_t sendSingleObject(UAVLinkConnectionData *connection, UAVObjHandle 
 		connection->stats.txObjectBytes += length;
 	}
 	
+	// Done
+	return 0;
+}
+
+
+/**
+ * Send an object through the telemetry link.
+ * \param[in] connection UAVLinkConnection to be used
+ * \param[in] obj Object handle to send
+ * \param[in] instId The instance ID (can NOT be UAVOBJ_ALL_INSTANCES, use sendObject() instead)
+ * \param[in] type Transaction type
+ * \return 0 Success
+ * \return -1 Failure
+ */
+int32_t sendStreamPacket(UAVLinkConnection connectionHandle, uint8_t streamId, uint8_t length, uint8_t *buf)
+{
+	UAVLinkConnectionData *connection;
+	CHECKCONHANDLE(connectionHandle,connection,return -1);
+
+	uint8_t dataOffset;
+	dataOffset = 5;
+
+	if (!connection->outStream) return -1;
+
+	connection->txBuffer[0] = UAVLINK_SYNC_VAL;  // sync byte
+	connection->txBuffer[1] = UAVLINK_TYPE_STREAM;
+	// data length inserted here below
+	connection->txBuffer[4] = length;
+
+	// Check length
+	if (length >= UAVLINK_MAX_PAYLOAD_LENGTH | length == 0)
+	{
+		return -1;
+	}
+
+	// Copy data
+	memcpy(buf,&connection->txBuffer[dataOffset],length);
+
+	// Store the packet length
+	connection->txBuffer[2] = (uint8_t)((dataOffset+length) & 0xFF);
+	connection->txBuffer[3] = (uint8_t)(((dataOffset+length) >> 8) & 0xFF);
+
+	// Calculate checksum
+	connection->txBuffer[dataOffset+length] = PIOS_CRC_updateCRC(0, connection->txBuffer, dataOffset+length);
+
+	uint16_t tx_msg_len = dataOffset+length+UAVLINK_CHECKSUM_LENGTH;
+	int32_t rc = (*connection->outStream)(connection->txBuffer, tx_msg_len);
+
+	if (rc == tx_msg_len) {
+		// Update stats
+		++connection->stats.txStreamPackets;
+		connection->stats.txBytes += tx_msg_len;
+		connection->stats.txStreamBytes += length;
+	}
+
 	// Done
 	return 0;
 }

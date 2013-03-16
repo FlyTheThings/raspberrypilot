@@ -46,22 +46,19 @@
 #define MAX_RETRIES 2
 #define STATS_UPDATE_PERIOD_MS 4000
 #define CONNECTION_TIMEOUT_MS 8000
-
+#define BRIDGE_TELEM_TX_BUF_LEN 200
 // Private types
 
 // Private variables
 static uint32_t uavlinkbridgePort;
-static xQueueHandle queue;
+static uint8_t * bridge_telem_tx_buffer;
 
-#if defined(PIOS_TELEM_PRIORITY_QUEUE)
 static xQueueHandle priorityQueue;
 static xTaskHandle uavlinkbridgeTxPriTaskHandle;
 static void uavlinkbridgeTxPriTask(void *parameters);
-#else
-#define priorityQueue queue
-#endif
 
-static xTaskHandle uavlinkbridgeTxTaskHandle;
+
+static xTaskHandle uavlinkbridgeTelemTxTaskHandle;
 static xTaskHandle uavlinkbridgeRxTaskHandle;
 static uint32_t txErrors;
 static uint32_t txRetries;
@@ -69,7 +66,7 @@ static uint32_t timeOfLastObjectUpdate;
 static UAVLinkConnection uavLinkCon;
 
 // Private functions
-static void uavlinkbridgeTxTask(void *parameters);
+static void uavlinkbridgeTelemTxTask(void *parameters);
 static void uavlinkbridgeRxTask(void *parameters);
 static int32_t transmitData(uint8_t * data, int32_t length);
 //static int32_t setUpdatePeriod(UAVObjHandle obj, int32_t updatePeriodMs);
@@ -77,6 +74,7 @@ static void processObjEvent(UAVObjEvent * ev);
 static void updateUavlinkStats();
 static void compUavlinkBridgeStatsUpdated();
 static int32_t forwardStream();
+static int32_t forwardDataTelem(uint8_t * data, int32_t length);
 
 /**
  * Initialise the uavlinkbridge module
@@ -93,15 +91,14 @@ int32_t UavlinkbridgeStart(void)
 	FlightUavlinkStatsConnectQueue(priorityQueue);
     
 	// Start uavlinkbridge tasks
-	xTaskCreate(uavlinkbridgeTxTask, (signed char *)"TelTx", STACK_SIZE_BYTES/4, NULL, TASK_PRIORITY_TX, &uavlinkbridgeTxTaskHandle);
-	xTaskCreate(uavlinkbridgeRxTask, (signed char *)"TelRx", STACK_SIZE_BYTES/4, NULL, TASK_PRIORITY_RX, &uavlinkbridgeRxTaskHandle);
+	xTaskCreate(uavlinkbridgeTelemTxTask, (signed char *)"LinkTelTx", STACK_SIZE_BYTES/4, NULL, TASK_PRIORITY_TX, &uavlinkbridgeTelemTxTaskHandle);
+	xTaskCreate(uavlinkbridgeRxTask, (signed char *)"LinkRx", STACK_SIZE_BYTES/4, NULL, TASK_PRIORITY_RX, &uavlinkbridgeRxTaskHandle);
 	//TaskMonitorAdd(TASKINFO_RUNNING_TELEMETRYTX, uavlinkbridgeTxTaskHandle);
 	//TaskMonitorAdd(TASKINFO_RUNNING_TELEMETRYRX, uavlinkbridgeRxTaskHandle);
 
-#if defined(PIOS_TELEM_PRIORITY_QUEUE)
-	xTaskCreate(uavlinkbridgeTxPriTask, (signed char *)"TelPriTx", STACK_SIZE_BYTES/4, NULL, TASK_PRIORITY_TXPRI, &uavlinkbridgeTxPriTaskHandle);
+	xTaskCreate(uavlinkbridgeTxPriTask, (signed char *)"LinkPriTx", STACK_SIZE_BYTES/4, NULL, TASK_PRIORITY_TXPRI, &uavlinkbridgeTxPriTaskHandle);
 	//TaskMonitorAdd(TASKINFO_RUNNING_TELEMETRYTXPRI, uavlinkbridgeTxPriTaskHandle);
-#endif
+
 
 	return 0;
 }
@@ -116,14 +113,16 @@ int32_t UavlinkbridgeInitialize(void)
 	FlightUavlinkStatsInitialize();
 	CompUavlinkStatsInitialize();
 
+	// initialize serial streams
+	bridge_telem_tx_buffer =  pvPortMalloc(BRIDGE_TELEM_TX_BUF_LEN);
+	PIOS_Assert(bridge_telem_tx_buffer);
+
 	// Initialize vars
 	timeOfLastObjectUpdate = 0;
 
-	// Create object queues
-	queue = xQueueCreate(MAX_QUEUE_SIZE, sizeof(UAVObjEvent));
-#if defined(PIOS_TELEM_PRIORITY_QUEUE)
+	// Create object queue
 	priorityQueue = xQueueCreate(MAX_QUEUE_SIZE, sizeof(UAVObjEvent));
-#endif
+
 
 	// Update uavlinkbridge settings
 	uavlinkbridgePort = PIOS_COM_UAVLINK;
@@ -189,26 +188,23 @@ static void processObjEvent(UAVObjEvent * ev)
 
 
 /**
- * Uavlinkbridge transmit task, regular priority
+ * uavlinkbridgeTelemTxTask forwards telemetry transmissions out over uavlink
  */
-static void uavlinkbridgeTxTask(void *parameters)
+static void uavlinkbridgeTelemTxTask(void *parameters)
 {
-	UAVObjEvent ev;
-
-	// Loop forever
+	//this task handles serial forwarding only
 	while (1) {
-		// Wait for queue message
-		if (xQueueReceive(queue, &ev, portMAX_DELAY) == pdTRUE) {
-			// Process event
-			processObjEvent(&ev);
+		uint32_t rx_bytes;
+		rx_bytes = PIOS_COM_ReceiveBuffer(PIOS_COM_TELEM_LOOP, bridge_telem_tx_buffer, BRIDGE_TELEM_TX_BUF_LEN, 500);
+		if (rx_bytes > 0) {
+			sendStreamPacket(uavLinkCon, TELEM_STREAM_ID, rx_bytes, bridge_telem_tx_buffer);
 		}
 	}
 }
 
 /**
- * Uavlinkbridge transmit task, high priority
+ * Uavlinkbridge transmit task high priority
  */
-#if defined(PIOS_TELEM_PRIORITY_QUEUE)
 static void uavlinkbridgeTxPriTask(void *parameters)
 {
 	UAVObjEvent ev;
@@ -222,14 +218,14 @@ static void uavlinkbridgeTxPriTask(void *parameters)
 		}
 	}
 }
-#endif
 
 /**
- * Uavlinkbridge transmit task. Processes queue events and periodic updates.
+ * Uavlinkbridge Rx task. Processes queue events and periodic updates.
  */
 static void uavlinkbridgeRxTask(void *parameters)
 {
 	uint32_t inputPort;
+	UAVLinkRxState state;
 
 	// Task loop
 	while (1) {
@@ -251,7 +247,10 @@ static void uavlinkbridgeRxTask(void *parameters)
 			bytes_to_process = PIOS_COM_ReceiveBuffer(inputPort, serial_data, sizeof(serial_data), 500);
 			if (bytes_to_process > 0) {
 				for (uint8_t i = 0; i < bytes_to_process; i++) {
-					UAVLinkProcessInputStream(uavLinkCon,serial_data[i]);
+					state = UAVLinkProcessInputStream(uavLinkCon,serial_data[i]);
+					if (state == UAVLINK_STATE_STREAM_COMPLETE) {
+						forwardStream();
+					}
 				}
 			}
 		} else {
@@ -267,8 +266,25 @@ static void uavlinkbridgeRxTask(void *parameters)
  * \return number of bytes transmitted on success
  */
 static int32_t forwardStream() {
+	int16_t streamId;
+	streamId = UAVLinkGetStreamId(uavLinkCon);
+	switch (streamId) {
+		case(TELEM_STREAM_ID):
+			return UAVLinkForwardStream(uavLinkCon,&forwardDataTelem);
+	}
 
+}
 
+/**
+ * Transmits data to the telemetry port loopback
+ * \param[in] data Data buffer to send
+ * \param[in] length Length of buffer
+ * \return -1 on failure
+ * \return number of bytes transmitted on success
+ */
+static int32_t forwardDataTelem(uint8_t * data, int32_t length)
+{
+	return PIOS_COM_SendBuffer(PIOS_COM_TELEM_LOOP, data, length);
 }
 
 /**

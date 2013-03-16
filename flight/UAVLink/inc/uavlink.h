@@ -38,6 +38,10 @@ typedef struct {
     uint32_t txObjectBytes;
     uint32_t rxObjectBytes;
     uint32_t rxObjects;
+    uint32_t rxStreamBytes;
+    uint32_t rxStreamPackets;
+    uint32_t txStreamBytes;
+    uint32_t txStreamPackets;
     uint32_t txObjects;
     uint32_t txErrors;
     uint32_t rxErrors;
@@ -45,7 +49,7 @@ typedef struct {
 
 typedef void* UAVLinkConnection;
 
-typedef enum {UAVLINK_STATE_ERROR=0, UAVLINK_STATE_SYNC, UAVLINK_STATE_TYPE, UAVLINK_STATE_SIZE, UAVLINK_STATE_OBJID, UAVLINK_STATE_INSTID, UAVLINK_STATE_DATA, UAVLINK_STATE_CS, UAVLINK_STATE_COMPLETE} UAVLinkRxState;
+typedef enum {UAVLINK_STATE_ERROR=0, UAVLINK_STATE_SYNC, UAVLINK_STATE_TYPE, UAVLINK_STATE_SIZE, UAVLINK_STATE_OBJID, UAVLINK_STATE_STREAMID, UAVLINK_STATE_INSTID, UAVLINK_STATE_DATA, UAVLINK_STATE_CS, UAVLINK_STATE_STREAM_COMPLETE, UAVLINK_STATE_COMPLETE} UAVLinkRxState;
 
 // Public functions
 UAVLinkConnection UAVLinkInitialize(UAVLinkOutputStream outputStream);
@@ -59,6 +63,9 @@ UAVLinkRxState UAVLinkProcessInputStream(UAVLinkConnection connection, uint8_t r
 UAVLinkRxState UAVLinkProcessInputStreamQuiet(UAVLinkConnection connection, uint8_t rxbyte);
 void UAVLinkGetStats(UAVLinkConnection connection, UAVLinkStats *stats);
 void UAVLinkResetStats(UAVLinkConnection connection);
+int32_t sendStreamPacket(UAVLinkConnection connectionHandle, uint8_t streamId, uint8_t length, uint8_t *buf);
+int16_t UAVLinkGetStreamId(UAVLinkConnection connectionHandle);
+int16_t UAVLinkForwardStream(UAVLinkConnection connectionHandle,UAVLinkOutputStream outputStream);
 
 #endif // UAVLINK_H
 /**

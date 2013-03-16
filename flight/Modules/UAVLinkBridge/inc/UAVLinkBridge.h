@@ -4,8 +4,8 @@
  * @{ 
  * @addtogroup UavlinkbridgeModule Uavlinkbridge Module
  * @brief Main uavlinkbridge module
- * Starts three tasks (RX, TX, and priority TX) that watch event queues
- * and handle all the uavlinkbridge of the UAVobjects
+ * Similar to telem module, does not transmit based on meta, can forward serial streams
+ *
  * @{ 
  *
  * @file       uavlinkbridge.h
@@ -33,12 +33,14 @@
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
-#ifndef TELEMETRY_H
-#define TELEMETRY_H
+#ifndef UAVLINKBRIDGE_H
+#define UAVLINKBRIDGE_H
+
+#define TELEM_STREAM_ID 1
 
 int32_t UavlinkbridgeInitialize(void);
 
-#endif // TELEMETRY_H
+#endif // UAVLINKBRIDGE_H
 
 /**
   * @}
