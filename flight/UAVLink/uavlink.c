@@ -846,7 +846,7 @@ int32_t sendStreamPacket(UAVLinkConnection connectionHandle, uint8_t streamId, u
 	connection->txBuffer[0] = UAVLINK_SYNC_VAL;  // sync byte
 	connection->txBuffer[1] = UAVLINK_TYPE_STREAM;
 	// data length inserted here below
-	connection->txBuffer[4] = length;
+	connection->txBuffer[4] = streamId;
 
 	// Check length
 	if (length >= UAVLINK_MAX_PAYLOAD_LENGTH | length == 0)
@@ -855,7 +855,7 @@ int32_t sendStreamPacket(UAVLinkConnection connectionHandle, uint8_t streamId, u
 	}
 
 	// Copy data
-	memcpy(buf,&connection->txBuffer[dataOffset],length);
+	memcpy(&connection->txBuffer[dataOffset],buf,length);
 
 	// Store the packet length
 	connection->txBuffer[2] = (uint8_t)((dataOffset+length) & 0xFF);
