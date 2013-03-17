@@ -1,0 +1,1 @@
+This directory is for flight python intended to be run on the raspberry pi.  The directory structure in here is evolving.
