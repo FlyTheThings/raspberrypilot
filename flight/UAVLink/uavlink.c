@@ -269,7 +269,7 @@ UAVLinkRxState UAVLinkProcessInputStreamQuiet(UAVLinkConnection connectionHandle
 	UAVLinkInputProcessor *iproc = &connection->iproc;
 	++connection->stats.rxBytes;
 
-	if (iproc->state == UAVLINK_STATE_ERROR || iproc->state == UAVLINK_STATE_COMPLETE)
+	if (iproc->state == UAVLINK_STATE_ERROR || iproc->state == UAVLINK_STATE_COMPLETE || iproc->state == UAVLINK_STATE_STREAM_COMPLETE)
 		iproc->state = UAVLINK_STATE_SYNC;
 	
 	if (iproc->rxPacketLength < 0xffff)
@@ -462,12 +462,7 @@ UAVLinkRxState UAVLinkProcessInputStreamQuiet(UAVLinkConnection connectionHandle
 				break;
 			}
 			
-			if (iproc->rxPacketLength != (iproc->packet_size + 1))
-			{   // packet error - mismatched packet size
-				connection->stats.rxErrors++;
-				iproc->state = UAVLINK_STATE_ERROR;
-				break;
-			}
+
 
 			if (iproc->type == UAVLINK_TYPE_STREAM) 
 			{
@@ -475,6 +470,13 @@ UAVLinkRxState UAVLinkProcessInputStreamQuiet(UAVLinkConnection connectionHandle
 				connection->stats.rxStreamPackets++;
 				iproc->state = UAVLINK_STATE_STREAM_COMPLETE;
 			} else {
+				if (iproc->rxPacketLength != (iproc->packet_size + 1))
+				{   // packet error - mismatched packet size
+					connection->stats.rxErrors++;
+					iproc->state = UAVLINK_STATE_ERROR;
+					break;
+				}
+
 				connection->stats.rxObjectBytes += iproc->length;
 				connection->stats.rxObjects++;
 				iproc->state = UAVLINK_STATE_COMPLETE;

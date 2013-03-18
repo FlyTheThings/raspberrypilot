@@ -3,6 +3,8 @@ import logging
 import serial
 import threading
 import Queue
+import SocketServer
+
 
 class Crc(object):
     
@@ -43,11 +45,15 @@ class Crc(object):
         return self.crc
     
     def add(self, value):
+        if isinstance(value, str):
+            value = ord(value)
         self.crc = Crc.crcTable[self.crc ^ (value & 0xff)]
+            
         
     def addList(self, values):
         for v in values:
             self.add(v)
+
             
 class uavLinkProtocol():
     """this class's responsibility is to parse a stream of bytes into objects and serial packets events, which are implemented as callbacks.
@@ -148,7 +154,7 @@ class uavLinkProtocol():
             self.rxObjId |= (byte<<24)
             self.rxCount += 1
             if self.rxCount == 4:    
-                self.rxData = []
+                self.rxData = ""
                 self.rxCount = 0
                 self.rxDataSize = self.rxSize - self.rxCnt
                 if self.rxDataSize:
@@ -160,9 +166,10 @@ class uavLinkProtocol():
             self.rxStreamId = byte
             self.rxState = self.STATE_DATA
             self.rxDataSize = self.rxSize - self.rxCnt
+            self.rxData = ""
         # DATA STATE
         elif self.rxState == self.STATE_DATA:
-            self.rxData.append(byte)
+            self.rxData += chr(byte)
             self.rxCount += 1
             if self.rxCount == self.rxDataSize:
                 self.rxState = self.STATE_CS
@@ -185,8 +192,8 @@ class uavLinkProtocol():
         if data == None:
             return
         length = len(data) + self.STREAM_HEADER_LENGTH 
-        toSend = chr(SYNC)
-        toSend += chr(TYPE_STREAM | VERSION)
+        toSend = chr(self.SYNC)
+        toSend += chr(self.TYPE_STREAM | self.VERSION)
         toSend += chr(length & 0xFF)
         toSend += chr( (length >>8) & 0xFF )
         toSend += chr(serialId)
@@ -194,6 +201,7 @@ class uavLinkProtocol():
         crc = Crc()
         crc.addList(toSend)
         toSend += chr(crc.read())
+        print toSend
         return self._tx(toSend)
     def _sendObject(self,ObjId,objType,data,instanceId = None):
         if instanceId:
@@ -294,8 +302,73 @@ class uavLinkConnection():
         
         
         
-        
-        
+#the streamServer handles multiple connections from GCS (or any serial sream)
+class streamServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
+    daemon_threads = True
+    allow_reuse_address = True
+    def start(self):
+        self.handlers_list_lock = threading.RLock()
+        self.rx_buffer_lock = threading.RLock()
+        self.readEvent = threading.Event()
+        self.handlers = []
+        self.rx_buf = ""
+        self.read_timeout = 0.2 # the read will block for at most this amount of time
+        self.read_len = 30      # the read will return if more than this many bytes are available
+        #start it as a new thread
+        t = threading.Thread(target=self.serve_forever)
+        t.start()
+    def register_handler(self,handler):
+        self.handlers_list_lock.acquire()
+        self.handlers.append(handler)
+        self.handlers_list_lock.release()
+    def deregister_handler(self,handler):
+        self.handlers_list_lock.acquire()
+        self.handlers.remove(handler)
+        self.handlers_list_lock.release()
+        print "Deregistered"
+    def write(self,data):
+        self.handlers_list_lock.acquire()
+        for handler in self.handlers:
+            handler.write(data)
+        self.handlers_list_lock.release()
+    def rx_data(self,data,source):
+        "This function takes in data from the handlers and combines it"
+        self.rx_buffer_lock.acquire()
+        if source == self.handlers[0]:
+            self.rx_buf += data
+        if len(self.rx_buf) > self.read_len:
+            self.readEvent.set()
+        self.rx_buffer_lock.release()
+    def read(self):
+        self.readEvent.wait(self.read_timeout)
+        self.rx_buffer_lock.acquire()
+        buf = self.rx_buf
+        self.rx_buf = ""
+        self.readEvent.clear()
+        self.rx_buffer_lock.release()
+        return buf
+
+class streamServerHandler(SocketServer.StreamRequestHandler):
+    timeout = 30
+    def setup(self):
+        SocketServer.StreamRequestHandler.setup(self)
+        self.rxQueue = Queue.Queue()
+        self.server.register_handler(self)
+    def write(self,data):
+        print data
+        self.wfile.write(data)
+    def handle(self):
+        # the txThread will handle writing to this socket 
+        # this thread's (the handler) purpose is to read from it
+        # this is a thread because streamServer has the threadingMixIn
+        while(True):
+            data = self.rfile.read(1)
+            self.server.rx_data(data,self)
+    def finish(self):
+        self.server.deregister_handler(self)
+        SocketServer.StreamRequestHandler.finish(self)
+    def handle_timeout(self):
+        self.server.deregister_handler(self)    
         
         
         
@@ -318,9 +391,20 @@ if __name__ == "__main__":
     
     ser = serial.Serial("COM11",baudrate=57600)
     
+    
+    
+    uavtalk_server = streamServer(("", 8080), streamServerHandler)
+    uavtalk_server.start()
+    
     conn = uavLinkConnection(None,ser.read,ser.write)
-    conn.register_rxStream_callback(1,lambda data: print_uavLinkSerialPacket(1,data) )
+    conn.register_rxStream_callback(1,lambda data: uavtalk_server.write(data) )
     conn.start()
+    
+    while (True):
+        data = uavtalk_server.read()
+        if len(data):
+            conn.sendSerial(1,data)
+    
 
 
             
