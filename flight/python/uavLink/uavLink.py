@@ -201,7 +201,6 @@ class uavLinkProtocol():
         crc = Crc()
         crc.addList(toSend)
         toSend += chr(crc.read())
-        print toSend
         return self._tx(toSend)
     def _sendObject(self,ObjId,objType,data,instanceId = None):
         if instanceId:
@@ -285,6 +284,17 @@ class uavLinkConnection():
         self.txQueue.put(data)
     def rxObject(self,rxObjId,rxType,rxData ):
         print "not doing anything with recived objects yet"
+        if rxType == self.protocol.TYPE_OBJ:
+            #receive the object into the object manager
+        elif rxType == self.protocol.TYPE_OBJ_ACK:
+            #receive the object into the object manager and ack?
+        elif rxType == self.protocol.TYPE_OBJ_REQ:
+            #get the object from the object manager, 
+            #send an obj if it exists nack otherwise
+        elif rxType == self.protocol.TYPE_ACK:
+            #set the transaction response to ACK
+        elif rxType == self.protocol.TYPE_NACK:
+            #set the transaction response to NACK
     def rxStream(self,rxStreamId,rxData):
         if rxStreamId in self.rxSerialStreams:
             self.rxSerialStreams[rxStreamId](rxData)
@@ -304,19 +314,42 @@ class uavLinkConnection():
         
 #the streamServer handles multiple connections from GCS (or any serial sream)
 class streamServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
+    """"There are two ways to get data out of this stream server, if a rx_handler is registered 
+    then the class builds upt to read_len bytes or waits read_timeout then calls the handler 
+    with the buffer.  The other builds up the buffer, the buffer can be read by the read function.  
+    The read function will return read_len bytes or timeout after read_timeout."""
     daemon_threads = True
     allow_reuse_address = True
-    def start(self):
+    def __init__(self,host,port):
+        SocketServer.TCPServer.__init__(self,host,port)
+        
+        #   def start(self):
         self.handlers_list_lock = threading.RLock()
         self.rx_buffer_lock = threading.RLock()
         self.readEvent = threading.Event()
         self.handlers = []
         self.rx_buf = ""
-        self.read_timeout = 0.2 # the read will block for at most this amount of time
+        self.read_timeout = 0.25 # the read will block for at most this amount of time
         self.read_len = 30      # the read will return if more than this many bytes are available
+        self.rx_handler = None
         #start it as a new thread
         t = threading.Thread(target=self.serve_forever)
         t.start()
+    def call_rx_handler(self):
+        if self.rx_handler == None:
+            return
+        self.rx_timer.cancel()
+        self.rx_buffer_lock.acquire()
+        if len(self.rx_buf):
+            self.rx_handler(self.rx_buf)
+        self.rx_buf = ""
+        self.rx_buffer_lock.release()
+        self.rx_timer = threading.Timer(self.read_timeout,self.call_rx_handler)
+        self.rx_timer.start()
+    def register_rx_handler(self,rx_handler):
+        self.rx_handler = rx_handler
+        self.rx_timer = threading.Timer(self.read_timeout,self.call_rx_handler)
+        self.rx_timer.start()
     def register_handler(self,handler):
         self.handlers_list_lock.acquire()
         self.handlers.append(handler)
@@ -337,7 +370,10 @@ class streamServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
         if source == self.handlers[0]:
             self.rx_buf += data
         if len(self.rx_buf) > self.read_len:
-            self.readEvent.set()
+            if self.rx_handler:
+                self.call_rx_handler()
+            else:
+                self.readEvent.set()
         self.rx_buffer_lock.release()
     def read(self):
         self.readEvent.wait(self.read_timeout)
@@ -393,17 +429,16 @@ if __name__ == "__main__":
     
     
     
-    uavtalk_server = streamServer(("", 8080), streamServerHandler)
-    uavtalk_server.start()
+    uavtalk_server = streamServer(("", 8079), streamServerHandler)
+    uavtalk_server.register_rx_handler(lambda data: conn.sendSerial(1,data))
     
     conn = uavLinkConnection(None,ser.read,ser.write)
     conn.register_rxStream_callback(1,lambda data: uavtalk_server.write(data) )
     conn.start()
     
     while (True):
-        data = uavtalk_server.read()
-        if len(data):
-            conn.sendSerial(1,data)
+        pass
+
     
 
 
