@@ -32,29 +32,23 @@ class Crc(object):
             0xa9, 0xa0, 0xa7, 0xb2, 0xb5, 0xbc, 0xbb, 0x96, 0x91, 0x98, 0x9f,
             0x8a, 0x8d, 0x84, 0x83, 0xde, 0xd9, 0xd0, 0xd7, 0xc2, 0xc5, 0xcc,
             0xcb, 0xe6, 0xe1, 0xe8, 0xef, 0xfa, 0xfd, 0xf4, 0xf3 )
-    
     def __init__(self):
         self.reset()
-        
     def reset(self, firstValue=None):
         self.crc = 0
         if firstValue != None:
             self.add(firstValue)
-        
     def read(self):
         return self.crc
-    
     def add(self, value):
         if isinstance(value, str):
             value = ord(value)
         self.crc = Crc.crcTable[self.crc ^ (value & 0xff)]
-            
-        
     def addList(self, values):
         for v in values:
             self.add(v)
 
-            
+
 class uavLinkProtocol():
     """this class's responsibility is to parse a stream of bytes into objects and serial packets events, which are implemented as callbacks.
     It also can take raw data bytes and encapsulate them into uavlink packets.  It knows nothing about what the data means.    
@@ -236,9 +230,97 @@ class uavLinkProtocol():
     def sendNack(self,ObjId,instanceId=None):
         return self._packObject(ObjId,self.TYPE_NACK,"",instanceId)
 
-#this is a placeholder for now
+        
+class uavObject():
+    def getInstanceId(self):
+        raise
+        "return the instance id if multinstance or none"
+    def getPackedData(self):
+        raise
+        "return the objects packed data as a string"
+        
+# the object manager
+# this is a routing object manager for now, ie it holds no copies of the data
+# it assumes the data is always on the other side of its connection conn
 class objManager():
-    pass
+    def __init__(self,conn):
+        #conn is an unstream connection
+        self.conn = conn
+    def receive(self,rxObjId,rxData):
+        #receive an object into the manager 
+        pass
+    def unpack(self,rxObjId,rxData):
+        """Returns on object from ID and packed data. Returns None if object is unkown"""
+        pass
+    def getSingleObjByID (self,id):
+        #returns a single object
+        pass
+
+# transaction class used by uavLinkConnection
+class uavLinkConnectionTransaction():
+    def __init__(self,protocol):
+        self.lock = threading.RLock()
+        self.protocol = protocol
+        self.objId = None
+        self.transType = None
+        self.rxObjId = None
+        self.rxType = None
+        self.rxData = None
+        self.rxAck = False
+        self.pending = False
+        self.reply = False
+        self.transTimeout = .5
+    def start(self,objId,transType):
+        " Starts a new transaction "
+        self.lock.acquire()
+        self.transType = transType
+        self.objId = objId
+        #set the pending flag and clear responses
+        self.pending = True
+        self.reply = False
+        self.rxAck = False
+        self.rxData = ""
+    def process(self,rxObjId,rxType,rxData):
+        if not self.pending:
+            return
+        if rxObjId != self.objId:
+            return
+        if (self.transType == self.protocol.TYPE_OBJ_REQ) & (self.rxType == self.protocol.TYPE_OBJ):
+            self.rxObjId = rxObjId
+            self.rxType = rxType
+            self.rxData = rxData
+            self.reply = True
+            self.transDoneEvent.set()
+        elif (self.transType == self.protocol.TYPE_OBJ_REQ) & (self.rxType == self.protocol.TYPE_NACK):
+            self.rxObjId = rxObjId
+            self.rxType = rxType
+            self.rxData = None
+            self.rxAck = False
+            self.reply = True
+            self.transDoneEvent.set()
+        elif (self.transType == self.protocol.TYPE_OBJ_ACK) & (self.rxType == self.protocol.TYPE_ACK):
+            self.rxObjId = rxObjId
+            self.rxType = rxType
+            self.rxData = None
+            self.rxAck = True
+            self.reply = True
+            self.transDoneEvent.set()
+        #The response to an OBJ_ACK is always an ack to no need to check for a NACK
+    def getResponse(self):
+        #Waits for the current transaction to complete
+        result = self.transDoneEvent.wait(self.transTimeout)
+        self.pending = False
+        return self.reply
+    def getData(self):
+        if self.reply:
+            return self.rxData
+    def getAck(self):
+        if self.reply:
+            return self.rxAck
+    def end(self):
+        # ends the transaction and allows the next to begin
+        self.lock.release()
+    
         
         
 class uavLinkConnection_rx(threading.Thread):
@@ -275,41 +357,100 @@ class uavLinkConnection():
         self.protocol.register_uavLinkRxStreamPacket_callback(self.rxStream)
         self.tx_thread = uavLinkConnection_tx(self)
         self.rx_thread = uavLinkConnection_rx(self)
+        self.trans = uavLinkConnectionTransaction(self.protocol)
         self.txQueue = Queue.Queue()
         self.write = write
         self.read = read
         self.rxSerialStreams = {}
         self.connected = False
+    def register_rxStream_callback(self,streamId,callback):
+        self.rxSerialStreams[streamId] = callback
+    def start(self):
+        self.connected = True
+        self.tx_thread.start()
+        self.rx_thread.start()
     def tx(self,data):
         self.txQueue.put(data)
     def rxObject(self,rxObjId,rxType,rxData ):
         print "not doing anything with recived objects yet"
-        if rxType == self.protocol.TYPE_OBJ:
-            #receive the object into the object manager
-        elif rxType == self.protocol.TYPE_OBJ_ACK:
-            #receive the object into the object manager and ack?
-        elif rxType == self.protocol.TYPE_OBJ_REQ:
-            #get the object from the object manager, 
-            #send an obj if it exists nack otherwise
-        elif rxType == self.protocol.TYPE_ACK:
-            #set the transaction response to ACK
-        elif rxType == self.protocol.TYPE_NACK:
-            #set the transaction response to NACK
+        print "id: %d type: %d datalen: %d" % (rxObjId,rxType,len(rxData))
+        #process the incoming object for effect on transactions 
+        self.trans.process(rxObjId,rxType,rxData)
+        #if there is an object manager send objects to it
+        if self.objMgr:
+            if rxType == self.protocol.TYPE_OBJ:
+                #receive the object into the object manager
+                objMgr.receive(rxObjId,rxData)
+            elif rxType == self.protocol.TYPE_OBJ_ACK:
+                #receive the object into the object manager and ack?
+                obj = objMgr.receive(rxObjId,rxData)
+                self.protocol.sendAck(rxObjId,obj.getInstanceId())
+            elif rxType == self.protocol.TYPE_OBJ_REQ:
+                #get the object from the object manager, 
+                #send an obj if it exists nack otherwise
+                if len(rxData) == 2:
+                    objInstance = ord(rxData[0]) + (ord(rxData[1]) << 8)
+                    obj = objMgr.getObjInstanceByID(rxObjId,objInstance)
+                    self.protocol.sendInstanceObject(rxObjId,objInstance,obj.getPackedData())
+                if len(rxData) == 0:
+                    obj - objMgr.getSingleObjByID(rxObjId)
+                    self.protocol.sendSingleObject(rxObjId,obj.getPackedData())
+                else:
+                    logging.warning("Received Obj Request with data length other than 2 or 0")
     def rxStream(self,rxStreamId,rxData):
         if rxStreamId in self.rxSerialStreams:
             self.rxSerialStreams[rxStreamId](rxData)
         else:
             logging.warning("Recieved Unregistered StreamId: %d", rxStreamId)
-    def register_rxStream_callback(self,streamId,callback):
-        self.rxSerialStreams[streamId] = callback
     def sendSerial(self,serialId,data):
         """sends data to serialId, where data is a string"""
-        self.protocol.sendSerial(serialId,data)
-    def start(self):
-        self.connected = True
-        self.tx_thread.start()
-        self.rx_thread.start()
-        
+        self.protocol.sendSerial(serialId,data),
+    def sendSingleObject(self,ObjId,data):
+        """Sends a single object, no return value"""
+        self.protocol.sendSingleObject(ObjId,data)
+    def sendInstanceObject(self,ObjId,Instance,data): 
+        """Sends a single object, no return value"""
+        self.protocol.sendInstanceObject(ObjId,Instance,data) 
+    def transSingleObjectReq(self,ObjId):
+        """Sends an OBJ_REQ for objId, returns that object or None if failes""" 
+        self.trans.start(ObjId,self.protocol.TYPE_OBJ_REQ)
+        self.protocol.sendSingleObjectReq(ObjId)
+        if (self.trans.getResponse()):
+            rxData = self.trans.getData()
+            self.trans.end()
+            return self.objMgr.unpack(self,ObjId,rxData)
+        else:
+            return None
+    def transInstanceObjectReq(self,ObjId,Instance):
+        """Sends an OBJ_REQ for objId,Instance returns that object or None if failes""" 
+        self.trans.start(ObjId,self.protocol.TYPE_OBJ_REQ)
+        self.protocol.sendInstanceObjectReq(ObjId,Instance)
+        if (self.trans.getResponse()):
+            rxData = self.trans.getData()
+            self.trans.end()
+            return self.objMgr.unpack(self,ObjId,rxData)
+        else:
+            return None
+    def transSingleObjectAck(self,ObjId,data):
+        """Sends an OBJ_ACK for objId, returns True for ACK or None if timedout""" 
+        self.trans.start(ObjId,self.protocol.TYPE_OBJ_REQ)
+        self.protocol.sendSingleObjectAck(ObjId,data)
+        if (self.trans.getResponse()):
+            ack = self.trans.getAck()
+            self.trans.end()
+            return ack
+        else:
+            return None
+    def transInstanceObjectAck(self,ObjId,Instance,data):
+        """Sends an OBJ_ACK for objId,Instance, returns True for ACK or None if timedout""" 
+        self.trans.start(ObjId,self.protocol.TYPE_OBJ_REQ)
+        self.protocol.sendInstanceObjectAck(ObjId,data)
+        if (self.trans.getResponse()):
+            ack = self.trans.getAck()
+            self.trans.end()
+            return ack
+        else:
+            return None
         
         
 #the streamServer handles multiple connections from GCS (or any serial sream)
@@ -322,8 +463,6 @@ class streamServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
     allow_reuse_address = True
     def __init__(self,host,port):
         SocketServer.TCPServer.__init__(self,host,port)
-        
-        #   def start(self):
         self.handlers_list_lock = threading.RLock()
         self.rx_buffer_lock = threading.RLock()
         self.readEvent = threading.Event()
@@ -385,6 +524,7 @@ class streamServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
         return buf
 
 class streamServerHandler(SocketServer.StreamRequestHandler):
+    """This is a StreamRequestHAndler for the streamServer"""
     timeout = 30
     def setup(self):
         SocketServer.StreamRequestHandler.setup(self)
@@ -407,7 +547,7 @@ class streamServerHandler(SocketServer.StreamRequestHandler):
         self.server.deregister_handler(self)    
         
         
-        
+        ##################################################################################################
 """ below this are junk functions for testings"""
 
 def print_uavLinkObjectPacket(objId,objType,data):
@@ -426,8 +566,6 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
     
     ser = serial.Serial("COM11",baudrate=57600)
-    
-    
     
     uavtalk_server = streamServer(("", 8079), streamServerHandler)
     uavtalk_server.register_rx_handler(lambda data: conn.sendSerial(1,data))
