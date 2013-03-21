@@ -10,6 +10,11 @@ import sys
 import os
 import inspect
 
+
+import uavlink.uavobjects
+
+
+
 class Crc(object):
     
     crcTable = ( 0x00, 0x07, 0x0e, 0x09, 0x1c,
@@ -246,21 +251,9 @@ class objManager():
     def _addObjDef(self, objDef):
         self.objs_def[objDef.objId] = obj
     def importObjDefs(self):
-        currModPath = os.path.dirname(sys.modules[__name__].__file__)
-        uavObjDefPath = os.path.join(currModPath, "uavobjects")
-        logging.info("Importing UAVObject definitions from %s" % uavObjDefPath)
-        sys.path.append(uavObjDefPath)
-        for fileName in os.listdir(uavObjDefPath):
-            if fileName[-3:] == ".py":
-                logging.debug("Importing from file %s", fileName)
-                module = __import__(fileName.replace(".py",""))
-                for name in dir(module):
-                    klass = getattr(module, name)
-                    obj = getattr(module, name)
-                    if inspect.isclass(obj):
-                        if name != "UAVObject"  and name != "UAVMetaDataObject" and issubclass(klass, UAVObject):
-                            logging.debug("Importing class %s", name)
-                            self._addObjDef(obj)
+        for obj in inspect.getmembers(uavlink.uavobjects):
+            if isinstance(obj,uavlink.uavObject):
+                self._addObjDef(obj)
 
     def receive(self,rxObjId,rxData):
     
@@ -581,27 +574,7 @@ def print_uavLinkObjectPacket(objId,objType,data):
 def print_uavLinkSerialPacket(streamId,data):
         print "uavLinkStreamPacket: streamId: %d  data: %s" % (streamId, data)
         
-if __name__ == "__main__":
-    # Log everything, and send it to stderr.
-    logging.basicConfig(level=logging.DEBUG)
-    
-    objMgr = objManager()
-    
-    exit()
-    
-    ser = serial.Serial("COM11",baudrate=57600)
-    
-    uavtalk_server = streamServer(("", 8079), streamServerHandler)
-    uavtalk_server.register_rx_handler(lambda data: conn.sendSerial(1,data))
-    
-    conn = uavLinkConnection(None,ser.read,ser.write)
-    conn.register_rxStream_callback(1,lambda data: uavtalk_server.write(data) )
-    conn.start()
-    
-    
-    
-    while (True):
-        pass
+
 
     
 
