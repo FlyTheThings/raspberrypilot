@@ -9,6 +9,7 @@
 /flight/.project
 /flight/.settings
 /flight/Build
+/flight/python/build
 
 # /flight/AHRS/
 /flight/AHRS/Build

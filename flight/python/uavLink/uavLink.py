@@ -5,6 +5,10 @@ import threading
 import Queue
 import SocketServer
 
+import logging
+import sys
+import os
+import inspect
 
 class Crc(object):
     
@@ -230,23 +234,37 @@ class uavLinkProtocol():
     def sendNack(self,ObjId,instanceId=None):
         return self._packObject(ObjId,self.TYPE_NACK,"",instanceId)
 
-        
-class uavObject():
-    def getInstanceId(self):
-        raise
-        "return the instance id if multinstance or none"
-    def getPackedData(self):
-        raise
-        "return the objects packed data as a string"
-        
 # the object manager
 # this is a routing object manager for now, ie it holds no copies of the data
 # it assumes the data is always on the other side of its connection conn
 class objManager():
-    def __init__(self,conn):
+    def __init__(self,conn=None):
         #conn is an unstream connection
         self.conn = conn
+        self.objs_def = {}
+        self.importObjDefs()
+    def _addObjDef(self, objDef):
+        self.objs_def[objDef.objId] = obj
+    def importObjDefs(self):
+        currModPath = os.path.dirname(sys.modules[__name__].__file__)
+        uavObjDefPath = os.path.join(currModPath, "uavobjects")
+        logging.info("Importing UAVObject definitions from %s" % uavObjDefPath)
+        sys.path.append(uavObjDefPath)
+        for fileName in os.listdir(uavObjDefPath):
+            if fileName[-3:] == ".py":
+                logging.debug("Importing from file %s", fileName)
+                module = __import__(fileName.replace(".py",""))
+                for name in dir(module):
+                    klass = getattr(module, name)
+                    obj = getattr(module, name)
+                    if inspect.isclass(obj):
+                        if name != "UAVObject"  and name != "UAVMetaDataObject" and issubclass(klass, UAVObject):
+                            logging.debug("Importing class %s", name)
+                            self._addObjDef(obj)
+
     def receive(self,rxObjId,rxData):
+    
+    
         #receive an object into the manager 
         pass
     def unpack(self,rxObjId,rxData):
@@ -255,6 +273,9 @@ class objManager():
     def getSingleObjByID (self,id):
         #returns a single object
         pass
+    
+        
+        
 
 # transaction class used by uavLinkConnection
 class uavLinkConnectionTransaction():
@@ -372,7 +393,6 @@ class uavLinkConnection():
     def tx(self,data):
         self.txQueue.put(data)
     def rxObject(self,rxObjId,rxType,rxData ):
-        print "not doing anything with recived objects yet"
         print "id: %d type: %d datalen: %d" % (rxObjId,rxType,len(rxData))
         #process the incoming object for effect on transactions 
         self.trans.process(rxObjId,rxType,rxData)
@@ -393,7 +413,7 @@ class uavLinkConnection():
                     obj = objMgr.getObjInstanceByID(rxObjId,objInstance)
                     self.protocol.sendInstanceObject(rxObjId,objInstance,obj.getPackedData())
                 if len(rxData) == 0:
-                    obj - objMgr.getSingleObjByID(rxObjId)
+                    obj = objMgr.getSingleObjByID(rxObjId)
                     self.protocol.sendSingleObject(rxObjId,obj.getPackedData())
                 else:
                     logging.warning("Received Obj Request with data length other than 2 or 0")
@@ -565,6 +585,10 @@ if __name__ == "__main__":
     # Log everything, and send it to stderr.
     logging.basicConfig(level=logging.DEBUG)
     
+    objMgr = objManager()
+    
+    exit()
+    
     ser = serial.Serial("COM11",baudrate=57600)
     
     uavtalk_server = streamServer(("", 8079), streamServerHandler)
@@ -573,6 +597,8 @@ if __name__ == "__main__":
     conn = uavLinkConnection(None,ser.read,ser.write)
     conn.register_rxStream_callback(1,lambda data: uavtalk_server.write(data) )
     conn.start()
+    
+    
     
     while (True):
         pass

@@ -43,7 +43,7 @@ win32 {
 
     uavobjects.commands += pushd $$targetPath(../../uavobject-synthetics) &&
     uavobjects.commands += $$targetPath(../ground/uavobjgenerator/$${BUILD_CONFIG}/uavobjgenerator)
-    uavobjects.commands +=   -gcs -flight -python -pythonground -matlab
+    uavobjects.commands +=   -gcs -flight -python -pythonflight -matlab
     uavobjects.commands +=   $$targetPath(../../shared/uavobjectdefinition)
     uavobjects.commands +=   $$targetPath(../..) &&
     uavobjects.commands += popd $$addNewline()
@@ -59,7 +59,7 @@ win32 {
 
     uavobjects.commands += cd ../../uavobject-synthetics &&
     uavobjects.commands += ../ground/uavobjgenerator/uavobjgenerator
-    uavobjects.commands += -gcs -flight -python -pythonground -matlab ../../shared/uavobjectdefinition ../.. &&
+    uavobjects.commands += -gcs -flight -python -pythonflight -matlab ../../shared/uavobjectdefinition ../.. &&
 
     uavobjects.commands += cd ../ground/openpilotgcs &&
     uavobjects.commands += $(QMAKE) ../../../ground/openpilotgcs/openpilotgcs.pro
