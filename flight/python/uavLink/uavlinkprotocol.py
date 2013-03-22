@@ -199,6 +199,7 @@ class uavLinkProtocol():
         toSend += chr( (length >>8) & 0xFF )
         toSend += chr(serialId)
         toSend += data
+        toSend += data
         crc = Crc()
         crc.addList(toSend)
         toSend += chr(crc.read())
@@ -300,10 +301,10 @@ class objManager():
         attempt = self.retries
         while attempt:
             if obj.isSingleInstance():
-                data = self.conn.transSingleObjectAck(obj.OBJID,data)
+                res = self.conn.transSingleObjectAck(obj.OBJID,data)
             else:
-                data = self.conn.transInstanceObjectAck(obj.OBJID,obj.instance,data)
-            if data:
+                res = self.conn.transInstanceObjectAck(obj.OBJID,obj.instance,data)
+            if res:
                 return True
             attempt -= 1
         
