@@ -250,6 +250,7 @@ class objManager():
         self.objDefs = {}
         self.objNames = {}
         self.importObjDefs()
+        self.retries = 3
     def _addObjDef(self, name, objDef):
         self.objDefs[objDef.OBJID] = objDef
         self.objNames[name] = objDef
@@ -284,18 +285,27 @@ class objManager():
         else:
             return None
     def getObj(self,obj):
-        if obj.isSingleInstance():
-            data = self.conn.transSingleObjectReq(obj.OBJID)
-        else:
-            data = self.conn.transInstanceObjectReq(obj.OBJID,obj.instance)
-        obj.unpackData(data)
+        attempt = self.retries
+        while attempt:
+            if obj.isSingleInstance():
+                data = self.conn.transSingleObjectReq(obj.OBJID)
+            else:
+                data = self.conn.transInstanceObjectReq(obj.OBJID,obj.instance)
+            if data:
+                obj.unpackData(data)
+                return
+            attempt -= 1
     def setObj(self,obj):
         data = obj.getPackedData()
-        if obj.isSingleInstance():
-            data = self.conn.transSingleObjectAck(obj.OBJID,data)
-        else:
-            data = self.conn.transInstanceObjectAck(obj.OBJID,obj.instance,data)
-        return data == True
+        attempt = self.retries
+        while attempt:
+            if obj.isSingleInstance():
+                data = self.conn.transSingleObjectAck(obj.OBJID,data)
+            else:
+                data = self.conn.transInstanceObjectAck(obj.OBJID,obj.instance,data)
+            if data:
+                return True
+            attempt -= 1
         
 
 # transaction class used by uavLinkConnection

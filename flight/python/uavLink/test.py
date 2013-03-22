@@ -27,6 +27,7 @@ print stats.nacks
 
 while(True):
     stats.nacks += 1
+    stats.nacks %= 100
     print stats.nacks
     for i in range(20):
         stats.write()
