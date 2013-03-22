@@ -23,11 +23,11 @@ conn.start()
 objMgr = uavlink.objManager(conn)
 stats = objMgr.getObjByName("I2CStats")
 stats.read()
-print stats.nacks.value
+print stats.nacks
 
 while(True):
-    stats.nacks.value += 1
-    print stats.nacks.value
+    stats.nacks += 1
+    print stats.nacks
     for i in range(20):
         stats.write()
         time.sleep(0.02)

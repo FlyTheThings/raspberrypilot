@@ -32,7 +32,7 @@
 import struct
 
 
-class uavObjectField:
+class uavObjectField():
     class FType:
         INT8 = 0
         INT16 = 1
@@ -97,9 +97,12 @@ class uavObjectField:
         else:
             self.value = values
         return self.rawSize
+    def setValue(self,value):
+        #this has been added for error checking later TODO
+        self.value = value
 
           
-class uavObject:
+class uavObject(object):
     def __init__(self, objId):
         self.objId = objId
         self.instId = 0

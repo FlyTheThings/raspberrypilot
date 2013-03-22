@@ -133,12 +133,27 @@ bool UAVObjectGeneratorPythonFlight::process_object(ObjectInfo* info)
     }
     outCode.replace(QString("$(DATAFIELDS)"), datafields);
 
+    // Replace the $(PROPERTYFUNCTIONS) tag
+    QString properties;
+    for (int n = 0; n < info->fields.length(); ++n)
+    {
+        // The property
+        properties.append(QString("\t@property\n"));
+        properties.append(QString("\tdef %1(self):\n").arg(info->fields[n]->name));
+        properties.append(QString("\t\treturn self._%1.value\n").arg(info->fields[n]->name));
+        //the property setter
+        properties.append(QString("\t@%1.setter\n").arg(info->fields[n]->name));
+        properties.append(QString("\tdef %1(self,value):\n").arg(info->fields[n]->name));
+        properties.append(QString("\t\tself._%1.setValue(value)\n\n").arg(info->fields[n]->name));
+    }
+    outCode.replace(QString("$(PROPERTYFUNCTIONS)"), properties);
+
     // Replace the $(DATAFIELDINIT) tag
     QString fields;
     for (int n = 0; n < info->fields.length(); ++n)
     {
-        fields.append(QString("\t\tself.%1 = %1Field()\n").arg(info->fields[n]->name));
-        fields.append(QString("\t\tself.addField(self.%1)\n").arg(info->fields[n]->name));
+        fields.append(QString("\t\tself._%1 = %1Field()\n").arg(info->fields[n]->name));
+        fields.append(QString("\t\tself.addField(self._%1)\n").arg(info->fields[n]->name));
     }
     outCode.replace(QString("$(DATAFIELDINIT)"), fields);
 
