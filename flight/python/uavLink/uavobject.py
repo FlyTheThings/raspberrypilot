@@ -83,14 +83,15 @@ class uavObjectField:
         self.rawSize = self.rawSizePerElem * self.numElements
     def getRawSize(self):
         return self.rawSize
-    def serialize(self, ser):
+    def serialize(self):
         if self.numElements == 1:
-            ser += map(ord, self.struct.pack(self.value))
+            ser = self.struct.pack(self.value)
         else:
-            ser += map(ord, apply(self.struct.pack, self.value))
+            ser = self.struct.pack(*self.value)
+        return ser
     def deserialize(self, data):
         # DOTO: FIXME: This is getting very messy
-        values = list(self.struct.unpack("".join(map(chr,data[:self.rawSize]))))
+        values = list(self.struct.unpack("".join(data[:self.rawSize])))
         if self.numElements == 1:
             self.value = values[0]
         else:
@@ -99,14 +100,13 @@ class uavObjectField:
 
           
 class uavObject:
-    def __init__(self, objId, name=None):
+    def __init__(self, objId):
         self.objId = objId
         self.instId = 0
         self.fields = []
-        if name:
-            self.name = name
-        else:
-            self.name = self.__class__.__name__
+        self.objMgr = None
+    def setObjManager(self,objMgr):
+        self.objMgr = objMgr
     def addField(self, field):
         self.fields.append(field)
     def getSerialisedSize(self):
@@ -114,29 +114,31 @@ class uavObject:
         for field in self.fields:
             size += field.getRawSize()
         return size
+    def isSingleInstance(self):
+        return self.isSingleInst == True
     def unpackData(self, data):
         p = 0
         for field in self.fields:
             p += field.deserialize(data[p:])
     def getPackedData(self):
-        ser = []
+        ser = ""
         for field in self.fields:
-            field.serialize(ser)
+            ser += field.serialize()
         return ser
     def __str__(self):
         if self.name != None:
-            if self.isMetaData():
-                return "%s" % self.name
-            else:
-                return "%s" % self.name
+            return "uavObject: %s" % self.name
         else:    
-            if self.isMetaData():
-                return "UAVMetaObj of %08x" % (self.objId-1)
-            else:
-                return "UAVObj %08x" % self.objId
+            return "UAVObj %08x" % self.objId
     def getInstanceId(self):
         return self.instId
         "return the instance id if multinstance or none"
+    def read(self):
+        if self.objMgr:
+            self.objMgr.getObj(self)
+    def write(self):
+        if self.objMgr:
+            self.objMgr.setObj(self)
 
 
 

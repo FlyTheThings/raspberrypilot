@@ -39,6 +39,7 @@ $(DATAFIELDS)
 class $(NAME)(uavlink.uavObject):
 	# Object constants
 	OBJID = $(OBJID)
+	name = "$(NAME)"
 
 	# Constructor
 	def __init__(self):

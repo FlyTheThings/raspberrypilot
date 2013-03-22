@@ -1,6 +1,5 @@
 
 import logging
-import serial
 import threading
 import Queue
 import SocketServer
@@ -10,8 +9,7 @@ import sys
 import os
 import inspect
 
-
-import uavlink.uavobjects
+import uavlink
 
 
 
@@ -210,11 +208,14 @@ class uavLinkProtocol():
             length = len(data) + self.OBJECT_INST_HEADER_LENGTH
         else:
             length = len(data) + self.OBJECT_HEADER_LENGTH
-        toSend = chr(SYNC)
-        toSend += chr(objType | VERSION)
+        toSend = chr(self.SYNC)
+        toSend += chr(objType | self.VERSION)
         toSend += chr(length & 0xFF)
-        toSend += chr( (length >>8) & 0xFF )
-        toSend += chr(ObjId)
+        toSend += chr( (length >> 8) & 0xFF)
+        toSend += chr( (ObjId >> 0) & 0xFF)
+        toSend += chr( (ObjId >> 8) & 0xFF)
+        toSend += chr( (ObjId >> 16) & 0xFF)
+        toSend += chr( (ObjId >> 24) & 0xFF)
         if instanceId:
             toSend += chr(instanceId)
         toSend += data
@@ -223,21 +224,21 @@ class uavLinkProtocol():
         toSend += chr(crc.read())
         return self._tx(toSend)
     def sendSingleObject(self,ObjId,data):
-        return self._packObject(ObjId,self.TYPE_OBJ,data)
+        return self._sendObject(ObjId,self.TYPE_OBJ,data)
     def sendSingleObjectReq(self,ObjId):
-        return self._packObject(ObjId,self.TYPE_OBJ_REQ,"")
+        return self._sendObject(ObjId,self.TYPE_OBJ_REQ,"")
     def sendSingleObjectAck(self,ObjId,data):
-        return self._packObject(ObjId,self.TYPE_OBJ_ACK,data)
+        return self._sendObject(ObjId,self.TYPE_OBJ_ACK,data)
     def sendInstanceObject(self,ObjId,Instance,data):
-        return self._packObject(ObjId,self.TYPE_OBJ,data,Instance)    
+        return self._sendObject(ObjId,self.TYPE_OBJ,data,Instance)    
     def sendInstanceObjectReq(self,ObjId,Instance):
-        return self._packObject(ObjId,self.TYPE_OBJ_REQ,"",Instance)
+        return self._sendObject(ObjId,self.TYPE_OBJ_REQ,"",Instance)
     def sendInstanceObjectAck(self,ObjId,Instance,data):
-        return self._packObject(ObjId,self.TYPE_OBJ_ACK,data,Instance)
+        return self._sendObject(ObjId,self.TYPE_OBJ_ACK,data,Instance)
     def sendAck(self,ObjId,instanceId=None):
-        return self._packObject(ObjId,self.TYPE_ACK,"",instanceId)
+        return self._sendObject(ObjId,self.TYPE_ACK,"",instanceId)
     def sendNack(self,ObjId,instanceId=None):
-        return self._packObject(ObjId,self.TYPE_NACK,"",instanceId)
+        return self._sendObject(ObjId,self.TYPE_NACK,"",instanceId)
 
 # the object manager
 # this is a routing object manager for now, ie it holds no copies of the data
@@ -246,34 +247,62 @@ class objManager():
     def __init__(self,conn=None):
         #conn is an unstream connection
         self.conn = conn
-        self.objs_def = {}
+        self.objDefs = {}
+        self.objNames = {}
         self.importObjDefs()
-    def _addObjDef(self, objDef):
-        self.objs_def[objDef.objId] = obj
+    def _addObjDef(self, name, objDef):
+        self.objDefs[objDef.OBJID] = objDef
+        self.objNames[name] = objDef
     def importObjDefs(self):
-        for obj in inspect.getmembers(uavlink.uavobjects):
-            if isinstance(obj,uavlink.uavObject):
-                self._addObjDef(obj)
+        import uavlink.uavobjects
+        for name,obj in inspect.getmembers(uavlink.uavobjects):
+            if inspect.isclass(obj):
+                if issubclass(obj,uavlink.uavObject):
+                    self._addObjDef(name,obj)
 
     def receive(self,rxObjId,rxData):
-    
-    
+        print "recieved object into object manager what to do with it?"
         #receive an object into the manager 
         pass
     def unpack(self,rxObjId,rxData):
         """Returns on object from ID and packed data. Returns None if object is unkown"""
         pass
-    def getSingleObjByID (self,id):
-        #returns a single object
-        pass
-    
-        
+    def getObjByID (self,id):
+        if id in self.objDefs:
+            obj = self.objDefs[id]()
+            obj.setObjManager(self)
+            self.getObj(obj)
+            return obj
+        else:
+            return None
+    def getObjByName(self,name):
+        if name in self.objNames:
+            obj = self.objNames[name]()
+            obj.setObjManager(self)
+            self.getObj(obj)
+            return obj
+        else:
+            return None
+    def getObj(self,obj):
+        if obj.isSingleInstance():
+            data = self.conn.transSingleObjectReq(obj.OBJID)
+        else:
+            data = self.conn.transInstanceObjectReq(obj.OBJID,obj.instance)
+        obj.unpackData(data)
+    def setObj(self,obj):
+        data = obj.getPackedData()
+        if obj.isSingleInstance():
+            data = self.conn.transSingleObjectAck(obj.OBJID,data)
+        else:
+            data = self.conn.transInstanceObjectAck(obj.OBJID,obj.instance,data)
+        return data == True
         
 
 # transaction class used by uavLinkConnection
 class uavLinkConnectionTransaction():
     def __init__(self,protocol):
         self.lock = threading.RLock()
+        self.transDoneEvent = threading.Event()
         self.protocol = protocol
         self.objId = None
         self.transType = None
@@ -283,7 +312,7 @@ class uavLinkConnectionTransaction():
         self.rxAck = False
         self.pending = False
         self.reply = False
-        self.transTimeout = .5
+        self.transTimeout = 5
     def start(self,objId,transType):
         " Starts a new transaction "
         self.lock.acquire()
@@ -293,26 +322,29 @@ class uavLinkConnectionTransaction():
         self.pending = True
         self.reply = False
         self.rxAck = False
+        self.transDoneEvent.clear()
         self.rxData = ""
     def process(self,rxObjId,rxType,rxData):
         if not self.pending:
             return
         if rxObjId != self.objId:
             return
-        if (self.transType == self.protocol.TYPE_OBJ_REQ) & (self.rxType == self.protocol.TYPE_OBJ):
+        if (self.transType == self.protocol.TYPE_OBJ_REQ) & (rxType == self.protocol.TYPE_OBJ):
+            print "objreq ack"
             self.rxObjId = rxObjId
             self.rxType = rxType
             self.rxData = rxData
             self.reply = True
             self.transDoneEvent.set()
-        elif (self.transType == self.protocol.TYPE_OBJ_REQ) & (self.rxType == self.protocol.TYPE_NACK):
+        elif (self.transType == self.protocol.TYPE_OBJ_REQ) & (rxType == self.protocol.TYPE_NACK):
+            print "objreq nack"
             self.rxObjId = rxObjId
             self.rxType = rxType
             self.rxData = None
             self.rxAck = False
             self.reply = True
             self.transDoneEvent.set()
-        elif (self.transType == self.protocol.TYPE_OBJ_ACK) & (self.rxType == self.protocol.TYPE_ACK):
+        elif (self.transType == self.protocol.TYPE_OBJ_ACK) & (rxType == self.protocol.TYPE_ACK):
             self.rxObjId = rxObjId
             self.rxType = rxType
             self.rxData = None
@@ -386,7 +418,7 @@ class uavLinkConnection():
     def tx(self,data):
         self.txQueue.put(data)
     def rxObject(self,rxObjId,rxType,rxData ):
-        print "id: %d type: %d datalen: %d" % (rxObjId,rxType,len(rxData))
+        #print "id: %d type: %d datalen: %d" % (rxObjId,rxType,len(rxData))
         #process the incoming object for effect on transactions 
         self.trans.process(rxObjId,rxType,rxData)
         #if there is an object manager send objects to it
@@ -431,7 +463,7 @@ class uavLinkConnection():
         if (self.trans.getResponse()):
             rxData = self.trans.getData()
             self.trans.end()
-            return self.objMgr.unpack(self,ObjId,rxData)
+            return rxData
         else:
             return None
     def transInstanceObjectReq(self,ObjId,Instance):
@@ -441,12 +473,12 @@ class uavLinkConnection():
         if (self.trans.getResponse()):
             rxData = self.trans.getData()
             self.trans.end()
-            return self.objMgr.unpack(self,ObjId,rxData)
+            return rxData[2:]
         else:
             return None
     def transSingleObjectAck(self,ObjId,data):
         """Sends an OBJ_ACK for objId, returns True for ACK or None if timedout""" 
-        self.trans.start(ObjId,self.protocol.TYPE_OBJ_REQ)
+        self.trans.start(ObjId,self.protocol.TYPE_OBJ_ACK)
         self.protocol.sendSingleObjectAck(ObjId,data)
         if (self.trans.getResponse()):
             ack = self.trans.getAck()
@@ -456,7 +488,7 @@ class uavLinkConnection():
             return None
     def transInstanceObjectAck(self,ObjId,Instance,data):
         """Sends an OBJ_ACK for objId,Instance, returns True for ACK or None if timedout""" 
-        self.trans.start(ObjId,self.protocol.TYPE_OBJ_REQ)
+        self.trans.start(ObjId,self.protocol.TYPE_OBJ_ACK)
         self.protocol.sendInstanceObjectAck(ObjId,data)
         if (self.trans.getResponse()):
             ack = self.trans.getAck()
@@ -510,7 +542,6 @@ class streamServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
         self.handlers_list_lock.acquire()
         self.handlers.remove(handler)
         self.handlers_list_lock.release()
-        print "Deregistered"
     def write(self,data):
         self.handlers_list_lock.acquire()
         for handler in self.handlers:
@@ -544,7 +575,6 @@ class streamServerHandler(SocketServer.StreamRequestHandler):
         self.rxQueue = Queue.Queue()
         self.server.register_handler(self)
     def write(self,data):
-        print data
         self.wfile.write(data)
     def handle(self):
         # the txThread will handle writing to this socket 
