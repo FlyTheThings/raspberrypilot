@@ -10,6 +10,7 @@ import os
 import inspect
 
 import uavlink
+import socket
 
 
 
@@ -192,13 +193,14 @@ class uavLinkProtocol():
             return
         if data == None:
             return
+        if len(data) > 200:
+            print "data too long"
         length = len(data) + self.STREAM_HEADER_LENGTH 
         toSend = chr(self.SYNC)
         toSend += chr(self.TYPE_STREAM | self.VERSION)
         toSend += chr(length & 0xFF)
         toSend += chr( (length >>8) & 0xFF )
         toSend += chr(serialId)
-        toSend += data
         toSend += data
         crc = Crc()
         crc.addList(toSend)
@@ -263,9 +265,12 @@ class objManager():
                     self._addObjDef(name,obj)
 
     def receive(self,rxObjId,rxData):
-        print "recieved object into object manager what to do with it?"
-        #receive an object into the manager 
-        pass
+        """ receive an id and data, return it as an uavobject"""
+        # blindly send up the object
+        self.conn.transSingleObjectAck(rxObjId,rxData)
+        obj = self.getObjByID(rxObjId)
+        obj.unpackData(rxData)
+        return obj
     def unpack(self,rxObjId,rxData):
         """Returns on object from ID and packed data. Returns None if object is unkown"""
         pass
@@ -294,7 +299,8 @@ class objManager():
                 data = self.conn.transInstanceObjectReq(obj.OBJID,obj.instance)
             if data:
                 obj.unpackData(data)
-                return
+                return True
+            logging.warning("Retry getObj")
             attempt -= 1
     def setObj(self,obj):
         data = obj.getPackedData()
@@ -306,6 +312,7 @@ class objManager():
                 res = self.conn.transInstanceObjectAck(obj.OBJID,obj.instance,data)
             if res:
                 return True
+            logging.warning("Retry getObj")
             attempt -= 1
         
 
@@ -323,7 +330,7 @@ class uavLinkConnectionTransaction():
         self.rxAck = False
         self.pending = False
         self.reply = False
-        self.transTimeout = 5
+        self.transTimeout = 1
     def start(self,objId,transType):
         " Starts a new transaction "
         self.lock.acquire()
@@ -341,14 +348,12 @@ class uavLinkConnectionTransaction():
         if rxObjId != self.objId:
             return
         if (self.transType == self.protocol.TYPE_OBJ_REQ) & (rxType == self.protocol.TYPE_OBJ):
-            print "objreq ack"
             self.rxObjId = rxObjId
             self.rxType = rxType
             self.rxData = rxData
             self.reply = True
             self.transDoneEvent.set()
         elif (self.transType == self.protocol.TYPE_OBJ_REQ) & (rxType == self.protocol.TYPE_NACK):
-            print "objreq nack"
             self.rxObjId = rxObjId
             self.rxType = rxType
             self.rxData = None
@@ -366,6 +371,8 @@ class uavLinkConnectionTransaction():
     def getResponse(self):
         #Waits for the current transaction to complete
         result = self.transDoneEvent.wait(self.transTimeout)
+        if not result:
+            print "transaction timeout"
         self.pending = False
         return self.reply
     def getData(self):
@@ -387,8 +394,13 @@ class uavLinkConnection_rx(threading.Thread):
         self.conn = uavLinkConnection
     def run(self):
         while(self.conn.connected):
-            byte = ord(self.conn.read(1))
+            try:
+                byte = ord(self.conn.read(1))
+            except socket.error as e:
+                self.conn.close()
             self.conn.protocol.rxByte(byte)
+        
+
 
 class uavLinkConnection_tx(threading.Thread):
     """private class used only by uavLinkConnection to implement the transmit thread""" 
@@ -398,9 +410,10 @@ class uavLinkConnection_tx(threading.Thread):
     def run(self):
         while(self.conn.connected):
             data = self.conn.txQueue.get()
-            sent = self.conn.write(data)
-            if sent < len(data):
-                logging.warning("Unable to TX %d bytes", len(data)-sent)
+            try:
+                self.conn.write(data)
+            except socket.error as e:
+                self.conn.close()
    
 class uavLinkConnection():
     """ this class's responsibility is to manage a uavLink connection.  It uses the uavLinkProtocol to process and encode packets.
@@ -416,6 +429,7 @@ class uavLinkConnection():
         self.rx_thread = uavLinkConnection_rx(self)
         self.trans = uavLinkConnectionTransaction(self.protocol)
         self.txQueue = Queue.Queue()
+        self.disconnectEvent = threading.Event()
         self.write = write
         self.read = read
         self.rxSerialStreams = {}
@@ -426,33 +440,44 @@ class uavLinkConnection():
         self.connected = True
         self.tx_thread.start()
         self.rx_thread.start()
+    def close(self):
+        if self.connected:
+            logging.warning("closing uavlink connection")
+        self.disconnectEvent.set()
+        self.connected = False
     def tx(self,data):
         self.txQueue.put(data)
     def rxObject(self,rxObjId,rxType,rxData ):
         #print "id: %d type: %d datalen: %d" % (rxObjId,rxType,len(rxData))
         #process the incoming object for effect on transactions 
-        self.trans.process(rxObjId,rxType,rxData)
+        self.trans.process(rxObjId,rxType,rxData)        
         #if there is an object manager send objects to it
-        if self.objMgr:
-            if rxType == self.protocol.TYPE_OBJ:
+        if rxType == self.protocol.TYPE_OBJ:
+            if self.objMgr:
                 #receive the object into the object manager
-                objMgr.receive(rxObjId,rxData)
-            elif rxType == self.protocol.TYPE_OBJ_ACK:
+                self.objMgr.receive(rxObjId,rxData)
+        elif rxType == self.protocol.TYPE_OBJ_ACK:
+            if self.objMgr:
                 #receive the object into the object manager and ack?
-                obj = objMgr.receive(rxObjId,rxData)
+                obj = self.objMgr.receive(rxObjId,rxData)
                 self.protocol.sendAck(rxObjId,obj.getInstanceId())
-            elif rxType == self.protocol.TYPE_OBJ_REQ:
-                #get the object from the object manager, 
-                #send an obj if it exists nack otherwise
-                if len(rxData) == 2:
-                    objInstance = ord(rxData[0]) + (ord(rxData[1]) << 8)
-                    obj = objMgr.getObjInstanceByID(rxObjId,objInstance)
+            else:
+                self.protocol.sendAck(rxObjId)
+        elif rxType == self.protocol.TYPE_OBJ_REQ:
+            #get the object from the object manager, 
+            #send an obj if it exists nack otherwise
+            if len(rxData) == 2:
+                objInstance = ord(rxData[0]) + (ord(rxData[1]) << 8)
+                if self.objMgr:
+                    raise "UNIMPLEMENTED"
+                    obj = self.objMgr.getObjInstanceByID(rxObjId,objInstance)
                     self.protocol.sendInstanceObject(rxObjId,objInstance,obj.getPackedData())
-                if len(rxData) == 0:
-                    obj = objMgr.getSingleObjByID(rxObjId)
-                    self.protocol.sendSingleObject(rxObjId,obj.getPackedData())
-                else:
-                    logging.warning("Received Obj Request with data length other than 2 or 0")
+            if len(rxData) == 0:
+                obj = self.objMgr.getObjByID(rxObjId)
+                obj.read()
+                self.protocol.sendSingleObject(rxObjId,obj.getPackedData())
+            else:
+                logging.warning("Received Obj Request with data length other than 2 or 0")
     def rxStream(self,rxStreamId,rxData):
         if rxStreamId in self.rxSerialStreams:
             self.rxSerialStreams[rxStreamId](rxData)
@@ -476,6 +501,7 @@ class uavLinkConnection():
             self.trans.end()
             return rxData
         else:
+            self.trans.end()
             return None
     def transInstanceObjectReq(self,ObjId,Instance):
         """Sends an OBJ_REQ for objId,Instance returns that object or None if failes""" 
@@ -486,6 +512,7 @@ class uavLinkConnection():
             self.trans.end()
             return rxData[2:]
         else:
+            self.trans.end()
             return None
     def transSingleObjectAck(self,ObjId,data):
         """Sends an OBJ_ACK for objId, returns True for ACK or None if timedout""" 
@@ -496,6 +523,7 @@ class uavLinkConnection():
             self.trans.end()
             return ack
         else:
+            self.trans.end()
             return None
     def transInstanceObjectAck(self,ObjId,Instance,data):
         """Sends an OBJ_ACK for objId,Instance, returns True for ACK or None if timedout""" 
@@ -506,6 +534,7 @@ class uavLinkConnection():
             self.trans.end()
             return ack
         else:
+            self.trans.end()
             return None
         
         
@@ -517,15 +546,15 @@ class streamServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
     The read function will return read_len bytes or timeout after read_timeout."""
     daemon_threads = True
     allow_reuse_address = True
-    def __init__(self,host,port):
-        SocketServer.TCPServer.__init__(self,host,port)
+    def __init__(self,host, port):
+        SocketServer.TCPServer.__init__(self,(host,port),streamServerHandler)
         self.handlers_list_lock = threading.RLock()
         self.rx_buffer_lock = threading.RLock()
         self.readEvent = threading.Event()
         self.handlers = []
         self.rx_buf = ""
-        self.read_timeout = 0.25 # the read will block for at most this amount of time
-        self.read_len = 30      # the read will return if more than this many bytes are available
+        self.read_timeout = 0.1 # the read will block for at most this amount of time
+        self.read_len = 15      # the read will return if more than this many bytes are available
         self.rx_handler = None
         #start it as a new thread
         t = threading.Thread(target=self.serve_forever)
@@ -598,29 +627,6 @@ class streamServerHandler(SocketServer.StreamRequestHandler):
         self.server.deregister_handler(self)
         SocketServer.StreamRequestHandler.finish(self)
     def handle_timeout(self):
-        self.server.deregister_handler(self)    
-        
-        
-        ##################################################################################################
-""" below this are junk functions for testings"""
-
-def print_uavLinkObjectPacket(objId,objType,data):
-    typeStr = ["OBJ","OBJ_REQ","OBJ_ACK","ACK","NACK"]
-    if objType < 4:
-        objTypeFormated = typeStr[objType]
-    else:
-        objTypeFormated = "UNKOWN TYPE"
-    print "uavLinkObjectPacket: objId: %d %s data: %s" % (objId, objTypeFormated, data)
-
-def print_uavLinkSerialPacket(streamId,data):
-        print "uavLinkStreamPacket: streamId: %d  data: %s" % (streamId, data)
-        
-
-
-    
-
-
-            
-
-            
+        self.server.deregister_handler(self) 
+        SocketServer.StreamRequestHandler.finish(self)        
         
