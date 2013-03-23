@@ -416,23 +416,35 @@ class uavLinkConnection():
         self.protocol.register_uavLinkRxStreamPacket_callback(self.rxStream)
         self.tx_thread = uavLinkConnection_tx(self)
         self.rx_thread = uavLinkConnection_rx(self)
-        self.trans = []
+       
         self.trans_list_lock = threading.RLock()
         self.txQueue = Queue.Queue()
         self.disconnectEvent = threading.Event()
+        self.trans = []
+        self.max_trans = 5
+        self.trans_available = threading.Event()
         self.write = write
         self.read = read
         self.rxSerialStreams = {}
         self.connected = False
+        
     def register_rxStream_callback(self,streamId,callback):
         self.rxSerialStreams[streamId] = callback
     def register_transaction(self,tran):
         self.trans_list_lock.acquire()
+        if len(self.trans) > self.max_trans:
+            self.trans_list_lock.release()
+            self.trans_available.wait()
+            self.trans_list_lock.acquire()
         self.trans.append(tran)
         self.trans_list_lock.release()
     def deregister_transaction(self,tran):
         self.trans_list_lock.acquire()
         self.trans.remove(tran)
+        if len(self.trans) < self.max_trans:
+            self.trans_available.set()
+        elif len(self.trans) >= self.max_trans:
+            self.trans_available.clear()
         self.trans_list_lock.release()
     def start(self):
         self.connected = True

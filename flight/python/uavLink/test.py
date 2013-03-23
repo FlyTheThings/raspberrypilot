@@ -29,14 +29,14 @@ stats.read()
 print stats.nacks
 
 while(True):
-    time.sleep(1)
+    #time.sleep(1)
     
-    """
+
     stats.nacks += 1
     stats.nacks %= 100
     print stats.nacks
     for i in range(20):
         stats.write()
         time.sleep(0.02)
-    """
+
     
