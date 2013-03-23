@@ -318,30 +318,20 @@ class objManager():
 
 # transaction class used by uavLinkConnection
 class uavLinkConnectionTransaction():
-    def __init__(self,protocol):
-        self.lock = threading.RLock()
+    def __init__(self,conn,objId,transType,timeout=0.5):
         self.transDoneEvent = threading.Event()
-        self.protocol = protocol
-        self.objId = None
-        self.transType = None
+        self.conn = conn
+        self.protocol = conn.protocol
+        self.objId = objId
+        self.transType = transType
+        self.transTimeout = timeout
         self.rxObjId = None
         self.rxType = None
         self.rxData = None
         self.rxAck = False
-        self.pending = False
         self.reply = False
-        self.transTimeout = 1
-    def start(self,objId,transType):
-        " Starts a new transaction "
-        self.lock.acquire()
-        self.transType = transType
-        self.objId = objId
-        #set the pending flag and clear responses
         self.pending = True
-        self.reply = False
-        self.rxAck = False
-        self.transDoneEvent.clear()
-        self.rxData = ""
+        self.conn.register_transaction(self)
     def process(self,rxObjId,rxType,rxData):
         if not self.pending:
             return
@@ -371,6 +361,7 @@ class uavLinkConnectionTransaction():
     def getResponse(self):
         #Waits for the current transaction to complete
         result = self.transDoneEvent.wait(self.transTimeout)
+        self.conn.deregister_transaction(self)
         if not result:
             print "transaction timeout"
         self.pending = False
@@ -381,9 +372,7 @@ class uavLinkConnectionTransaction():
     def getAck(self):
         if self.reply:
             return self.rxAck
-    def end(self):
-        # ends the transaction and allows the next to begin
-        self.lock.release()
+
     
         
         
@@ -427,7 +416,8 @@ class uavLinkConnection():
         self.protocol.register_uavLinkRxStreamPacket_callback(self.rxStream)
         self.tx_thread = uavLinkConnection_tx(self)
         self.rx_thread = uavLinkConnection_rx(self)
-        self.trans = uavLinkConnectionTransaction(self.protocol)
+        self.trans = []
+        self.trans_list_lock = threading.RLock()
         self.txQueue = Queue.Queue()
         self.disconnectEvent = threading.Event()
         self.write = write
@@ -436,6 +426,14 @@ class uavLinkConnection():
         self.connected = False
     def register_rxStream_callback(self,streamId,callback):
         self.rxSerialStreams[streamId] = callback
+    def register_transaction(self,tran):
+        self.trans_list_lock.acquire()
+        self.trans.append(tran)
+        self.trans_list_lock.release()
+    def deregister_transaction(self,tran):
+        self.trans_list_lock.acquire()
+        self.trans.remove(tran)
+        self.trans_list_lock.release()
     def start(self):
         self.connected = True
         self.tx_thread.start()
@@ -449,8 +447,11 @@ class uavLinkConnection():
         self.txQueue.put(data)
     def rxObject(self,rxObjId,rxType,rxData ):
         #print "id: %d type: %d datalen: %d" % (rxObjId,rxType,len(rxData))
-        #process the incoming object for effect on transactions 
-        self.trans.process(rxObjId,rxType,rxData)        
+        #process the incoming object for effect on transactions
+        self.trans_list_lock.acquire()
+        for tran in self.trans:
+            tran.process(rxObjId,rxType,rxData)
+        self.trans_list_lock.release()
         #if there is an object manager send objects to it
         if rxType == self.protocol.TYPE_OBJ:
             if self.objMgr:
@@ -494,48 +495,32 @@ class uavLinkConnection():
         self.protocol.sendInstanceObject(ObjId,Instance,data) 
     def transSingleObjectReq(self,ObjId):
         """Sends an OBJ_REQ for objId, returns that object or None if failes""" 
-        self.trans.start(ObjId,self.protocol.TYPE_OBJ_REQ)
+        tran = uavLinkConnectionTransaction(self,ObjId,self.protocol.TYPE_OBJ_REQ)
         self.protocol.sendSingleObjectReq(ObjId)
-        if (self.trans.getResponse()):
-            rxData = self.trans.getData()
-            self.trans.end()
+        if (tran.getResponse()):
+            rxData = tran.getData()
             return rxData
-        else:
-            self.trans.end()
-            return None
     def transInstanceObjectReq(self,ObjId,Instance):
         """Sends an OBJ_REQ for objId,Instance returns that object or None if failes""" 
-        self.trans.start(ObjId,self.protocol.TYPE_OBJ_REQ)
+        tran = uavLinkConnectionTransaction(self,ObjId,self.protocol.TYPE_OBJ_REQ)
         self.protocol.sendInstanceObjectReq(ObjId,Instance)
-        if (self.trans.getResponse()):
-            rxData = self.trans.getData()
-            self.trans.end()
+        if (tran.getResponse()):
+            rxData = tran.getData()
             return rxData[2:]
-        else:
-            self.trans.end()
-            return None
     def transSingleObjectAck(self,ObjId,data):
         """Sends an OBJ_ACK for objId, returns True for ACK or None if timedout""" 
-        self.trans.start(ObjId,self.protocol.TYPE_OBJ_ACK)
+        tran = uavLinkConnectionTransaction(self,ObjId,self.protocol.TYPE_OBJ_ACK)
         self.protocol.sendSingleObjectAck(ObjId,data)
-        if (self.trans.getResponse()):
-            ack = self.trans.getAck()
-            self.trans.end()
-            return ack
-        else:
-            self.trans.end()
-            return None
+        if (tran.getResponse()):
+            return tran.getAck()
     def transInstanceObjectAck(self,ObjId,Instance,data):
         """Sends an OBJ_ACK for objId,Instance, returns True for ACK or None if timedout""" 
-        self.trans.start(ObjId,self.protocol.TYPE_OBJ_ACK)
+        tran = uavLinkConnectionTransaction(self,ObjId,self.protocol.TYPE_OBJ_ACK)
         self.protocol.sendInstanceObjectAck(ObjId,data)
-        if (self.trans.getResponse()):
-            ack = self.trans.getAck()
-            self.trans.end()
-            return ack
-        else:
-            self.trans.end()
-            return None
+        if (tran.getResponse()):
+            return  tran.getAck()
+
+
         
         
 #the streamServer handles multiple connections from GCS (or any serial sream)
