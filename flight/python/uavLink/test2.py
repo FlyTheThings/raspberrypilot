@@ -2,7 +2,7 @@
 import logging
 import uavlink
 import time
-import socket
+import socket 
 
 # Log everything, and send it to stderr.
 logging.basicConfig(level=logging.DEBUG)

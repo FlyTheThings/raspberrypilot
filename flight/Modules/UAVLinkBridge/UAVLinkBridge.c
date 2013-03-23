@@ -43,6 +43,7 @@
 #define TASK_PRIORITY_TX (tskIDLE_PRIORITY + 2)
 #define TASK_PRIORITY_TXPRI (tskIDLE_PRIORITY + 2)
 #define REQ_TIMEOUT_MS 250
+#define TELEM_STREAM_ACK_TIMEOUT 300
 #define MAX_RETRIES 2
 #define STATS_UPDATE_PERIOD_MS 4000
 #define CONNECTION_TIMEOUT_MS 8000
@@ -73,8 +74,9 @@ static int32_t transmitData(uint8_t * data, int32_t length);
 static void processObjEvent(UAVObjEvent * ev);
 static void updateUavlinkStats();
 static void compUavlinkBridgeStatsUpdated();
-static int32_t forwardStream();
-static int32_t forwardDataTelem(uint8_t * data, int32_t length);
+static void forwardStream(uint32_t id, uint8_t * buf, uint16_t buf_len);
+
+
 
 /**
  * Initialise the uavlinkbridge module
@@ -129,6 +131,8 @@ int32_t UavlinkbridgeInitialize(void)
     
 	// Initialise UAVLink
 	uavLinkCon = UAVLinkInitialize(&transmitData);
+
+	UAVLinkSetStreamForwarder(uavLinkCon, forwardStream);
     
 	// Create periodic event that will be used to update the uavlinkbridge stats
 	txErrors = 0;
@@ -197,7 +201,7 @@ static void uavlinkbridgeTelemTxTask(void *parameters)
 		uint32_t rx_bytes;
 		rx_bytes = PIOS_COM_ReceiveBuffer(PIOS_COM_TELEM_LOOP, bridge_telem_tx_buffer, BRIDGE_TELEM_TX_BUF_LEN, 500);
 		if (rx_bytes > 0) {
-			sendStreamPacket(uavLinkCon, TELEM_STREAM_ID, rx_bytes, bridge_telem_tx_buffer);
+			streamStream(uavLinkCon, TELEM_STREAM_ID,  rx_bytes, bridge_telem_tx_buffer, TELEM_STREAM_ACK_TIMEOUT);
 		}
 	}
 }
@@ -247,10 +251,7 @@ static void uavlinkbridgeRxTask(void *parameters)
 			bytes_to_process = PIOS_COM_ReceiveBuffer(inputPort, serial_data, sizeof(serial_data), 500);
 			if (bytes_to_process > 0) {
 				for (uint8_t i = 0; i < bytes_to_process; i++) {
-					state = UAVLinkProcessInputStream(uavLinkCon,serial_data[i]);
-					if (state == UAVLINK_STATE_STREAM_COMPLETE) {
-						forwardStream();
-					}
+					UAVLinkProcessInputStream(uavLinkCon,serial_data[i]);
 				}
 			}
 		} else {
@@ -265,27 +266,17 @@ static void uavlinkbridgeRxTask(void *parameters)
  * \return -1 on failure
  * \return number of bytes transmitted on success
  */
-static int32_t forwardStream() {
-	int16_t streamId;
-	streamId = UAVLinkGetStreamId(uavLinkCon);
-	switch (streamId) {
+static void forwardStream(uint32_t id, uint8_t * buf, uint16_t buf_len) {
+	switch (id) {
 		case(TELEM_STREAM_ID):
-			return UAVLinkForwardStream(uavLinkCon,&forwardDataTelem);
+				PIOS_COM_SendBuffer(PIOS_COM_TELEM_LOOP, buf, buf_len);
+			break;
+		default:
+			break;
 	}
 
 }
 
-/**
- * Transmits data to the telemetry port loopback
- * \param[in] data Data buffer to send
- * \param[in] length Length of buffer
- * \return -1 on failure
- * \return number of bytes transmitted on success
- */
-static int32_t forwardDataTelem(uint8_t * data, int32_t length)
-{
-	return PIOS_COM_SendBuffer(PIOS_COM_TELEM_LOOP, data, length);
-}
 
 /**
  * Transmit data buffer to the modem or USB port.

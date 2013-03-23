@@ -38,7 +38,7 @@ typedef struct {
 	uint16_t size;
 	uint32_t objId;
 } uavlink_min_header;
-#define UAVLINK_MIN_HEADER_LENGTH       sizeof(uavlink_min_header)
+#define UAVLINK_MIN_PACKET_SIZE       5
 
 typedef struct {
 	uint8_t  sync;
@@ -59,10 +59,9 @@ typedef struct {
     UAVObjHandle obj;
     uint8_t type;
     uint16_t packet_size;
-    uint32_t objId;
+    uint32_t rxId;
     uint16_t instId;
     uint32_t length;
-    uint8_t streamId;
     uint8_t instanceLength;
     uint8_t cs;
     int32_t rxCount;
@@ -76,19 +75,20 @@ typedef struct {
     xSemaphoreHandle lock;
     xSemaphoreHandle transLock;
     xSemaphoreHandle respSema;
-    UAVObjHandle respObj;
+    uint32_t respId;
     uint16_t respInstId;
     UAVLinkStats stats;
     UAVLinkInputProcessor iproc;
     uint8_t *rxBuffer;
     uint32_t txSize;
     uint8_t *txBuffer;
+    uavLinkStreamForwarder streamForwarder;
 } UAVLinkConnectionData;
 
 #define UAVLINK_CANARI         0xCA
 #define UAVLINK_WAITFOREVER     -1
 #define UAVLINK_NOWAIT          0
-#define UAVLINK_SYNC_VAL       0x3C
+#define UAVLINK_SYNC_VAL       0x3E
 #define UAVLINK_TYPE_MASK      0xF8
 #define UAVLINK_TYPE_VER       0x20
 #define UAVLINK_TYPE_OBJ       (UAVLINK_TYPE_VER | 0x00)
