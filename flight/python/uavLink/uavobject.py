@@ -81,7 +81,6 @@ class uavObjectField():
         if self.numElements == 1:
             ser = self.struct.pack(value)
         else:
-            print value
             ser = self.struct.pack(*value)
         return ser
     def deserialize(self, data):

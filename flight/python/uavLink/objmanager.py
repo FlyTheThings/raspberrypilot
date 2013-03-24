@@ -61,7 +61,6 @@ class objManager():
                 data = self.conn.transSingleObjectReq(obj.OBJID)
             else:
                 data = self.conn.transInstanceObjectReq(obj.OBJID,obj.instance)
-            print "get obj data %s" % data
             if data:
                 obj.unpackData(data)
                 return True

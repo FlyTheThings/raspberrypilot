@@ -41,11 +41,9 @@ def UAVObjSave(cur,obj):
     return True
     
 def UAVObjSaveSettings(cur,objMgr):
-    print "save settings"
     ids = objMgr.getAllObjsIDs()
     for objId in ids:
         obj = objMgr.getObjByID(objId,read = False)
-        print "trying to save %s" % obj.name
         if obj.isSetting == True:
             if obj.isSingleInst:
                 obj.get()
@@ -92,8 +90,7 @@ def run():
     while True:
         # Get object data
         time.sleep(0.5)
-        print objper.get()
-        print objper.Operation
+        objper.get()
         
         # Execute action each action returns true for success, false for failure
         retval = None
