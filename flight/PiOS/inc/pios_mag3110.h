@@ -40,6 +40,7 @@
 #define PIOS_MAG3110_I2C_WRITE_ADDR		PIOS_MAG3110_I2C_ADDR << 1          // 8 Bit Write Address
 #define PIOS_MAG3110_I2C_READ_ADDR		PIOS_MAG3110_I2C_WRITE_ADDR | 0x01  // 8 Bit Read Address
 #define PIOS_MAG3110_ID					0xC4								// Self Assigned Internal ID Number
+#define PIOS_I2C_MAG3110_ADAPTER		PIOS_I2C_MAIN_ADAPTER
 /**
 The MAG3110 automatically increments its subaddress for repeated reads or writes.
 It has a "fast" read mode which skips the least significant data bytes if CTRL_REG1 bit2 is set.
@@ -110,6 +111,7 @@ It has a "fast" read mode which skips the least significant data bytes if CTRL_R
 #define PIOS_MAG3110_ODR_0p16_64	(30 << 3)				//	0.16		64		80		8.6		0.3
 #define PIOS_MAG3110_ODR_0p08_128	(31 << 3)				//	0.08		128		80		8.6		0.25
 
+#define	NO							0
 #define PIOS_MAG3110_FAST_READ		(1 << 2)				//			Skips the low byte if autoincrement reading
 															//	TM/AC
 #define PIOS_MAG3110_STANDBY		((0 << 1) | (0 << 0))	//	0	0	ASIC is in low power standby mode.
@@ -202,13 +204,14 @@ It has a "fast" read mode which skips the least significant data bytes if CTRL_R
 #define PIOS_MAG3110_SYSMOD_ACTIVE_CORR	((1 << 1) | (0 << 0))	//	10: ACTIVE mode, non-RAW user-corrected data.
 #define PIOS_MAG3110_SYSMOD_ERROR		((1 << 1) | (1 << 0))	//	Not defined in Datasheet. If present something wrong?!
 
-struct pios_MAG3110_cfg {
-	uint8_t data_rate;						// ADC Conversion rate and noise tradeoff.
-	uint8_t fast_read;						// Whether or not to use fast mode to retreive the data (8 bits vs 16 on continuous I²C read).
-	uint8_t trig_mode;						// One of four trigger modes, see above.
-	uint8_t auto_degauss;					// Perform automatic degauss of the sensor before each reading.
-	uint8_t raw_read;						// Use the factory calibration only, ignore the user calibration registers.
-	uint8_t degauss_now;					// Oneshot degauss of the sensor. This bit will clear itself in the sensor.
+
+struct pios_MAG3110_cfg{
+	uint8_t data_rate;			// ADC Conversion rate and noise tradeoff.
+	uint8_t fast_read;			// Whether or not to use fast mode to retreive the data (8 bits vs 16 on continuous I²C read).
+	uint8_t trig_mode;			// One of four trigger modes, see above.
+	uint8_t auto_degauss;		// Perform automatic degauss of the sensor before each reading.
+	uint8_t raw_read;			// Use the factory calibration only, ignore the user calibration registers.
+	uint8_t degauss_now;		// Oneshot degauss of the sensor. This bit will clear itself in the sensor.
 };
 
 /* Public Functions */
@@ -218,6 +221,7 @@ extern int32_t PIOS_MAG3110_ReadMag(int16_t out[3]);
 extern int32_t PIOS_MAG3110_ReadID(void);
 extern int32_t PIOS_MAG3110_Test(void);
 extern int32_t PIOS_MAG3110_DeGaussNow(void);
+
 #endif /* PIOS_MAG3110_H */
 
 /** 

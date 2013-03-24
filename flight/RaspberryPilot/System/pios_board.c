@@ -39,6 +39,19 @@
 /**
  * Sensor configurations 
  */
+ 
+#if defined(PIOS_INCLUDE_MAG3110)
+#include "pios_mag3110.h"
+ static const struct pios_mag3110_cfg pios_mag3110_cfg = {
+	.data_rate =	PIOS_MAG3110_ODR_80_16,			// see header file for others
+	.fast_read =	NO,								// alternately PIOS_MAG3110_FAST_READ
+	.trig_mode =	PIOS_MAG3110_CONTINUOUS,		// see header file for others
+	.auto_degauss = NO,								// alternately PIOS_MAG3110_AUTO_MRST_EN
+	.raw_read =		PIOS_MAG3110_RAW,				// alternately NO
+	.degauss_now =	NO,								// alternately PIOS_MAG3110_MAG_RST
+};
+#endif /* PIOS_INCLUDE_MAG3110 */
+
 #if defined(PIOS_INCLUDE_HMC5883)
 #include "pios_hmc5883.h"
 static const struct pios_exti_cfg pios_exti_hmc5883_cfg __exti_config = {
@@ -478,7 +491,13 @@ void PIOS_Board_Init(void) {
 	PIOS_DELAY_WaitmS(50);
 
 
+#if defined(PIOS_INCLUDE_HMC5883)
+	PIOS_HMC5883_Init(&pios_hmc5883_cfg);
+#endif
 
+#if defined(PIOS_INCLUDE_MAG3110)
+	PIOS_MAG3110_Init(&pios_mag3110_cfg);
+#endif
 
 
 }
