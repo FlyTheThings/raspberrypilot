@@ -73,32 +73,23 @@ class uavObjectField():
         fmt = "<" + vfmt*numElements
         self.struct = struct.Struct(fmt)
         self.fmt = fmt
-        if ftype == uavObjectField.FType.FLOAT32:
-            baseValue = 0.0
-        else:
-            baseValue = 0
-        if numElements == 1:
-            self.value = baseValue
-        else:
-            self.value = [baseValue]* numElements
         self.rawSize = self.rawSizePerElem * self.numElements
     def getRawSize(self):
         return self.rawSize
     def serialize(self):
-        self.getValueFromObj()
+        value = self.getValueFromObj()
         if self.numElements == 1:
-            ser = self.struct.pack(self.value)
+            ser = self.struct.pack(value)
         else:
-            ser = self.struct.pack(*self.value)
+            ser = self.struct.pack(*value)
         return ser
     def deserialize(self, data):
-        # DOTO: FIXME: This is getting very messy
         values = list(self.struct.unpack("".join(data[:self.rawSize])))
         if self.numElements == 1:
-            self.value = self.enum_to_str(values[0])
+            value = self.enum_to_str(values[0])
         else:
-            self.value = map(self.enum_to_str,values)
-        self.setValueToObj(self.value)
+            value = map(self.enum_to_str,values)
+        self.setValueToObj(value)
         return self.rawSize
     def setValueToObj(self,value):
         setattr(self.obj,self.name,value)
@@ -111,7 +102,7 @@ class uavObjectField():
             value = self.str_to_enum(value)
         else:
             value = map(self.str_to_enum,value)
-        self.value = value
+        return value
     def enum_to_str(self,value):
         if (self.ftype == uavObjectField.FType.ENUM):
             return self.enums[value]
@@ -156,10 +147,10 @@ class uavObject(object):
     def getInstanceId(self):
         return self.instId
         "return the instance id if multinstance or none"
-    def read(self):
+    def get(self):
         if self.objMgr:
             self.objMgr.getObj(self)
-    def write(self):
+    def set(self):
         if self.objMgr:
             self.objMgr.setObj(self)
 

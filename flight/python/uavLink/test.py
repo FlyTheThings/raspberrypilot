@@ -25,19 +25,14 @@ objMgr = uavlink.objManager(conn)
 uavlink_server = uavlink.uavLinkServer(objMgr,"",8075)
 
 
-stats = objMgr.getObjByName("I2CStats")
-stats.read()
-print stats.nacks
+stats = objMgr.getObjByName("ObjectPersistence")
+stats.get()
+
 
 while(True):
+    continue
+    stats.get()
     time.sleep(1)
     
-"""
-    stats.nacks += 1
-    stats.nacks %= 100
-    print stats.nacks
-    for i in range(20):
-        stats.write()
-        time.sleep(0.02)
-"""
+
     

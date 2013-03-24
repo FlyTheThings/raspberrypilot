@@ -321,11 +321,9 @@ class uavLinkConnectionTransaction():
         self.rxData = None
         self.rxAck = False
         self.reply = False
-        self.pending = True
         self.conn.register_transaction(self)
     def process(self,rxId,rxType,rxData):
-        if not self.pending:
-            return
+        #print "trans data %s len: %s" % (rxData.encode('hex'),len(rxData))
         if rxId != self.id:
             return
         if (self.transType == self.protocol.TYPE_OBJ_REQ) & (rxType == self.protocol.TYPE_OBJ):
@@ -359,7 +357,6 @@ class uavLinkConnectionTransaction():
         self.conn.deregister_transaction(self)
         if not result:
             print "transaction timeout type: %d id: %d" % (self.transType,self.id)
-        self.pending = False
         return self.reply
     def getData(self):
         if self.reply:
@@ -478,7 +475,7 @@ class uavLinkConnection():
                     self.protocol.sendInstanceObject(rxId,objInstance,obj.getPackedData())
             if len(rxData) == 0:
                 obj = self.objMgr.getObjByID(rxId)
-                obj.read()
+                obj.get()
                 self.protocol.sendSingleObject(rxId,obj.getPackedData())
             else:
                 logging.warning("Received Obj Request with data length other than 2 or 0")
@@ -553,7 +550,7 @@ class streamServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
         self.handlers = []
         self.rx_buf = ""
         self.read_timeout = 0.1 # the read will block for at most this amount of time
-        self.read_len = 15      # the read will return if more than this many bytes are available
+        self.read_len = 75      # the read will return if more than this many bytes are available
         self.rx_handler = None
         #start it as a new thread
         t = threading.Thread(target=self.serve_forever)

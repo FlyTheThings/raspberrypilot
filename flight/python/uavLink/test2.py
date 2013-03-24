@@ -18,27 +18,10 @@ conn.start()
 objMgr = uavlink.objManager(conn)
 
 
-stats = objMgr.getObjByName("I2CStats")
-stats.read()
-event_log = stats.event_log
-print event_log
-event_log[2] = "I2C_EVENT_START"
-print event_log
-stats.event_log = event_log
-stats.write()
-stats.read()
-print stats.event_log
-time.sleep(5)
-stats.read()
-print stats.event_log
+stats = objMgr.getObjByName("GCSTelemetryStats")
+stats.get()
 
-
-#exit()
 
 while(True):
-    stats.nacks += 1
-    stats.nacks %= 100
-    print stats.nacks
-    for i in range(20):
-        stats.write()
+    stats.get()
     
