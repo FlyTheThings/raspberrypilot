@@ -4,7 +4,6 @@ from uavlinkserver import *
 from streamserver import *
 from objmanager import *
 from uavlinkconnection import *
-import logging
 
 # This is a helper function to clean up repeat code in flight modules
 def connectObjMgr(host="127.0.0.1",port=8075):

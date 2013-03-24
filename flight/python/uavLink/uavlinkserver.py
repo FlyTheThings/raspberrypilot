@@ -28,6 +28,7 @@
 import SocketServer
 import threading
 import uavlink
+import logging
 
 #the streamServer handles multiple connections from GCS (or any serial sream)
 class uavLinkServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):

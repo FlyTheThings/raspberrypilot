@@ -25,15 +25,37 @@ conn.start()
 objMgr = uavlink.objManager(conn)
 uavlink_server = uavlink.uavLinkServer(objMgr,"",8075)
 
-
-stats = objMgr.getObjByName("ObjectPersistence")
-stats.get()
-
+CompUavlinkStats = None
+while CompUavlinkStats == None:
+    CompUavlinkStats = objMgr.getObjByName("CompUavlinkStats")
+FlightUavlinkStats = None
+while FlightUavlinkStats == None:
+    FlightUavlinkStats = objMgr.getObjByName("FlightUavlinkStats")    
 
 while(True):
-    continue
-    stats.get()
+    CompUavlinkStats.set()
     time.sleep(0.5)
+    print CompUavlinkStats.Status
+    
+    if not FlightUavlinkStats.get():
+        CompUavlinkStats.Status = "DISCONNECTED"
+    if CompUavlinkStats.Status == "CONNECTED":
+        if FlightUavlinkStats.Status == "DISCONNECTED":
+            CompUavlinkStats.Status = "DISCONNECTED"
+            continue
+    elif CompUavlinkStats.Status == "HANDSHAKEREQ":
+        if FlightUavlinkStats.Status == "HANDSHAKEACK":
+            CompUavlinkStats.Status = "CONNECTED"
+    # This case won't happen as flight does not begin the handshake
+    #elif CompUavlinkStats.Status == "HANDSHAKEACK":
+    #    if FlightUavlinkStats.Status == "CONNECTED":
+    #        CompUavlinkStats.Status = "CONNECTED"
+    elif CompUavlinkStats.Status == "DISCONNECTED":
+        if FlightUavlinkStats.Status == "DISCONNECTED":
+            CompUavlinkStats.Status = "HANDSHAKEREQ"
+    
+    
+
 
 
     

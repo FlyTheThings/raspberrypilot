@@ -1,5 +1,6 @@
 import uavlink
 import inspect
+import logging
 
 # the object manager
 # this is a routing object manager for now, ie it holds no copies of the data
