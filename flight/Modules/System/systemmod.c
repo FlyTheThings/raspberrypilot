@@ -159,7 +159,7 @@ static void systemTask(void *parameters)
 	idleCounterClear = 0;
 
 	// Listen for SettingPersistance object updates, connect a callback function
-	ObjectPersistenceConnectQueue(objectPersistenceQueue);
+	//ObjectPersistenceConnectQueue(objectPersistenceQueue);
 
 	// Main system loop
 	while (1) {
@@ -200,16 +200,17 @@ static void systemTask(void *parameters)
 			SYSTEM_UPDATE_PERIOD_MS / portTICK_RATE_MS / (LED_BLINK_RATE_HZ * 2) :
 			SYSTEM_UPDATE_PERIOD_MS / portTICK_RATE_MS;
 
-		if(xQueueReceive(objectPersistenceQueue, &ev, delayTime) == pdTRUE) {
-			// If object persistence is updated call the callback
-			objectUpdatedCb(&ev);
-		}
+		//if(xQueueReceive(objectPersistenceQueue, &ev, delayTime) == pdTRUE) {
+		//	// If object persistence is updated call the callback
+		//	objectUpdatedCb(&ev);
+		//}
 	}
 }
 
 /**
  * Function called in response to object updates
  */
+/* REMOVED, RUNNING ON RASPBERRY PI
 static void objectUpdatedCb(UAVObjEvent * ev)
 {
 	ObjectPersistenceData objper;
@@ -297,6 +298,7 @@ static void objectUpdatedCb(UAVObjEvent * ev)
 		}
 	}
 }
+*/
 
 /**
  * Called periodically to update the I2C statistics 

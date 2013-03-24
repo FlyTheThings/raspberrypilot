@@ -40,13 +40,15 @@ class $(NAME)(uavlink.uavObject):
 	# Object constants
 	OBJID = $(OBJID)
 	name = "$(NAME)"
-$(PROPERTYFUNCTIONS)
 	# Constructor
 	def __init__(self):
 		uavlink.uavObject.__init__(self, $(NAME).OBJID)
 
 		# Create object fields
 $(DATAFIELDINIT)
+
+		#default values
+$(INITFIELDS)
 
 		# Associated Data
 		self.isSingleInst = $(ISSINGLEINST)

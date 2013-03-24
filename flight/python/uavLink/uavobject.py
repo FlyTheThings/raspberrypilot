@@ -43,10 +43,11 @@ class uavObjectField():
         FLOAT32 = 6
         ENUM = 7
          
-    def __init__(self, ftype, numElements):
+    def __init__(self, obj, ftype, numElements):
         self.ftype = ftype
+        self.obj = obj
         self.numElements = numElements
-        if self.ftype == uavObjectField.FType.INT8:
+        if self.ftype == self.FType.INT8:
             vfmt = "b"
             self.rawSizePerElem = 1
         elif self.ftype == uavObjectField.FType.UINT8 or self.ftype == uavObjectField.FType.ENUM:
@@ -72,34 +73,44 @@ class uavObjectField():
         fmt = "<" + vfmt*numElements
         self.struct = struct.Struct(fmt)
         self.fmt = fmt
-        if ftype == uavObjectField.FType.FLOAT32:
-            baseValue = 0.0
-        else:
-            baseValue = 0
-        if numElements == 1:
-            self.value = baseValue
-        else:
-            self.value = [baseValue]* numElements
         self.rawSize = self.rawSizePerElem * self.numElements
     def getRawSize(self):
         return self.rawSize
     def serialize(self):
+        value = self.getValueFromObj()
         if self.numElements == 1:
-            ser = self.struct.pack(self.value)
+            ser = self.struct.pack(value)
         else:
-            ser = self.struct.pack(*self.value)
+            ser = self.struct.pack(*value)
         return ser
     def deserialize(self, data):
-        # DOTO: FIXME: This is getting very messy
         values = list(self.struct.unpack("".join(data[:self.rawSize])))
         if self.numElements == 1:
-            self.value = values[0]
+            value = self.enum_to_str(values[0])
         else:
-            self.value = values
+            value = map(self.enum_to_str,values)
+        self.setValueToObj(value)
         return self.rawSize
-    def setValue(self,value):
-        #this has been added for error checking later TODO
-        self.value = value
+    def setValueToObj(self,value):
+        setattr(self.obj,self.name,value)
+    def getValueFromObj(self):
+        value = getattr(self.obj,self.name)
+        if self.numElements != 1:
+            if self.numElements != len(value):
+                raise ValueError("Incorrect Length List")
+        if self.numElements == 1:
+            value = self.str_to_enum(value)
+        else:
+            value = map(self.str_to_enum,value)
+        return value
+    def enum_to_str(self,value):
+        if (self.ftype == uavObjectField.FType.ENUM):
+            return self.enums[value]
+        return value
+    def str_to_enum(self,value):
+        if (self.ftype == uavObjectField.FType.ENUM) and (value in self.enums):
+            value = self.enums.index(value)
+        return value
 
           
 class uavObject(object):
@@ -136,12 +147,12 @@ class uavObject(object):
     def getInstanceId(self):
         return self.instId
         "return the instance id if multinstance or none"
-    def read(self):
+    def get(self):
         if self.objMgr:
-            self.objMgr.getObj(self)
-    def write(self):
+            return self.objMgr.getObj(self)
+    def set(self):
         if self.objMgr:
-            self.objMgr.setObj(self)
+            return self.objMgr.setObj(self)
 
 
 

@@ -100,18 +100,21 @@ bool UAVObjectGeneratorPythonFlight::process_object(ObjectInfo* info)
         // Class header
         datafields.append(QString("# Field %1 definition\n").arg(info->fields[n]->name));
         datafields.append(QString("class %1Field(uavlink.uavObjectField):\n").arg(info->fields[n]->name));
+        datafields.append(QString("\tname = '%1'\n").arg(info->fields[n]->name));
         // Only for enum types
         if (info->fields[n]->type == FIELDTYPE_ENUM)
         {
             datafields.append(QString("\t# Enumeration options\n"));
             // Go through each option
             QStringList options = info->fields[n]->options;
+            datafields.append(QString("\tenums = ["));
             for (int m = 0; m < options.length(); ++m) {
                 QString name = options[m].toUpper().replace(QRegExp(ENUM_SPECIAL_CHARS), "");
                 if (name[0].isDigit())
                     name = QString("N%1").arg(name);
-                datafields.append(QString("\t%1 = %2\n").arg(name).arg(m));
+                datafields.append(QString("\"%1\", ").arg(name));
             }
+            datafields.append(QString("]\n"));
         }
         // Generate element names (only if field has more than one element)
         if (info->fields[n]->numElements > 1 && !info->fields[n]->defaultElementNames)
@@ -128,8 +131,8 @@ bool UAVObjectGeneratorPythonFlight::process_object(ObjectInfo* info)
             }
         }
         // Constructor
-        datafields.append(QString("\tdef __init__(self):\n"));
-        datafields.append(QString("\t\tuavlink.uavObjectField.__init__(self, %1, %2)\n\n").arg(info->fields[n]->type).arg(info->fields[n]->numElements));
+        datafields.append(QString("\tdef __init__(self,obj):\n"));
+        datafields.append(QString("\t\tuavlink.uavObjectField.__init__(self,obj, %1, %2)\n\n").arg(info->fields[n]->type).arg(info->fields[n]->numElements));
     }
     outCode.replace(QString("$(DATAFIELDS)"), datafields);
 
@@ -140,7 +143,7 @@ bool UAVObjectGeneratorPythonFlight::process_object(ObjectInfo* info)
         // The property
         properties.append(QString("\t@property\n"));
         properties.append(QString("\tdef %1(self):\n").arg(info->fields[n]->name));
-        properties.append(QString("\t\treturn self._%1.value\n").arg(info->fields[n]->name));
+        properties.append(QString("\t\treturn self._%1.getValue()\n").arg(info->fields[n]->name));
         //the property setter
         properties.append(QString("\t@%1.setter\n").arg(info->fields[n]->name));
         properties.append(QString("\tdef %1(self,value):\n").arg(info->fields[n]->name));
@@ -152,10 +155,119 @@ bool UAVObjectGeneratorPythonFlight::process_object(ObjectInfo* info)
     QString fields;
     for (int n = 0; n < info->fields.length(); ++n)
     {
-        fields.append(QString("\t\tself._%1 = %1Field()\n").arg(info->fields[n]->name));
+        fields.append(QString("\t\tself._%1 = %1Field(self)\n").arg(info->fields[n]->name));
         fields.append(QString("\t\tself.addField(self._%1)\n").arg(info->fields[n]->name));
     }
     outCode.replace(QString("$(DATAFIELDINIT)"), fields);
+
+    // Replace the $(INITFIELDS) tag
+    QString initfields;
+    for (int n = 0; n < info->fields.length(); ++n)
+    {
+        if (!info->fields[n]->defaultValues.isEmpty() )
+        {
+            // For non-array fields
+            if ( info->fields[n]->numElements == 1)
+            {
+                if ( info->fields[n]->type == FIELDTYPE_ENUM )
+                {
+                    initfields.append( QString("\t\tself.%1 = %2\r\n")
+                                .arg( info->fields[n]->name )
+                                .arg( info->fields[n]->options.indexOf( info->fields[n]->defaultValues[0] ) ) );
+                }
+                else if ( info->fields[n]->type == FIELDTYPE_FLOAT32 )
+                {
+                    initfields.append( QString("\t\tself.%1 = %2\r\n")
+                                .arg( info->fields[n]->name )
+                                .arg( info->fields[n]->defaultValues[0].toFloat() ) );
+                }
+                else
+                {
+                    initfields.append( QString("\t\tself.%1 = %2\r\n")
+                                .arg( info->fields[n]->name )
+                                .arg( info->fields[n]->defaultValues[0].toInt() ) );
+                }
+            }
+            else
+            {
+                initfields.append( QString("\t\tself.%1 = []\r\n")
+                            .arg( info->fields[n]->name ) );
+                // Initialize all fields in the array
+                for (int idx = 0; idx < info->fields[n]->numElements; ++idx)
+                {
+                    if ( info->fields[n]->type == FIELDTYPE_ENUM )
+                    {
+                        initfields.append( QString("\t\tself.%1.append('%2')\r\n")
+                                    .arg( info->fields[n]->name )
+                                    .arg( info->fields[n]->options.indexOf( info->fields[n]->defaultValues[idx] ) ) );
+                    }
+                    else if ( info->fields[n]->type == FIELDTYPE_FLOAT32 )
+                    {
+                        initfields.append( QString("\t\tself.%1.append(%2)\r\n")
+                                    .arg( info->fields[n]->name )
+                                    .arg( info->fields[n]->defaultValues[idx].toFloat() ) );
+                    }
+                    else
+                    {
+                        initfields.append( QString("\t\tself.%1.append(%2)\r\n")
+                                    .arg( info->fields[n]->name )
+                                    .arg( info->fields[n]->defaultValues[idx].toInt() ) );
+                    }
+                }
+            }
+        } else {
+            // For non-array fields
+            if ( info->fields[n]->numElements == 1)
+            {
+                if ( info->fields[n]->type == FIELDTYPE_ENUM )
+                {
+                    initfields.append( QString("\t\tself.%1 = %2\r\n")
+                                .arg( info->fields[n]->name )
+                                .arg( QString("0") ) );
+                }
+                else if ( info->fields[n]->type == FIELDTYPE_FLOAT32 )
+                {
+                    initfields.append( QString("\t\tself.%1 = %2\r\n")
+                                .arg( info->fields[n]->name )
+                                .arg( QString("0") ) );
+                }
+                else
+                {
+                    initfields.append( QString("\t\tself.%1 = %2\r\n")
+                                .arg( info->fields[n]->name )
+                                .arg(  QString("0") ) );
+                }
+            }
+            else
+            {
+                initfields.append( QString("\t\tself.%1 = []\r\n")
+                            .arg( info->fields[n]->name ) );
+                // Initialize all fields in the array
+                for (int idx = 0; idx < info->fields[n]->numElements; ++idx)
+                {
+                    if ( info->fields[n]->type == FIELDTYPE_ENUM )
+                    {
+                        initfields.append( QString("\t\tself.%1.append(%2)\r\n")
+                                    .arg( info->fields[n]->name )
+                                    .arg(  QString("0") ) );
+                    }
+                    else if ( info->fields[n]->type == FIELDTYPE_FLOAT32 )
+                    {
+                        initfields.append( QString("\t\tself.%1.append(%2)\r\n")
+                                    .arg( info->fields[n]->name )
+                                    .arg(  QString("0") ) );
+                    }
+                    else
+                    {
+                        initfields.append( QString("\t\tself.%1.append(%2)\r\n")
+                                    .arg( info->fields[n]->name )
+                                    .arg(  QString("0") ) );
+                    }
+                }
+            }
+        }
+    }
+    outCode.replace(QString("$(INITFIELDS)"), initfields);
 
     // Write the Python code
     bool res = writeFileIfDiffrent( pythonOutputPath.absolutePath() + "/" + info->namelc + ".py", outCode );
