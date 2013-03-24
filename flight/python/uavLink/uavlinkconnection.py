@@ -25,6 +25,7 @@ class uavLinkConnectionTransaction():
         if (self.transType == self.protocol.TYPE_OBJ_REQ) & (rxType == self.protocol.TYPE_OBJ):
             self.rxType = rxType
             self.rxData = rxData
+            self.rxAck = True
             self.reply = True
             self.transDoneEvent.set()
         elif (self.transType == self.protocol.TYPE_OBJ_REQ) & (rxType == self.protocol.TYPE_NACK):
@@ -257,8 +258,12 @@ class uavLinkConnection():
         tran = uavLinkConnectionTransaction(self,ObjId,self.protocol.TYPE_OBJ_REQ)
         self.protocol.sendSingleObjectReq(ObjId)
         if (tran.getResponse()):
-            rxData = tran.getData()
-            return rxData
+            # getAck returns None if nothing received
+            ack = tran.getAck()
+            if ack == True:
+                return tran.getData()
+            elif ack == False:
+                return False
         else:
             self.stats.txFailure()
             return None
@@ -267,8 +272,12 @@ class uavLinkConnection():
         tran = uavLinkConnectionTransaction(self,ObjId,self.protocol.TYPE_OBJ_REQ)
         self.protocol.sendInstanceObjectReq(ObjId,Instance)
         if (tran.getResponse()):
-            rxData = tran.getData()
-            return rxData[2:]
+            ack = tran.getAck()
+            # getAck returns None if nothing received
+            if ack == True:
+                return tran.getData()[2:]
+            elif ack == False:
+                return False
         else:
             self.stats.txFailure()
             return None

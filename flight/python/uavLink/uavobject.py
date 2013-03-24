@@ -81,6 +81,7 @@ class uavObjectField():
         if self.numElements == 1:
             ser = self.struct.pack(value)
         else:
+            print value
             ser = self.struct.pack(*value)
         return ser
     def deserialize(self, data):
@@ -110,7 +111,7 @@ class uavObjectField():
     def str_to_enum(self,value):
         if (self.ftype == uavObjectField.FType.ENUM) and (value in self.enums):
             value = self.enums.index(value)
-        return value
+        return int(value)
 
           
 class uavObject(object):
