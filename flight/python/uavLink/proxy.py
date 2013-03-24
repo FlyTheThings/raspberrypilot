@@ -11,20 +11,25 @@ import sys
 # Log everything, and send it to stderr.
 logging.basicConfig(level=logging.DEBUG)
 
-
+#open a serial port to the embedded micro
 ser = serial.Serial("COM11",baudrate=57600)
 
+#create a stream server to allow telemetry to connect
 uavtalk_stream_server = uavlink.streamServer("", 8079)
 conn = uavlink.uavLinkConnection(None,ser.read,ser.write)
-
 uavtalk_stream_server.register_rx_handler(lambda data: conn.sendStream(1,data,timeout=1,retries=3))
 conn.register_rxStream_callback(1,lambda data: uavtalk_stream_server.write(data) )
 
+# start the connection to the embedded micro
 conn.start()
      
+# create an object manager and connect it through conn to the embedded microcontroller
 objMgr = uavlink.objManager(conn)
+
+# create a server to allow uavlink connections our object manager
 uavlink_server = uavlink.uavLinkServer(objMgr,"",8075)
 
+#wait until we are getting responses on the *UavlinkStats objects before continueing
 CompUavlinkStats = None
 while CompUavlinkStats == None:
     CompUavlinkStats = objMgr.getObjByName("CompUavlinkStats")
@@ -32,6 +37,7 @@ FlightUavlinkStats = None
 while FlightUavlinkStats == None:
     FlightUavlinkStats = objMgr.getObjByName("FlightUavlinkStats")    
 
+# Do the handshake and update the CompUavlinkStats forever
 period = 0.5
 while(True):
     CompUavlinkStats.set()
@@ -59,7 +65,6 @@ while(True):
             CompUavlinkStats.RxFailures = 0
             CompUavlinkStats.TxRetries = 0
             CompUavlinkStats.Status = "HANDSHAKEREQ"
-    
     
     connStats = conn.stats.get()
     conn.stats.clear()
