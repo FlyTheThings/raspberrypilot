@@ -250,7 +250,7 @@ class uavLinkConnection():
         if (tran.getResponse()):
             return tran.getAck()
         else:
-            self.conn.txFailure()
+            self.stats.txFailure()
             return None
     def transSingleObjectReq(self,ObjId):
         """Sends an OBJ_REQ for objId, returns that object or None if failes""" 
@@ -260,7 +260,7 @@ class uavLinkConnection():
             rxData = tran.getData()
             return rxData
         else:
-            self.conn.txFailure()
+            self.stats.txFailure()
             return None
     def transInstanceObjectReq(self,ObjId,Instance):
         """Sends an OBJ_REQ for objId,Instance returns that object or None if failes""" 
@@ -270,7 +270,7 @@ class uavLinkConnection():
             rxData = tran.getData()
             return rxData[2:]
         else:
-            self.conn.txFailure()
+            self.stats.txFailure()
             return None
     def transSingleObjectAck(self,ObjId,data):
         """Sends an OBJ_ACK for objId, returns True for ACK or None if timedout""" 
@@ -279,7 +279,7 @@ class uavLinkConnection():
         if (tran.getResponse()):
             return tran.getAck()
         else:
-            self.conn.txFailure()
+            self.stats.txFailure()
             return None
     def transInstanceObjectAck(self,ObjId,Instance,data):
         """Sends an OBJ_ACK for objId,Instance, returns True for ACK or None if timedout""" 
