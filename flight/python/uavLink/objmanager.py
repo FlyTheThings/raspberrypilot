@@ -32,6 +32,11 @@ class objManager():
     def unpack(self,rxObjId,rxData):
         """Returns on object from ID and packed data. Returns None if object is unkown"""
         pass
+    def getObjDefByID (self,id):
+        if id in self.objDefs:
+            return self.objDefs[id]()
+        else:
+            return None
     def getObjByID (self,id):
         if id in self.objDefs:
             obj = self.objDefs[id]()

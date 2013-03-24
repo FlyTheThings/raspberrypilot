@@ -149,10 +149,10 @@ class uavObject(object):
         "return the instance id if multinstance or none"
     def get(self):
         if self.objMgr:
-            self.objMgr.getObj(self)
+            return self.objMgr.getObj(self)
     def set(self):
         if self.objMgr:
-            self.objMgr.setObj(self)
+            return self.objMgr.setObj(self)
 
 
 

@@ -4,11 +4,12 @@ import uavlink
 import uavlink.uavobjects
 import serial
 import time
-
+import sys
+#sys.path.append("../Modules")
+#import ObjectPersistance
 
 # Log everything, and send it to stderr.
 logging.basicConfig(level=logging.DEBUG)
-
 
 
 ser = serial.Serial("COM11",baudrate=57600)
@@ -32,7 +33,7 @@ stats.get()
 while(True):
     continue
     stats.get()
-    time.sleep(1)
-    
+    time.sleep(0.5)
+
 
     

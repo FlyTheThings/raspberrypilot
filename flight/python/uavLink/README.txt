@@ -8,6 +8,14 @@ There are 6 main components:
 	streamserver
 	uavobject
 	
+	
+TODO:
+	handling of multi-instance objects is unimplemented/untested, most of the hooks are there
+	no support for meta-obejcts (they mainly effect telemetry), only downside is they can't be saved
+	
+
+
+
 uavlinkprotocol - 
 contains the byte stream parser, the crc, and methods to send packets of all types, two callbacks 
 may be registered, one to send data, one on receiving a packet
@@ -45,8 +53,10 @@ uavlinkserver -
 This is a server to talk uavlink to multiple tcp/ip connections.  Each TCP/IP connection gets a uavlinkconnection instance 
 with the servers object manager.  This allows multiple network connections to the the same object manager.
 
- 
 On the raspberry pi there will be proxy with a uavlinkconnection over serial to the microcontroller.  This connection will not 
 have an object manager. One objectmanager will be created to use this connection. One serialserver will be set up to bridge 
 telemetry to the uavlink connection to the microcontroller.  One uavlinkserver will be setup to allow multiple uavlink connections
 to the object manager.
+
+All other python flight software will run on the pi in different processes.  Each of these will create a uavlink connection over a 
+socket to the uavlinkserver in the proxy. Each will create an object manager to use that connection.
