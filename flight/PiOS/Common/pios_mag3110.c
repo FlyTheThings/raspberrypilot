@@ -41,6 +41,7 @@
 volatile bool fast_read_mode = 0;
 // MAG3110 Datasheet says the value defaults to 0 so this is safe to initialize to 0.
 
+/* Local Functions */
 static int32_t PIOS_MAG3110_Config(const struct pios_MAG3110_cfg * cfg);
 static int32_t PIOS_MAG3110_Read(uint8_t address, uint8_t * buffer, uint8_t len);
 static int32_t PIOS_MAG3110_Write(uint8_t address, uint8_t buffer);
@@ -76,7 +77,7 @@ static int32_t PIOS_MAG3110_Config(const struct pios_MAG3110_cfg * cfg)
 	// "0  |  0 ASIC is in low power standby mode."
 	// ------------------------------------------------
 	// This is a public function, however, so I don't think
-	// we can assume it's currenlty in STANDBY.
+	// we can assume it's currently in STANDBY.
 	
 	fast_read_mode = (cfg->fast_read == PIOS_MAG3110_FAST_READ);
 	
@@ -165,13 +166,13 @@ int32_t PIOS_MAG3110_ReadMAG(int16_t out[3])
 
 /**
  * @brief Read the identification byte from the MAG3110 sensor
- * \param[out] uint8_t array of size 1 to store MAG3110 ID.
+ * \param[out] int32_t to store MAG3110 ID.
  * \return id if successful
- * \return -1 if not successful (Don't worry, the MAG3110's id is not "-1")
+ * \return -1 if not successful (Don't worry, the MAG3110's id is not "-1" (0xFF))
  */
 int32_t PIOS_MAG3110_ReadID(void)
 {
-	uint8_t id;
+	uint8_t id = 0xFF;
 	
 	if (PIOS_MAG3110_Read(PIOS_MAG3110_WHO_AM_I, &id, 1) != 0);
 		return -1;

@@ -104,6 +104,9 @@
 #if defined(PIOS_INCLUDE_BMP085)
 #include <pios_bmp085.h>
 #endif
+#if defined(PIOS_INCLUDE_BMP180)
+#include <pios_bmp180.h>
+#endif
 #if defined(PIOS_INCLUDE_HCSR04)
 #include <pios_hcsr04.h>
 #endif
@@ -128,9 +131,9 @@
 #if defined(PIOS_INCLUDE_L3GD20)
 #include <pios_l3gd20.h>
 #endif
-#if defined(PIOS_INCLUDE_MS5611)
-#include <pios_ms5611.h>
-#endif
+//#if defined(PIOS_INCLUDE_MS5611)
+//#include <pios_ms5611.h>
+//#endif
 #if defined(PIOS_INCLUDE_IAP)
 #include <pios_iap.h>
 #endif

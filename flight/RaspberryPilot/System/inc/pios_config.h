@@ -59,11 +59,12 @@
 
 /* Select the sensors to include */
 #define PIOS_INCLUDE_BMA180
+#define PIOS_INCLUDE_BMP180
 #define PIOS_INCLUDE_HMC5883
 #define PIOS_INCLUDE_MPU6000
 #define PIOS_MPU6000_ACCEL
 #define PIOS_INCLUDE_L3GD20
-#define PIOS_INCLUDE_MS5611
+//#define PIOS_INCLUDE_MS5611
 //#define PIOS_INCLUDE_HCSR04
 #define PIOS_FLASH_ON_ACCEL /* true for second revo */
 #define FLASH_FREERTOS
@@ -108,6 +109,7 @@
 #define CPULOAD_LIMIT_WARNING		80
 #define CPULOAD_LIMIT_CRITICAL		95
 
+#define PIOS_BMP180_OSS				3 // PIOS_BMP180_ULTRA_HIGH_RESOLUTION_MODE
 // This actually needs calibrating
 #define IDLE_COUNTS_PER_SEC_AT_NO_LOAD (8379692)
 
