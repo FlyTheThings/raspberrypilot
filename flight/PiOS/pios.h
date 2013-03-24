@@ -101,6 +101,9 @@
 /* PIOS Hardware Includes (Common) */
 #include <pios_sdcard.h>
 #include <pios_com.h>
+#if defined(PIOS_INCLUDE_MAG3110)
+#include <pios_mag3110.h>
+#endif
 #if defined(PIOS_INCLUDE_BMP085)
 #include <pios_bmp085.h>
 #endif
@@ -131,9 +134,9 @@
 #if defined(PIOS_INCLUDE_L3GD20)
 #include <pios_l3gd20.h>
 #endif
-//#if defined(PIOS_INCLUDE_MS5611)
-//#include <pios_ms5611.h>
-//#endif
+#if defined(PIOS_INCLUDE_MS5611)
+#include <pios_ms5611.h>
+#endif
 #if defined(PIOS_INCLUDE_IAP)
 #include <pios_iap.h>
 #endif

@@ -54,7 +54,7 @@ int32_t PIOS_MAG3110_Init(const struct pios_MAG3110_cfg * cfg)
 {	
 	if (PIOS_MAG3110_Config(cfg) != 0)
 		return -1;
-	return 0
+	return 0;
 }
 
 /**
@@ -143,18 +143,18 @@ int32_t PIOS_MAG3110_ReadMAG(int16_t out[3])
 		if (PIOS_MAG3110_Read(PIOS_MAG3110_DATAOUT_XMSB_REG, buffer, 3) != 0)
 			return -1;
 
-		out[1] = (uint16_t) buffer[0] << 8;
-		out[2] = (uint16_t) buffer[1] << 8;
-		out[3] = (uint16_t) buffer[2] << 8;
+		out[1] = (uint16_t)(buffer[0] << 8);
+		out[2] = (uint16_t)(buffer[1] << 8);
+		out[3] = (uint16_t)(buffer[2] << 8);
 	}
 	else
 	{
 		if (PIOS_MAG3110_Read(PIOS_MAG3110_DATAOUT_XMSB_REG, buffer, 6) != 0)
 			return -1;
 
-		out[1] = (uint16_t) buffer[0] << 8 + buffer[1];
-		out[2] = (uint16_t) buffer[2] << 8 + buffer[3];
-		out[3] = (uint16_t) buffer[3] << 8 + buffer[4];
+		out[1] = (uint16_t)(buffer[0] << 8) + buffer[1];
+		out[2] = (uint16_t)(buffer[2] << 8) + buffer[3];
+		out[3] = (uint16_t)(buffer[3] << 8) + buffer[4];
 	}
 
 	return 1;
@@ -178,6 +178,18 @@ int32_t PIOS_MAG3110_ReadID(void)
 		return -1;
 
 	return (int32_t)id;
+}
+
+/**
+ * @brief Run self-test operation. See if the part is alive and the ID matches the datasheet.
+ * \return 0 if pass
+ * \return -1 if fail
+ */
+int32_t PIOS_MAG3110_Test(void)
+{
+	if( PIOS_MAG3110_ReadID() != PIOS_MAG3110_ID )
+		return -1;
+	return 0;
 }
 
 /**
@@ -213,7 +225,7 @@ static int32_t PIOS_MAG3110_Read(uint8_t address, uint8_t * buffer, uint8_t len)
 		}
 	};
 	
-	return PIOS_I2C_Transfer(PIOS_I2C_MAIN_ADAPTER, txn_list, NELEMENTS(txn_list));
+	return PIOS_I2C_Transfer(PIOS_I2C_MAG3110_ADAPTER, txn_list, NELEMENTS(txn_list));
 }
 
 /**
@@ -242,19 +254,7 @@ static int32_t PIOS_MAG3110_Write(uint8_t address, uint8_t buffer)
 		,
 	};
 	;
-	return PIOS_I2C_Transfer(PIOS_I2C_MAIN_ADAPTER, txn_list, NELEMENTS(txn_list));
-}
-
-/**
- * @brief Run self-test operation. See if the part is alive and the ID matches the datasheet.
- * \return 0 if pass
- * \return -1 if fail
- */
-int32_t PIOS_MAG3110_Test(void)
-{
-	if( PIOS_MAG3110_ReadID() != PIOS_MAG3110_ID )
-		return -1;
-	return 0;
+	return PIOS_I2C_Transfer(PIOS_I2C_MAG3110_ADAPTER, txn_list, NELEMENTS(txn_list));
 }
 
 #endif /* PIOS_INCLUDE_MAG3110 */

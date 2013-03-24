@@ -119,7 +119,7 @@ int32_t PIOS_BMP180_StartADC(ConversionTypeTypeDef ADC_Conversion_Type)
 * \param[in] PIOS_BMP180_PRES_START_ADC or PIOS_BMP180_TEMP_START_ADC
 * \return Raw ADC value
 */
-int32_t PIOS_BMP180_ReadADC(ConversionTypeTypeDef ADC_Conversion_Type)
+static int32_t PIOS_BMP180_ReadADC(ConversionTypeTypeDef ADC_Conversion_Type)
 {
 	uint8_t Data[3] = {0,0,0};
 	/* Straight from the datasheet */
@@ -232,7 +232,7 @@ int32_t PIOS_BMP180_Data_Ready_Time_us(void)
  * \return id if successful
  * \return -1 if not successful (Don't worry, the BMP180's id is not "-1" (0xFF))
  */
-uint8_t PIOS_BMP180_ReadID(void)
+static uint8_t PIOS_BMP180_ReadID(void)
 {
 	uint8_t id = 0xFF;
 
@@ -264,7 +264,7 @@ int32_t PIOS_BMP180_Test(void)
 * \return -2 if BMP180 blocked by another task (retry it!)
 * \return -4 if invalid length
 */
-uint32_t PIOS_BMP180_Read(uint8_t address, uint8_t * buffer, uint8_t len)
+static uint32_t PIOS_BMP180_Read(uint8_t address, uint8_t * buffer, uint8_t len)
 {
 	uint8_t addr_buffer[] = {
 		address,
@@ -299,7 +299,7 @@ uint32_t PIOS_BMP180_Read(uint8_t address, uint8_t * buffer, uint8_t len)
 * \return -1 if error during I²C transfer
 * \return -2 if BMP180 blocked by another task (retry it!)
 */
-uint32_t PIOS_BMP180_Write(uint8_t address, uint8_t buffer)
+static uint32_t PIOS_BMP180_Write(uint8_t address, uint8_t buffer)
 {
 	uint8_t data[] = {
 		address,
