@@ -43,10 +43,11 @@ class uavObjectField():
         FLOAT32 = 6
         ENUM = 7
          
-    def __init__(self, ftype, numElements):
+    def __init__(self, obj, ftype, numElements):
         self.ftype = ftype
+        self.obj = obj
         self.numElements = numElements
-        if self.ftype == uavObjectField.FType.INT8:
+        if self.ftype == self.FType.INT8:
             vfmt = "b"
             self.rawSizePerElem = 1
         elif self.ftype == uavObjectField.FType.UINT8 or self.ftype == uavObjectField.FType.ENUM:
@@ -84,6 +85,7 @@ class uavObjectField():
     def getRawSize(self):
         return self.rawSize
     def serialize(self):
+        self.getValueFromObj()
         if self.numElements == 1:
             ser = self.struct.pack(self.value)
         else:
@@ -93,13 +95,31 @@ class uavObjectField():
         # DOTO: FIXME: This is getting very messy
         values = list(self.struct.unpack("".join(data[:self.rawSize])))
         if self.numElements == 1:
-            self.value = values[0]
+            self.value = self.enum_to_str(values[0])
         else:
-            self.value = values
+            self.value = map(self.enum_to_str,values)
+        self.setValueToObj(self.value)
         return self.rawSize
-    def setValue(self,value):
-        #this has been added for error checking later TODO
+    def setValueToObj(self,value):
+        setattr(self.obj,self.name,value)
+    def getValueFromObj(self):
+        value = getattr(self.obj,self.name)
+        if self.numElements != 1:
+            if self.numElements != len(value):
+                raise ValueError("Incorrect Length List")
+        if self.numElements == 1:
+            value = self.str_to_enum(value)
+        else:
+            value = map(self.str_to_enum,value)
         self.value = value
+    def enum_to_str(self,value):
+        if (self.ftype == uavObjectField.FType.ENUM):
+            return self.enums[value]
+        return value
+    def str_to_enum(self,value):
+        if (self.ftype == uavObjectField.FType.ENUM) and (value in self.enums):
+            value = self.enums.index(value)
+        return value
 
           
 class uavObject(object):

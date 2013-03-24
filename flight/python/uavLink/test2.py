@@ -20,7 +20,20 @@ objMgr = uavlink.objManager(conn)
 
 stats = objMgr.getObjByName("I2CStats")
 stats.read()
-print stats.nacks
+event_log = stats.event_log
+print event_log
+event_log[2] = "I2C_EVENT_START"
+print event_log
+stats.event_log = event_log
+stats.write()
+stats.read()
+print stats.event_log
+time.sleep(5)
+stats.read()
+print stats.event_log
+
+
+#exit()
 
 while(True):
     stats.nacks += 1

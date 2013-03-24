@@ -378,10 +378,12 @@ class uavLinkConnection_rx(threading.Thread):
     def run(self):
         while(self.conn.connected):
             try:
-                byte = ord(self.conn.read(1))
+                byte = self.conn.read(1)
             except socket.error as e:
                 self.conn.close()
-            self.conn.protocol.rxByte(byte)
+            if isinstance(byte,str):
+                byte = ord(byte) 
+                self.conn.protocol.rxByte(byte)
 
 class uavLinkConnection_tx(threading.Thread):
     """private class used only by uavLinkConnection to implement the transmit thread""" 
