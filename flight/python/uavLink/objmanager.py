@@ -52,6 +52,8 @@ class objManager():
         if name in self.objNames:
             return self.getObjByID( self.objNames[name].OBJID,instance,read)
         return None
+    def getAllObjsIDs(self):
+        return list(self.objDefs.keys())
     def getObj(self,obj):
         attempt = self.retries
         while attempt:
