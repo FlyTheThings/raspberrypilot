@@ -77,6 +77,8 @@ class uavLinkConnection_rx(threading.Thread):
             if isinstance(byte,str):
                 byte = ord(byte) 
                 self.conn.protocol.rxByte(byte)
+                self.conn.stats.rxBytes(1)
+
 
 class uavLinkConnection_tx(threading.Thread):
     """private class used only by uavLinkConnection to implement the transmit thread""" 
@@ -86,10 +88,54 @@ class uavLinkConnection_tx(threading.Thread):
     def run(self):
         while(self.conn.connected):
             data = self.conn.txQueue.get()
+            self.conn.stats.txBytes(len(data))
             try:
                 self.conn.write(data)
             except socket.error as e:
                 self.conn.close()
+                
+class uavLinkConnectionStats():
+    def __init__(self):
+        self.stats = {
+            "TxFailures" : 0,
+            "RxFailures" : 0,
+            "TxRetries" : 0,
+            "TxBytes" : 0,
+            "RxBytes" : 0
+            }
+        self.lock = threading.RLock()
+    def rxBytes(self,num):
+        self.lock.acquire()
+        self.stats['RxBytes'] += num
+        self.lock.release()
+    def txFailure(self):
+        self.lock.acquire()
+        self.stats['TxFailures'] += 1
+        self.lock.release()
+    def rxFailure(self):
+        self.lock.acquire()
+        self.stats['RxFailures'] += 1
+        self.lock.release()
+    def txBytes(self,num):
+        self.lock.acquire()
+        self.stats['TxBytes'] += num
+        self.lock.release()
+    def clear(self):
+        self.lock.acquire()
+        self.stats = {
+            "TxFailures" : 0,
+            "RxFailures" : 0,
+            "TxRetries" : 0,
+            "TxBytes" : 0,
+            "RxBytes" : 0
+            }
+        self.lock.release()
+    def get(self):
+        self.lock.acquire()
+        stats = {}
+        stats.update(self.stats)
+        self.lock.release()
+        return stats
    
 class uavLinkConnection():
     """ this class's responsibility is to manage a uavLink connection.  It uses the uavLinkProtocol to process and encode packets.
@@ -97,9 +143,11 @@ class uavLinkConnection():
     """
     def __init__(self,objMgr,read,write):
         self.objMgr = objMgr
+        self.stats = uavLinkConnectionStats()
         self.protocol = uavlink.uavLinkProtocol()
         self.protocol.register_uavLinkTx_callback(self.tx)
         self.protocol.register_uavLinkRxPacket_callback(self.rxPacket)
+        self.protocol.register_uavLinkRxError_callback(self.stats.rxFailure)
         self.tx_thread = uavLinkConnection_tx(self)
         self.rx_thread = uavLinkConnection_rx(self)
         self.trans_list_lock = threading.RLock()
@@ -112,6 +160,7 @@ class uavLinkConnection():
         self.read = read
         self.rxSerialStreams = {}
         self.connected = False
+        
     def register_rxStream_callback(self,streamId,callback):
         self.rxSerialStreams[streamId] = callback
     def register_transaction(self,tran):
@@ -200,6 +249,9 @@ class uavLinkConnection():
         self.protocol.sendStream(ID,data)
         if (tran.getResponse()):
             return tran.getAck()
+        else:
+            self.conn.txFailure()
+            return None
     def transSingleObjectReq(self,ObjId):
         """Sends an OBJ_REQ for objId, returns that object or None if failes""" 
         tran = uavLinkConnectionTransaction(self,ObjId,self.protocol.TYPE_OBJ_REQ)
@@ -207,6 +259,9 @@ class uavLinkConnection():
         if (tran.getResponse()):
             rxData = tran.getData()
             return rxData
+        else:
+            self.conn.txFailure()
+            return None
     def transInstanceObjectReq(self,ObjId,Instance):
         """Sends an OBJ_REQ for objId,Instance returns that object or None if failes""" 
         tran = uavLinkConnectionTransaction(self,ObjId,self.protocol.TYPE_OBJ_REQ)
@@ -214,15 +269,24 @@ class uavLinkConnection():
         if (tran.getResponse()):
             rxData = tran.getData()
             return rxData[2:]
+        else:
+            self.conn.txFailure()
+            return None
     def transSingleObjectAck(self,ObjId,data):
         """Sends an OBJ_ACK for objId, returns True for ACK or None if timedout""" 
         tran = uavLinkConnectionTransaction(self,ObjId,self.protocol.TYPE_OBJ_ACK)
         self.protocol.sendSingleObjectAck(ObjId,data)
         if (tran.getResponse()):
             return tran.getAck()
+        else:
+            self.conn.txFailure()
+            return None
     def transInstanceObjectAck(self,ObjId,Instance,data):
         """Sends an OBJ_ACK for objId,Instance, returns True for ACK or None if timedout""" 
         tran = uavLinkConnectionTransaction(self,ObjId,self.protocol.TYPE_OBJ_ACK)
         self.protocol.sendInstanceObjectAck(ObjId,data)
         if (tran.getResponse()):
             return  tran.getAck()
+        else:
+            self.conn.txFailure()
+            return None

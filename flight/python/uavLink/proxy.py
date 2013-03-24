@@ -32,10 +32,10 @@ FlightUavlinkStats = None
 while FlightUavlinkStats == None:
     FlightUavlinkStats = objMgr.getObjByName("FlightUavlinkStats")    
 
+period = 0.5
 while(True):
     CompUavlinkStats.set()
-    time.sleep(0.5)
-    print CompUavlinkStats.Status
+    time.sleep(period)
     
     if not FlightUavlinkStats.get():
         CompUavlinkStats.Status = "DISCONNECTED"
@@ -52,9 +52,23 @@ while(True):
     #        CompUavlinkStats.Status = "CONNECTED"
     elif CompUavlinkStats.Status == "DISCONNECTED":
         if FlightUavlinkStats.Status == "DISCONNECTED":
+            #if both are disconnected clear stats and start the handshake
+            CompUavlinkStats.TxDataRate = 0
+            CompUavlinkStats.RxDataRate = 0
+            CompUavlinkStats.TxFailures = 0
+            CompUavlinkStats.RxFailures = 0
+            CompUavlinkStats.TxRetries = 0
             CompUavlinkStats.Status = "HANDSHAKEREQ"
     
     
+    connStats = conn.stats.get()
+    conn.stats.clear()
+    # filtering on the rates
+    CompUavlinkStats.TxDataRate = 0.25*connStats['TxBytes']//period + 0.75*CompUavlinkStats.TxDataRate
+    CompUavlinkStats.RxDataRate = 0.25*connStats['RxBytes']//period + 0.75*CompUavlinkStats.RxDataRate
+    CompUavlinkStats.TxFailures += connStats['TxFailures']
+    CompUavlinkStats.RxFailures += connStats['RxFailures']
+    CompUavlinkStats.TxRetries += connStats['TxRetries']
 
 
 

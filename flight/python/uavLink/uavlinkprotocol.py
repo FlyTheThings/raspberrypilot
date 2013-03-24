@@ -81,7 +81,7 @@ class uavLinkProtocol():
         self.rxCnt = 0
         self.rxData = []
         self.uavLinkRxObjectPacket_callback = None
-        self.uavLinkRxStreamPacket_callback = None
+        self.uavLinkRxError_callback = None
         self.uavLinkTx_callback = None
     def register_uavLinkRxPacket_callback(self,uavLinkPacket_callback):
         "A uavLinkObjectPacket_callback takes three arguements, the object_id, the message type, and the objects data"
@@ -89,6 +89,9 @@ class uavLinkProtocol():
     def register_uavLinkTx_callback(self,uavLinkTxPacket_callback):
         "A uavLinkSend_callback takes two arguements, the streamId,and the data"
         self.uavLinkTx_callback = uavLinkTxPacket_callback
+    def register_uavLinkRxError_callback(self,uavLinkRxError_callback):
+        "Functino to call when a rx Error occurs"
+        self.uavLinkRxError_callback = uavLinkRxError_callback
     def _tx(self,data):
         if self.uavLinkTx_callback:
             return self.uavLinkTx_callback(data)
@@ -163,6 +166,8 @@ class uavLinkProtocol():
             self.rxState = self.STATE_SYNC
             if self.rxCrc.read() != 0:
                 logging.error("CRC ERROR")
+                if self.uavLinkRxError_callback:
+                    self.uavLinkRxError_callback()
             elif self.uavLinkPacket_callback:
                 self.uavLinkPacket_callback(self.rxId,self.rxType,self.rxData)
     def sendStream(self,serialId,data):
