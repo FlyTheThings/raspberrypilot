@@ -52,7 +52,7 @@ class uavLinkConnectionTransaction():
         result = self.transDoneEvent.wait(self.transTimeout)
         self.conn.deregister_transaction(self)
         if not result:
-            print "transaction timeout type: %d id: %d" % (self.transType,self.id)
+            logging.warning( "transaction timeout type: %d id: %d" % (self.transType,self.id) )
         return self.reply
     def getData(self):
         if self.reply:
@@ -74,7 +74,7 @@ class uavLinkConnection_rx(threading.Thread):
                 byte = self.conn.read(1)
             except socket.error as e:
                 self.conn.close()
-            if isinstance(byte,str):
+            if isinstance(byte,str) and byte != "":
                 byte = ord(byte) 
                 self.conn.protocol.rxByte(byte)
                 self.conn.stats.rxBytes(1)
@@ -235,7 +235,7 @@ class uavLinkConnection():
             ack = self.transSendStreamAck(ID,data,timeout)
             if ack:
                 return ack
-            print "retrying serial, len %s" % len(data)
+            logging.warning( "retrying serial, len %s" % len(data) )
             retries -= 1
     def sendSingleObject(self,ObjId,data):
         """Sends a single object, no return value"""
