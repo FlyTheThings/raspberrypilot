@@ -206,7 +206,7 @@ class uavLinkConnection():
             if self.objMgr:
                 #receive the object into the object manager and ack?
                 obj = self.objMgr.receive(rxId,rxData)
-                self.protocol.sendAck(rxId,obj.getInstanceId())
+                self.protocol.sendAck(rxId,obj.getInstance())
             else:
                 self.protocol.sendAck(rxId)
         elif rxType == self.protocol.TYPE_OBJ_REQ:

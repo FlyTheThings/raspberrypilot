@@ -116,7 +116,8 @@ class uavObjectField():
 class uavObject(object):
     def __init__(self, objId):
         self.objId = objId
-        self.instId = 0
+        self.instance = 0
+        self.isMeta = 0
         self.fields = []
         self.objMgr = None
     def setObjManager(self,objMgr):
@@ -144,9 +145,8 @@ class uavObject(object):
             return "uavObject: %s" % self.name
         else:    
             return "UAVObj %08x" % self.objId
-    def getInstanceId(self):
-        return self.instId
-        "return the instance id if multinstance or none"
+    def getInstance(self):
+        return self.instance
     def get(self):
         if self.objMgr:
             return self.objMgr.getObj(self)
