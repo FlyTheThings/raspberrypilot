@@ -38,22 +38,22 @@ class objManager():
             return self.objDefs[id]()
         else:
             return None
-    def getObjByID (self,id):
+    def getObjByID (self,id,instance=0,read=True):
         if id in self.objDefs:
             obj = self.objDefs[id]()
             obj.setObjManager(self)
-            self.getObj(obj)
+            obj.instance = instance
+            if read:
+                self.getObj(obj)
             return obj
         else:
             return None
-    def getObjByName(self,name):
+    def getObjByName(self,name,instance=0,read=True):
         if name in self.objNames:
-            obj = self.objNames[name]()
-            obj.setObjManager(self)
-            self.getObj(obj)
-            return obj
-        else:
-            return None
+            return self.getObjByID( self.objNames[name].OBJID,instance,read)
+        return None
+    def getAllObjsIDs(self):
+        return list(self.objDefs.keys())
     def getObj(self,obj):
         attempt = self.retries
         while attempt:
@@ -61,9 +61,12 @@ class objManager():
                 data = self.conn.transSingleObjectReq(obj.OBJID)
             else:
                 data = self.conn.transInstanceObjectReq(obj.OBJID,obj.instance)
+            print "get obj data %s" % data
             if data:
                 obj.unpackData(data)
                 return True
+            elif data == False:
+                return False
             logging.warning("Retry getObj")
             attempt -= 1
     def setObj(self,obj):

@@ -25,6 +25,7 @@ class uavLinkConnectionTransaction():
         if (self.transType == self.protocol.TYPE_OBJ_REQ) & (rxType == self.protocol.TYPE_OBJ):
             self.rxType = rxType
             self.rxData = rxData
+            self.rxAck = True
             self.reply = True
             self.transDoneEvent.set()
         elif (self.transType == self.protocol.TYPE_OBJ_REQ) & (rxType == self.protocol.TYPE_NACK):
@@ -52,7 +53,7 @@ class uavLinkConnectionTransaction():
         result = self.transDoneEvent.wait(self.transTimeout)
         self.conn.deregister_transaction(self)
         if not result:
-            print "transaction timeout type: %d id: %d" % (self.transType,self.id)
+            logging.warning( "transaction timeout type: %d id: %d" % (self.transType,self.id) )
         return self.reply
     def getData(self):
         if self.reply:
@@ -74,7 +75,7 @@ class uavLinkConnection_rx(threading.Thread):
                 byte = self.conn.read(1)
             except socket.error as e:
                 self.conn.close()
-            if isinstance(byte,str):
+            if isinstance(byte,str) and byte != "":
                 byte = ord(byte) 
                 self.conn.protocol.rxByte(byte)
                 self.conn.stats.rxBytes(1)
@@ -206,7 +207,7 @@ class uavLinkConnection():
             if self.objMgr:
                 #receive the object into the object manager and ack?
                 obj = self.objMgr.receive(rxId,rxData)
-                self.protocol.sendAck(rxId,obj.getInstanceId())
+                self.protocol.sendAck(rxId,obj.getInstance())
             else:
                 self.protocol.sendAck(rxId)
         elif rxType == self.protocol.TYPE_OBJ_REQ:
@@ -235,7 +236,7 @@ class uavLinkConnection():
             ack = self.transSendStreamAck(ID,data,timeout)
             if ack:
                 return ack
-            print "retrying serial, len %s" % len(data)
+            logging.warning( "retrying serial, len %s" % len(data) )
             retries -= 1
     def sendSingleObject(self,ObjId,data):
         """Sends a single object, no return value"""
@@ -250,27 +251,35 @@ class uavLinkConnection():
         if (tran.getResponse()):
             return tran.getAck()
         else:
-            self.conn.txFailure()
+            self.stats.txFailure()
             return None
     def transSingleObjectReq(self,ObjId):
         """Sends an OBJ_REQ for objId, returns that object or None if failes""" 
         tran = uavLinkConnectionTransaction(self,ObjId,self.protocol.TYPE_OBJ_REQ)
         self.protocol.sendSingleObjectReq(ObjId)
         if (tran.getResponse()):
-            rxData = tran.getData()
-            return rxData
+            # getAck returns None if nothing received
+            ack = tran.getAck()
+            if ack == True:
+                return tran.getData()
+            elif ack == False:
+                return False
         else:
-            self.conn.txFailure()
+            self.stats.txFailure()
             return None
     def transInstanceObjectReq(self,ObjId,Instance):
         """Sends an OBJ_REQ for objId,Instance returns that object or None if failes""" 
         tran = uavLinkConnectionTransaction(self,ObjId,self.protocol.TYPE_OBJ_REQ)
         self.protocol.sendInstanceObjectReq(ObjId,Instance)
         if (tran.getResponse()):
-            rxData = tran.getData()
-            return rxData[2:]
+            ack = tran.getAck()
+            # getAck returns None if nothing received
+            if ack == True:
+                return tran.getData()[2:]
+            elif ack == False:
+                return False
         else:
-            self.conn.txFailure()
+            self.stats.txFailure()
             return None
     def transSingleObjectAck(self,ObjId,data):
         """Sends an OBJ_ACK for objId, returns True for ACK or None if timedout""" 
@@ -279,7 +288,7 @@ class uavLinkConnection():
         if (tran.getResponse()):
             return tran.getAck()
         else:
-            self.conn.txFailure()
+            self.stats.txFailure()
             return None
     def transInstanceObjectAck(self,ObjId,Instance,data):
         """Sends an OBJ_ACK for objId,Instance, returns True for ACK or None if timedout""" 
