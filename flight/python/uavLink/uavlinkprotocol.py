@@ -1,4 +1,5 @@
 import uavlink
+import logging
 
 class Crc(object):
     
