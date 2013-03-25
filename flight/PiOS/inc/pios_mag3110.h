@@ -111,7 +111,6 @@ It has a "fast" read mode which skips the least significant data bytes if CTRL_R
 #define PIOS_MAG3110_ODR_0p16_64	(30 << 3)				//	0.16		64		80		8.6		0.3
 #define PIOS_MAG3110_ODR_0p08_128	(31 << 3)				//	0.08		128		80		8.6		0.25
 
-#define	NO							0
 #define PIOS_MAG3110_FAST_READ		(1 << 2)				//			Skips the low byte if autoincrement reading
 															//	TM/AC
 #define PIOS_MAG3110_STANDBY		((0 << 1) | (0 << 0))	//	0	0	ASIC is in low power standby mode.

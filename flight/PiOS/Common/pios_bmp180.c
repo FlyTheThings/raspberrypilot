@@ -62,6 +62,14 @@ static BMP180CalDataTypeDef		CalData;
 static volatile uint32_t		ADC_Start_Time;
 static volatile bool			ADC_is_Running = false; // Assumed not running at startup.
 
+/* Straight from the datasheet */
+static	int32_t		X1, X2, X3, B3, B5, B6, P = 0;
+static	uint32_t	B4, B7;
+static	uint16_t	RawTemperature;
+static	uint32_t	RawPressure;
+static	uint32_t	Pressure = 0;
+static	uint16_t	Temperature = 0;
+
 /**
 * @brief Initialize the BMP180 sensor, get the calibration constants
 * \return Should hang on I²C failure
@@ -122,14 +130,7 @@ int32_t PIOS_BMP180_StartADC(ConversionTypeTypeDef ADC_Conversion_Type)
 static int32_t PIOS_BMP180_ReadADC(ConversionTypeTypeDef ADC_Conversion_Type)
 {
 	uint8_t Data[3] = {0,0,0};
-	/* Straight from the datasheet */
-	int32_t		X1, X2, X3, B3, B5, B6, P;
-	uint32_t	B4, B7;
-	uint16_t	RawTemperature;
-	uint32_t	RawPressure;
-	uint32_t	Pressure = 0;
-	uint16_t	Temperature = 0;
-
+	
 	if (ADC_Conversion_Type == TEMPERATURE) {
 		while (!PIOS_BMP180_Read(PIOS_BMP180_ADC_MSB, Data, 2))
 			continue;

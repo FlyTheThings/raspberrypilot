@@ -89,3 +89,4 @@ androidgcs/gen/
 .metadata
 *.pyc
 *.~*
+/flight/RaspberryPilot/NUL
