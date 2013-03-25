@@ -140,7 +140,7 @@ int32_t PIOS_MAG3110_ReadMAG(int16_t out[3])
 
 	if (fast_read_mode)
 	{
-		if (PIOS_MAG3110_Read(PIOS_MAG3110_DATAOUT_XMSB_REG, buffer, 3) != 0)
+		if (PIOS_MAG3110_Read(PIOS_MAG3110_OUT_X_MSB, buffer, 3) != 0)
 			return -1;
 
 		out[1] = (uint16_t)(buffer[0] << 8);
@@ -149,7 +149,7 @@ int32_t PIOS_MAG3110_ReadMAG(int16_t out[3])
 	}
 	else
 	{
-		if (PIOS_MAG3110_Read(PIOS_MAG3110_DATAOUT_XMSB_REG, buffer, 6) != 0)
+		if (PIOS_MAG3110_Read(PIOS_MAG3110_OUT_X_MSB, buffer, 6) != 0)
 			return -1;
 
 		out[1] = (uint16_t)(buffer[0] << 8) + buffer[1];

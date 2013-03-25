@@ -42,12 +42,12 @@
  
 #if defined(PIOS_INCLUDE_MAG3110)
 #include "pios_mag3110.h"
-static const struct pios_mag3110_cfg pios_mag3110_cfg23 = {
-	.data_rate =	0,			// see header file for others
+ static const struct pios_MAG3110_cfg pios_mag3110_cfg = {
+	.data_rate =	PIOS_MAG3110_ODR_80_16,			// see header file for others
 	.fast_read =	0,								// alternately PIOS_MAG3110_FAST_READ
-	.trig_mode =	0,		// see header file for others
+	.trig_mode =	PIOS_MAG3110_CONTINUOUS,		// see header file for others
 	.auto_degauss = 0,								// alternately PIOS_MAG3110_AUTO_MRST_EN
-	.raw_read =		0,				// alternately NO
+	.raw_read =		PIOS_MAG3110_RAW,				// alternately 0
 	.degauss_now =	0,								// alternately PIOS_MAG3110_MAG_RST
 };
 #endif /* PIOS_INCLUDE_MAG3110 */
