@@ -931,7 +931,7 @@ static int32_t sendStreamPacket(UAVLinkConnection connectionHandle, uint8_t Id, 
 	connection->txBuffer[4] = Id;
 
 	// Check length
-	if (length >= UAVLINK_MAX_PAYLOAD_LENGTH | length == 0)
+	if ((length >= UAVLINK_MAX_PAYLOAD_LENGTH) | (length == 0))
 	{
 		return -1;
 	}

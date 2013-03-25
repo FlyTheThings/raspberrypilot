@@ -154,5 +154,56 @@ class uavObject(object):
         if self.objMgr:
             return self.objMgr.setObj(self)
 
+            
+class MetaflagsField(uavObjectField):
+    name = 'flags'
+    def __init__(self,obj):
+        uavObjectField.__init__(self,obj, 3, 1)
+        
+class MetatelemetryUpdatePeriodField(uavObjectField):
+    name = 'telemetryUpdatePeriod'
+    def __init__(self,obj):
+        uavObjectField.__init__(self,obj, 4, 1)
+        
+class MetagcsTelemetryUpdatePeriodField(uavObjectField):
+    name = 'gcsTelemetryUpdatePeriod'
+    def __init__(self,obj):
+        uavObjectField.__init__(self,obj, 4, 1)
+        
+class MetaloggingUpdatePeriodField(uavObjectField):
+    name = 'loggingUpdatePeriod'
+    def __init__(self,obj):
+        uavObjectField.__init__(self,obj, 4, 1)
 
+class uavMetaObject(uavObject):
+    def __init__(self,objId):
+        uavObject.__init__(self,objId)
+        self.OBJID = objId
+        self.isMeta = 1
+        self.name = "Meta"
 
+        # Create object fields
+        self._flags = MetaflagsField(self)
+        self.addField(self._flags)
+        self._telemetryUpdatePeriod = MetatelemetryUpdatePeriodField(self)
+        self.addField(self._telemetryUpdatePeriod)
+        self._gcsTelemetryUpdatePeriod = MetagcsTelemetryUpdatePeriodField(self)
+        self.addField(self._gcsTelemetryUpdatePeriod)
+        self._loggingUpdatePeriod = MetaloggingUpdatePeriodField(self)
+        self.addField(self._loggingUpdatePeriod)
+
+        #default values
+        #  if i really wanted to be nice, i'd break these out
+        #   but until we need them im not going to
+        self.flags = 0
+        self.telemetryUpdatePeriod = 0
+        self.gcsTelemetryUpdatePeriod = 0
+        self.loggingUpdatePeriod = 0
+
+        # Associated Data
+        self.isSingleInst = 1
+        self.isSetting = 0
+    def updateName(self):
+        parent = self.objMgr.getObjByID(self.objId-1,read=False)
+        if parent:
+            self.name = parent.name + "Meta"

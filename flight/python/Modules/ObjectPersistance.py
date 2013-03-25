@@ -62,9 +62,15 @@ def UAVObjSaveSettings(cur,objMgr):
     return True
     
 def UAVObjSaveMetaobjects(cur,objMgr):
-    "save all meta objects"
-    print "save all meta objects"
-    return False
+    ids = objMgr.getAllMetaObjsIDs()
+    for objId in ids:
+        obj = objMgr.getObjByID(objId,read = False)
+        #the following line should always be true
+        if obj.isMeta == True:
+            if obj.isSingleInst:
+                obj.get()
+                UAVObjSave(cur,obj)
+    return True
     
 def UAVObjDelete(cur,obj):
     cur.execute("DELETE FROM uavObjects WHERE objId=? and instance=?",(obj.OBJID,obj.instance))
@@ -79,7 +85,7 @@ def run():
 
     objMgr = uavlink.connectObjMgr(host="127.0.0.1",port=8075)
     objper = objMgr.getObjByName("ObjectPersistence")
-    con = sqlite3.connect('test.db')
+    con = sqlite3.connect('uavobjects.sqlite')
     cur = con.cursor()
     #check if the uavObjects table exists
     cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='uavObjects'")

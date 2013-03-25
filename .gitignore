@@ -89,3 +89,5 @@ androidgcs/gen/
 .metadata
 *.pyc
 *.~*
+/flight/python/Modules/test.db
+/flight/python/Modules/uavobjects.sqlite

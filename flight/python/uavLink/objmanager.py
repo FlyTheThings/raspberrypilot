@@ -33,16 +33,19 @@ class objManager():
     def unpack(self,rxObjId,rxData):
         """Returns on object from ID and packed data. Returns None if object is unkown"""
         pass
-    def getObjDefByID (self,id):
-        if id in self.objDefs:
-            return self.objDefs[id]()
-        else:
-            return None
     def getObjByID (self,id,instance=0,read=True):
         if id in self.objDefs:
             obj = self.objDefs[id]()
             obj.setObjManager(self)
             obj.instance = instance
+            if read:
+                self.getObj(obj)
+            return obj
+        elif (id-1 in self.objDefs) and instance==0:
+            #its a meta object
+            obj = uavlink.uavMetaObject(id)
+            obj.setObjManager(self)
+            obj.updateName()
             if read:
                 self.getObj(obj)
             return obj
@@ -54,6 +57,8 @@ class objManager():
         return None
     def getAllObjsIDs(self):
         return list(self.objDefs.keys())
+    def getAllMetaObjsIDs(self):
+        return map(lambda x : x+1, list(self.objDefs.keys()))
     def getObj(self,obj):
         attempt = self.retries
         while attempt:
