@@ -1,6 +1,7 @@
 import SocketServer
 import threading
 import Queue
+import socket
 
 #the streamServer handles multiple connections from GCS (or any serial sream)
 class streamServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
@@ -23,6 +24,9 @@ class streamServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
         #start it as a new thread
         t = threading.Thread(target=self.serve_forever)
         t.start()
+    def server_bind(self):
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR,1)
+        SocketServer.TCPServer.server_bind(self) 
     def call_rx_handler(self):
         if self.rx_handler == None:
             return

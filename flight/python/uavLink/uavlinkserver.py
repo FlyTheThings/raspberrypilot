@@ -29,6 +29,7 @@ import SocketServer
 import threading
 import uavlink
 import logging
+import socket
 
 #the streamServer handles multiple connections from GCS (or any serial sream)
 class uavLinkServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
@@ -51,6 +52,9 @@ class uavLinkServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
         self.handlers_list_lock.acquire()
         self.handlers.remove(handler)
         self.handlers_list_lock.release()
+    def server_bind(self):
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR,1)
+        SocketServer.TCPServer.server_bind(self) 
 
 
 class uavLinkServerHandler(SocketServer.StreamRequestHandler):
