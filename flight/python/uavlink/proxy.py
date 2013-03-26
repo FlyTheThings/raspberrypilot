@@ -12,8 +12,11 @@ import sys
 logging.basicConfig(level=logging.DEBUG)
 
 #open a serial port to the embedded micro
-ser = serial.Serial("COM11",baudrate=57600)
-
+try:
+    ser = serial.Serial("COM11",baudrate=57600)
+except:
+    ser = serial.Serial("/dev/ttyAMA0",baudrate=57600)
+    
 #create a stream server to allow telemetry to connect
 uavtalk_stream_server = uavlink.streamServer("", 8079)
 conn = uavlink.uavLinkConnection(None,ser.read,ser.write)

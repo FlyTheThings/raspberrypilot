@@ -21,19 +21,21 @@ class uavLinkConnectionTransaction():
     def process(self,rxId,rxType,rxData):
         #print "trans data %s len: %s" % (rxData.encode('hex'),len(rxData))
         if rxId != self.id:
-            return
+            return False
         if (self.transType == self.protocol.TYPE_OBJ_REQ) & (rxType == self.protocol.TYPE_OBJ):
             self.rxType = rxType
             self.rxData = rxData
             self.rxAck = True
             self.reply = True
             self.transDoneEvent.set()
+            return True
         elif (self.transType == self.protocol.TYPE_OBJ_REQ) & (rxType == self.protocol.TYPE_NACK):
             self.rxType = rxType
             self.rxData = None
             self.rxAck = False
             self.reply = True
             self.transDoneEvent.set()
+            return True
         elif (self.transType == self.protocol.TYPE_OBJ_ACK) & (rxType == self.protocol.TYPE_ACK):
             #The response to an OBJ_ACK is always an ack to no need to check for a NACK for a OBJ_ACK
             self.rxType = rxType
@@ -41,6 +43,7 @@ class uavLinkConnectionTransaction():
             self.rxAck = True
             self.reply = True
             self.transDoneEvent.set()
+            return True
         elif (self.transType == self.protocol.TYPE_STREAM) & (rxType == self.protocol.TYPE_ACK):
             #The response to an OBJ_ACK is always an ack to no need to check for a NACK for a OBJ_ACK
             self.rxType = rxType
@@ -48,6 +51,9 @@ class uavLinkConnectionTransaction():
             self.rxAck = True
             self.reply = True
             self.transDoneEvent.set()
+            return True
+        else:
+            return False
     def getResponse(self):
         #Waits for the current transaction to complete
         result = self.transDoneEvent.wait(self.transTimeout)
@@ -152,7 +158,7 @@ class uavLinkConnection():
         self.tx_thread = uavLinkConnection_tx(self)
         self.rx_thread = uavLinkConnection_rx(self)
         self.trans_list_lock = threading.RLock()
-        self.txQueue = Queue.Queue()
+        self.txQueue = Queue.Queue(5)
         self.disconnectEvent = threading.Event()
         self.trans = []
         self.max_trans = 5
@@ -196,7 +202,8 @@ class uavLinkConnection():
         #process the incoming object for effect on transactions
         self.trans_list_lock.acquire()
         for tran in self.trans:
-            tran.process(rxId,rxType,rxData)
+            if tran.process(rxId,rxType,rxData):
+                break
         self.trans_list_lock.release()
         #if there is an object manager send objects to it
         if rxType == self.protocol.TYPE_OBJ:
