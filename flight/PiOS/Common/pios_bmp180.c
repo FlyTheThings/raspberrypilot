@@ -196,28 +196,8 @@ int32_t PIOS_BMP180_Data_Ready_Time_us(void)
 	if (ADC_Conversion_Type == TEMPERATURE)
 		waiting_time = PIOS_BMP180_TEMP_WAIT_us;
 	
-	else /*if (ADC_Conversion_Type == PRESSURE)*/ //{
-		waiting_time = PRESSURE_WAITING_TIME;
-		// switch (PIOS_BMP180_OVERSAMPLING){
-		
-			// case: PIOS_BMP180_ULTRA_LOW_POWER_MODE
-				// waiting_time = PIOS_BMP180_ULTRA_LOW_POWER_PRES_WAIT_us
-			// break;
-			
-			// case: PIOS_BMP180_STANDARD_MODE
-				// waiting_time = PIOS_BMP180_STANDARD_PRES_WAIT_us
-			// break;
-			
-			// case: PIOS_BMP180_HIGH_RESOLUTION_MODE
-				// waiting_time = PIOS_BMP180_HIGH_RESOLUTION_PRES_WAIT_us
-			// break;
-			
-			// case: PIOS_BMP180_ULTRA_HIGH_RESOLUTION_MODE
-				// waiting_time = PIOS_BMP180_ULTRA_HIGH_RESOLUTION_PRES_WAIT_us
-			// break;
-		// }
-	//}
-
+	else
+		waiting_time = PIOS_BMP180_PRESSURE_WAITING_TIME;
 	
 	if (PIOS_DELAY_GetuSSince(ADC_Start_Time) < waiting_time)
 		return (waiting_time - PIOS_DELAY_GetuSSince(ADC_Start_Time));
