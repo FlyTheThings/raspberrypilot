@@ -8,9 +8,13 @@ all: default
 
 WHEREAMI := $(dir $(lastword $(MAKEFILE_LIST)))
 TOP      := $(realpath $(WHEREAMI)/../)
-$(BUILDDIR) := $(TOP)/$(TARGET)
+BUILDDIR := $(TOP)/build/$(TARGET)
+OBJDIR   := $(BUILDDIR)/obj
 
-TARGET = prog
+$(shell mkdir -p $(TOP)/build/)
+$(shell mkdir -p $(BUILDDIR))
+$(shell mkdir -p $(OBJDIR))
+
 LIBS = -lm
 CC = gcc
 CFLAGS = -g -Wall
@@ -18,16 +22,26 @@ CFLAGS = -g -Wall
 
 SRC = server.c
 
-$(BUILDDIR)/%.o : $(srcdir)/%.cpp
-	$(CC) $(CCFLAGS) -c $< -o $@
+INCDIRS = uavlink/inc
 
+INCFLAGS = $(patsubst %,-I%,$(INCDIRS))
 
-OBJECTS = $(foreach SRC,$(patsubst %.c, $(BUILDDIR)/%.o, $(SRC)))
+	
+$(OBJDIR)/%.o : $(SRC) $(BLD)
+	$(CC) $(CFLAGS) $(INCFLAGS) -c $< -o $@
 
+ALLSRCBASE = $(notdir $(basename $(SRC)))
+OBJECTS = $(addprefix $(OBJDIR)/, $(addsuffix .o, $(ALLSRCBASE)))
+ 
 
-$(TARGET): $(OBJECTS)
-    $(CC) $(OBJECTS) -Wall $(LIBS) -o $@
-
+uavlink_server: $(OBJECTS)
+	$(CC) $(OBJECTS) -Wall $(LIBS) $(CFLAGS) -o $(BUILDDIR)/$@
+	
 clean:
-    -rm -f $(BUILDDIR)*.o
-    -rm -f $(TARGET)
+	-rm -f $(OBJDIR)/*.o
+	-rm -f $(TARGET)
+	
+serve: uavlink_server
+	$(info ------ MAKE COMPLETE - NOW RUNNING SERVER ---------)
+	$(shell $(BUILDDIR)/uavlink_server)
+	
