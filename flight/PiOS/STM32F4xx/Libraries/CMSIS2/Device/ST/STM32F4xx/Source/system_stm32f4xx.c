@@ -147,7 +147,8 @@
 /************************* PLL Parameters *************************************/
 /* PLL_VCO = (HSE_VALUE or HSI_VALUE / PLL_M) * PLL_N */
 #define PLL_M      10
-#define PLL_N      420
+//#define PLL_N      420
+#define PLL_N      210
 
 /* SYSCLK = PLL_VCO / PLL_P */
 #define PLL_P      2

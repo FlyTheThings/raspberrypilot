@@ -4,7 +4,7 @@ BOOTLOADER_VERSION  := 0x01
 HW_TYPE             := 0x00
 
 MCU                 := cortex-m4
-CHIP                := STM32F407VGT
+CHIP                := STM32F405VG
 BOARD               := STM32F4xx_RP
 MODEL               := HD
 MODEL_SUFFIX        := 
@@ -23,5 +23,5 @@ FW_BANK_SIZE        := 0x00040000  # Should include FW_DESC_SIZE
 
 FW_DESC_SIZE        := 0x00000064
 
-OSCILLATOR_FREQ     :=   8000000
+OSCILLATOR_FREQ     :=  16000000
 SYSCLK_FREQ         := 168000000

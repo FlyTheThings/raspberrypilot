@@ -58,13 +58,13 @@
 #define PIOS_INCLUDE_COM_LOOPBACK
 
 /* Select the sensors to include */
-#define PIOS_INCLUDE_BMA180
-#define PIOS_INCLUDE_BMP180
+//#define PIOS_INCLUDE_BMA180
+//#define PIOS_INCLUDE_BMP180
 //#define PIOS_INCLUDE_HMC5883
 //#define PIOS_INCLUDE_MAG3110
-#define PIOS_INCLUDE_MPU6000
-#define PIOS_MPU6000_ACCEL
-#define PIOS_INCLUDE_L3GD20
+//#define PIOS_INCLUDE_MPU6000
+//#define PIOS_MPU6000_ACCEL
+//#define PIOS_INCLUDE_L3GD20
 //#define PIOS_INCLUDE_MS5611
 //#define PIOS_INCLUDE_HCSR04
 #define PIOS_FLASH_ON_ACCEL /* true for second revo */
@@ -116,6 +116,7 @@
 
 #define REVOLUTION
 
+#define PIOS_LED_HEARTBEAT /*added by us*/
 #endif /* PIOS_CONFIG_H */
 /**
  * @}

@@ -199,11 +199,13 @@ static void systemTask(void *parameters)
 		int delayTime = flightStatus.Armed == FLIGHTSTATUS_ARMED_ARMED ?
 			SYSTEM_UPDATE_PERIOD_MS / portTICK_RATE_MS / (LED_BLINK_RATE_HZ * 2) :
 			SYSTEM_UPDATE_PERIOD_MS / portTICK_RATE_MS;
-
+		vTaskDelay((portTickType)delayTime);
 		//if(xQueueReceive(objectPersistenceQueue, &ev, delayTime) == pdTRUE) {
 		//	// If object persistence is updated call the callback
 		//	objectUpdatedCb(&ev);
 		//}
+
+
 	}
 }
 
