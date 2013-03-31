@@ -22,6 +22,7 @@
 			<elementname>OveroSync</elementname>
 			<elementname>Autotune</elementname>
 			<elementname>EventDispatcher</elementname>
+			<elementname>Airspeed</elementname>
 		</elementnames>
 	</field> 
 	<field name="Running" units="bool" type="enum">
@@ -45,6 +46,8 @@
 			<elementname>OveroSync</elementname>
 			<elementname>Autotune</elementname>
 			<elementname>EventDispatcher</elementname>
+			<elementname>Airspeed</elementname>
+			
 		</elementnames>
 		<options>
 			<option>False</option>
@@ -72,6 +75,7 @@
 			<elementname>OveroSync</elementname>
 			<elementname>Autotune</elementname>
 			<elementname>EventDispatcher</elementname>
+			<elementname>Airspeed</elementname>
 		</elementnames>
 	</field> 
         <access gcs="readwrite" flight="readwrite"/>
