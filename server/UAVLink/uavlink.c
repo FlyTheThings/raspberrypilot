@@ -42,14 +42,14 @@
  *  flight uc does not request objects from flight computer
  *
  */
-#include "uavlink.c"
- #include "uavlink_priv.h"
+#include "uavlink.h"
+#include "uavlink_priv.h"
 
 
 // Private functions
-static int32_t objectTransaction(UAVLinkConnectionData *connection, UAVObjHandle objectId, uint16_t instId, uint8_t type, int32_t timeout);
-static int32_t sendObject(UAVLinkConnectionData *connection, UAVObjHandle obj, uint16_t instId, uint8_t type);
-static int32_t sendSingleObject(UAVLinkConnectionData *connection, UAVObjHandle obj, uint16_t instId, uint8_t type);
+static int32_t objectTransaction(UAVLinkConnectionData *connection, uint32_t objId, uint16_t instId, uint8_t type, int32_t timeout);
+static int32_t sendObject(UAVLinkConnectionData *connection, uint32_t objId, uint16_t instId, uint8_t type);
+static int32_t sendSingleObject(UAVLinkConnectionData *connection, uint32_t objId, uint16_t instId, uint8_t type);
 static int32_t sendNack(UAVLinkConnectionData *connection, uint32_t objId);
 static int32_t receivePacket(UAVLinkConnectionData *connection, uint8_t type, uint32_t rxId, uint16_t instId, uint8_t* data, int32_t length);
 static void updateAck(UAVLinkConnectionData *connection, uint32_t rxId);
@@ -68,19 +68,17 @@ UAVLinkRxState UAVLinkProcessInputStreamQuiet(UAVLinkConnection connection, uint
 UAVLinkConnection UAVLinkInitialize(UAVLinkOutputStream outputStream)
 {
 	// allocate object
-	UAVLinkConnectionData * connection = pvPortMalloc(sizeof(UAVLinkConnectionData));
+	UAVLinkConnectionData * connection = malloc(sizeof(UAVLinkConnectionData));
 	if (!connection) return 0;
 	connection->canari = UAVLINK_CANARI;
 	connection->iproc.rxPacketLength = 0;
 	connection->iproc.state = UAVLINK_STATE_SYNC;
 	connection->outStream = outputStream;
-	connection->lock = xSemaphoreCreateRecursiveMutex();
-	connection->transLock = xSemaphoreCreateRecursiveMutex();
 	connection->streamForwarder = 0;
 	// allocate buffers
-	connection->rxBuffer = pvPortMalloc(UAVLINK_MAX_PACKET_LENGTH);
+	connection->rxBuffer = malloc(512);
 	if (!connection->rxBuffer) return 0;
-	connection->txBuffer = pvPortMalloc(UAVLINK_MAX_PACKET_LENGTH);
+	connection->txBuffer = malloc(512);
 	if (!connection->txBuffer) return 0;
 	UAVLinkResetStats( (UAVLinkConnection) connection );
 	return (UAVLinkConnection) connection;
@@ -175,86 +173,13 @@ void UAVLinkResetStats(UAVLinkConnection connectionHandle)
 	//xSemaphoreGiveRecursive(connection->lock);
 }
 
-/**
- * Request an update for the specified object, on success the object data would have been
- * updated by the GCS.
- * \param[in] connection UAVLinkConnection to be used
- * \param[in] obj Object to update
- * \param[in] instId The instance ID or UAVOBJ_ALL_INSTANCES for all instances.
- * \param[in] timeout Time to wait for the response, when zero it will return immediately
- * \return 0 Success
- * \return -1 Failure
- */
-int32_t UAVLinkSendObjectRequest(UAVLinkConnection connectionHandle, UAVObjHandle obj, uint16_t instId, int32_t timeout)
-{
-	UAVLinkConnectionData *connection;
-    CHECKCONHANDLE(connectionHandle,connection,return -1);
-	return objectTransaction(connection, obj, instId, UAVLINK_TYPE_OBJ_REQ, timeout);
-}
-
-/**
- * Send the specified object through the telemetry link.
- * \param[in] connection UAVLinkConnection to be used
- * \param[in] obj Object to send
- * \param[in] instId The instance ID or UAVOBJ_ALL_INSTANCES for all instances.
- * \param[in] acked Selects if an ack is required (1:ack required, 0: ack not required)
- * \param[in] timeoutMs Time to wait for the ack, when zero it will return immediately
- * \return 0 Success
- * \return -1 Failure
- */
-int32_t UAVLinkSendObject(UAVLinkConnection connectionHandle, UAVObjHandle obj, uint16_t instId, uint8_t acked, int32_t timeoutMs)
-{
-	UAVLinkConnectionData *connection;
-    CHECKCONHANDLE(connectionHandle,connection,return -1);
-	// Send object
-	if (acked == 1)
-	{
-		return objectTransaction(connection, obj, instId, UAVLINK_TYPE_OBJ_ACK, timeoutMs);
-	}
-	else
-	{
-		return objectTransaction(connection, obj, instId, UAVLINK_TYPE_OBJ, timeoutMs);
-	}
-}
-
-/**
- * Execute the requested transaction on an object.
- * \param[in] connection UAVLinkConnection to be used
- * \param[in] obj Object
- * \param[in] instId The instance ID of UAVOBJ_ALL_INSTANCES for all instances.
- * \param[in] type Transaction type
- * 			  UAVLINK_TYPE_OBJ: send object,
- * 			  UAVLINK_TYPE_OBJ_REQ: request object update
- * 			  UAVLINK_TYPE_OBJ_ACK: send object with an ack
- * \return 0 Success
- * \return -1 Failure
- */
-static int32_t objectTransaction(UAVLinkConnectionData *connection, UAVObjHandle obj, uint16_t instId, uint8_t type, int32_t timeoutMs)
-{
-	// Send object depending on if a response is needed
-	if (type == UAVLINK_TYPE_OBJ_ACK || type == UAVLINK_TYPE_OBJ_REQ)
-	{
-		connection->resp =  0;
-		connection->respId =  UAVObjGetID(obj);
-		sendObject(connection, obj, instId, type);
-	}
-	else if (type == UAVLINK_TYPE_OBJ)
-	{
-		sendObject(connection, obj, instId, UAVLINK_TYPE_OBJ);
-		return 0;
-	}
-	else
-	{
-		return -1;
-	}
-}
 
 
 /**
  * Execute a transaction while forwarding a stream.
  * \param[in] connection UAVLinkConnection to be used
- * \param[in] obj Object
- * \param[in] instId The instance ID of UAVOBJ_ALL_INSTANCES for all instances.
+ * \param[in] objId of object
+ *  * \param[in] instId The instance ID of UAVOBJ_ALL_INSTANCES for all instances.
  * \param[in] type Transaction type
  * 			  UAVLINK_TYPE_OBJ: send object,
  * 			  UAVLINK_TYPE_OBJ_REQ: request object update
@@ -262,7 +187,7 @@ static int32_t objectTransaction(UAVLinkConnectionData *connection, UAVObjHandle
  * \return 0 Success
  * \return -1 Failure
  */
-int32_t UAVLinkSendStream(UAVLinkConnection connectionHandle, uint8_t Id,  uint8_t length, uint8_t *buf, int32_t timeoutMs)
+int32_t UAVLinkSendStream(UAVLinkConnection connectionHandle, uint8_t Id, uint8_t *buf, uint8_t length)
 {
 	UAVLinkConnectionData *connection;
 	CHECKCONHANDLE(connectionHandle,connection,return -1);
@@ -340,7 +265,7 @@ UAVLinkRxState UAVLinkProcessInputStreamQuiet(UAVLinkConnection connectionHandle
 			
 			iproc->packet_size += rxbyte << 8;
 			
-			if (iproc->packet_size < UAVLINK_MIN_PACKET_SIZE || iproc->packet_size > UAVLINK_MAX_HEADER_LENGTH + UAVLINK_MAX_PAYLOAD_LENGTH)
+			if (iproc->packet_size < UAVLINK_MIN_PACKET_SIZE || iproc->packet_size > UAVLINK_MAX_PACKET_LENGTH)
 			{   // incorrect packet size
 				iproc->state = UAVLINK_STATE_ERROR;
 				break;
@@ -490,12 +415,12 @@ UAVLinkRxState UAVLinkProcessInputStream(UAVLinkConnection connectionHandle, uin
  * \return 0 Success
  * \return -1 Failure
  */
-int32_t UAVLinkSendAck(UAVLinkConnection connectionHandle, UAVObjHandle obj, uint16_t instId)
+int32_t UAVLinkSendAck(UAVLinkConnection connectionHandle, uint32_t objId)
 {
 	UAVLinkConnectionData *connection;
 	CHECKCONHANDLE(connectionHandle,connection,return -1);
 
-	return sendObject(connection, obj, instId, UAVLINK_TYPE_ACK);
+	return sendAck(connection, objId);
 }
 
 
@@ -526,63 +451,36 @@ int32_t UAVLinkSendNack(UAVLinkConnection connectionHandle, uint32_t objId)
  * \return 0 Success
  * \return -1 Failure
  */
-static int32_t receivePacket(UAVLinkConnectionData *connection, uint8_t type, uint32_t rxId, uint16_t instId, uint8_t* data, int32_t length)
+static int32_t receivePacket(UAVLinkConnectionData *connection, uint8_t type, uint32_t objId, uint16_t instId, uint8_t* data, int32_t length)
 {
-	UAVObjHandle obj;
 	int32_t ret = 0;
 
 	// Process message type
 	switch (type) {
 		case UAVLINK_TYPE_OBJ:
-			// All instances, not allowed for OBJ messages
-			if (obj && (instId != UAVOBJ_ALL_INSTANCES))
-			{
-				// Unpack object, if the instance does not exist it will be created!
-				UAVObjUnpackLocal(obj, instId, data);
-				// Check if an ack is pending
-				updateAck(connection, rxId);
-			}
-			else
-			{
-				ret = -1;
-			}
+			// Check if an ack is pending
+			updateAck(connection, objId);
 			break;
 		case UAVLINK_TYPE_OBJ_ACK:
-			// All instances, not allowed for OBJ_ACK messages
-			if (obj && (instId != UAVOBJ_ALL_INSTANCES))
-			{
-				// Unpack object, if the instance does not exist it will be created!
-				if ( UAVObjUnpackLocal(obj, instId, data) == 0 )
-				{
-					// Transmit ACK
-					sendObject(connection, obj, instId, UAVLINK_TYPE_ACK);
-				}
-				else
-				{
-					ret = -1;
-				}
-			}
-			else
-			{
-				ret = -1;
-			}
+			// Always Transmit ACK
+			sendAck(connection, objId);
 			break;
 		case UAVLINK_TYPE_STREAM:
 			// Transmit ACK
-			sendAck(connection,rxId);
+			sendAck(connection,objId);
 			if (connection->streamForwarder) {
-				(connection->streamForwarder)(rxId,data,length);
+				(connection->streamForwarder)(objId,data,length);
 			}
 		case UAVLINK_TYPE_OBJ_REQ:
 			// The in uavlink the autopilot board never requests an object from the computer (this code)
-			sendNack(connection, rxId);
+			sendNack(connection, objId);
 			break;
 		case UAVLINK_TYPE_NACK:
 			// Do nothing
 			break;
 		case UAVLINK_TYPE_ACK:
 			// Check if an ack is pending
-			updateAck(connection, rxId);
+			updateAck(connection, objId);
 			break;
 		default:
 			ret = -1;
@@ -607,7 +505,7 @@ static void updateAck(UAVLinkConnectionData *connection, uint32_t rxId)
 }
 
 
-bool getResponse(UAVLinkConnection connection, uint8_t *buf, uint32_t max_len) {
+bool getResponse(UAVLinkConnection connectionHandle, uint8_t *buf, uint32_t max_len) {
 	UAVLinkConnectionData *connection;
 	CHECKCONHANDLE(connectionHandle,connection,return -1);
 	uint32_t len;
@@ -615,7 +513,7 @@ bool getResponse(UAVLinkConnection connection, uint8_t *buf, uint32_t max_len) {
 	if (connection->resp) {
 		connection->resp = 0;
 		// use the smaller of the max_len and the received size
-		len = max_len < connection->iproc->length ? max_len : connection->iproc->length  ;
+		len = max_len < connection->iproc.length ? max_len : connection->iproc.length  ;
 		memcpy(buf,connection->rxBuffer,len);
 		return 1;
 	} else {
@@ -625,84 +523,23 @@ bool getResponse(UAVLinkConnection connection, uint8_t *buf, uint32_t max_len) {
 
 
 /**
- * Send an object through the telemetry link.
+ * Send a packet through the telemetry link.
  * \param[in] connection UAVLinkConnection to be used
- * \param[in] obj Object handle to send
- * \param[in] instId The instance ID or UAVOBJ_ALL_INSTANCES for all instances
- * \param[in] type Transaction type
- * \return 0 Success
- * \return -1 Failure
- */
-static int32_t sendObject(UAVLinkConnectionData *connection, UAVObjHandle obj, uint16_t instId, uint8_t type)
-{
-	uint32_t numInst;
-	uint32_t n;
-	
-	// If all instances are requested and this is a single instance object, force instance ID to zero
-	if ( instId == UAVOBJ_ALL_INSTANCES && UAVObjIsSingleInstance(obj) )
-	{
-		instId = 0;
-	}
-	
-	// Process message type
-	if ( type == UAVLINK_TYPE_OBJ || type == UAVLINK_TYPE_OBJ_ACK )
-	{
-		if (instId == UAVOBJ_ALL_INSTANCES)
-		{
-			// Get number of instances
-			numInst = UAVObjGetNumInstances(obj);
-			// Send all instances
-			for (n = 0; n < numInst; ++n)
-			{
-				sendSingleObject(connection, obj, n, type);
-			}
-			return 0;
-		}
-		else
-		{
-			return sendSingleObject(connection, obj, instId, type);
-		}
-	}
-	else if (type == UAVLINK_TYPE_OBJ_REQ)
-	{
-		return sendSingleObject(connection, obj, instId, UAVLINK_TYPE_OBJ_REQ);
-	}
-	else if (type == UAVLINK_TYPE_ACK)
-	{
-		if ( instId != UAVOBJ_ALL_INSTANCES )
-		{
-			return sendSingleObject(connection, obj, instId, UAVLINK_TYPE_ACK);
-		}
-		else
-		{
-			return -1;
-		}
-	}
-	else
-	{
-		return -1;
-	}
-}
-
-/**
- * Send an object through the telemetry link.
- * \param[in] connection UAVLinkConnection to be used
- * \param[in] obj Object handle to send
+ * \param[in] objId Object handle to send
  * \param[in] instId The instance ID (can NOT be UAVOBJ_ALL_INSTANCES, use sendObject() instead)
  * \param[in] type Transaction type
  * \return 0 Success
  * \return -1 Failure
  */
-static int32_t sendSingleObject(UAVLinkConnectionData *connection, UAVObjHandle obj, uint16_t instId, uint8_t type)
+int32_t sendPacket(UAVLinkConnection connectionHandle, uint32_t objId, uint8_t type, uint8_t *buf, uint16_t data_length)
 {
+	UAVLinkConnectionData *connection;
+	CHECKCONHANDLE(connectionHandle,connection,return -1);
 	int32_t length;
 	int32_t dataOffset;
-	uint32_t objId;
 
 	if (!connection->outStream) return -1;
 
-	// Setup type and object id fields
-	objId = UAVObjGetID(obj);
 	connection->txBuffer[0] = UAVLINK_SYNC_VAL;  // sync byte
 	connection->txBuffer[1] = type;
 	// data length inserted here below
@@ -711,17 +548,9 @@ static int32_t sendSingleObject(UAVLinkConnectionData *connection, UAVObjHandle 
 	connection->txBuffer[6] = (uint8_t)((objId >> 16) & 0xFF);
 	connection->txBuffer[7] = (uint8_t)((objId >> 24) & 0xFF);
 	
-	// Setup instance ID if one is required
-	if (UAVObjIsSingleInstance(obj))
-	{
-		dataOffset = 8;
-	}
-	else
-	{
-		connection->txBuffer[8] = (uint8_t)(instId & 0xFF);
-		connection->txBuffer[9] = (uint8_t)((instId >> 8) & 0xFF);
-		dataOffset = 10;
-	}
+	// Don't know anything about instance id here, so dont use it
+	dataOffset = 8;
+
 	
 	// Determine data length
 	if (type == UAVLINK_TYPE_OBJ_REQ || type == UAVLINK_TYPE_ACK)
@@ -730,7 +559,7 @@ static int32_t sendSingleObject(UAVLinkConnectionData *connection, UAVObjHandle 
 	}
 	else
 	{
-		length = UAVObjGetNumBytes(obj);
+		length = data_length;
 	}
 	
 	// Check length
@@ -742,12 +571,10 @@ static int32_t sendSingleObject(UAVLinkConnectionData *connection, UAVObjHandle 
 	// Copy data (if any)
 	if (length > 0)
 	{
-		if ( UAVObjPack(obj, instId, &connection->txBuffer[dataOffset]) < 0 )
-		{
-			return -1;
-		}
+		memcpy(&connection->txBuffer[dataOffset], buf, length);
 	}
 	
+
 	// Store the packet length
 	connection->txBuffer[2] = (uint8_t)((dataOffset+length) & 0xFF);
 	connection->txBuffer[3] = (uint8_t)(((dataOffset+length) >> 8) & 0xFF);
@@ -765,6 +592,11 @@ static int32_t sendSingleObject(UAVLinkConnectionData *connection, UAVObjHandle 
 		connection->stats.txObjectBytes += length;
 	}
 	
+	// store the response information if a response is needed
+	connection->resp =  0;
+	connection->respId =  objId;
+
+
 	// Done
 	return 0;
 }

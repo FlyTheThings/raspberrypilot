@@ -32,6 +32,8 @@
 #ifndef CRC_H
 #define CRC_H 
 
+#include <inttypes.h>
+
 uint8_t CRC_updateByte(uint8_t crc, const uint8_t data);
 uint8_t CRC_updateCRC(uint8_t crc, const uint8_t* data, int32_t length);
 
