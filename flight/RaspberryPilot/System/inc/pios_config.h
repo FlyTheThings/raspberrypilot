@@ -116,7 +116,6 @@
 
 #define REVOLUTION
 
-#define PIOS_LED_HEARTBEAT /*added by us*/
 #endif /* PIOS_CONFIG_H */
 /**
  * @}
