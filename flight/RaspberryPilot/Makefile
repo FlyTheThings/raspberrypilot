@@ -141,8 +141,8 @@ SRC += $(MATHLIB)/pid.c
 include $(PIOS)/STM32F4xx/library.mk
 
 ## PIOS Hardware (Common)
-SRC += $(PIOSCOMMON)/pios_etasv3.c
-SRC += $(PIOSCOMMON)/pios_mpxv.c
+##SRC += $(PIOSCOMMON)/pios_etasv3.c
+##SRC += $(PIOSCOMMON)/pios_mpxv.c
 SRC += $(PIOSCOMMON)/pios_hmc5883.c
 SRC += $(PIOSCOMMON)/pios_bmp180.c
 SRC += $(PIOSCOMMON)/pios_mag3110.c

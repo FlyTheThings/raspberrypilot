@@ -578,8 +578,8 @@ uint32_t pios_spi_overo_id = 0;
  * Telemetry on main USART
  */
 static const struct pios_usart_cfg pios_usart_telem_cfg = {
-	.regs = USART2,
-	.remap = GPIO_AF_USART2,
+	.regs = UART4,
+	.remap = GPIO_AF_UART4,
 	.init = {
 		.USART_BaudRate = 57600,
 		.USART_WordLength = USART_WordLength_8b,
@@ -591,16 +591,16 @@ static const struct pios_usart_cfg pios_usart_telem_cfg = {
 	},
 	.irq = {
 		.init = {
-			.NVIC_IRQChannel = USART2_IRQn,
+			.NVIC_IRQChannel = UART4_IRQn,
 			.NVIC_IRQChannelPreemptionPriority = PIOS_IRQ_PRIO_MID,
 			.NVIC_IRQChannelSubPriority = 0,
 			.NVIC_IRQChannelCmd = ENABLE,
 		},
 	},
 	.rx = {
-		.gpio = GPIOD,
+		.gpio = GPIOA,
 		.init = {
-			.GPIO_Pin   = GPIO_Pin_6,
+			.GPIO_Pin   = GPIO_Pin_1,
 			.GPIO_Speed = GPIO_Speed_2MHz,
 			.GPIO_Mode  = GPIO_Mode_AF,
 			.GPIO_OType = GPIO_OType_PP,
@@ -608,9 +608,9 @@ static const struct pios_usart_cfg pios_usart_telem_cfg = {
 		},
 	},
 	.tx = {
-		.gpio = GPIOD,
+		.gpio = GPIOA,
 		.init = {
-			.GPIO_Pin   = GPIO_Pin_5,
+			.GPIO_Pin   = GPIO_Pin_0,
 			.GPIO_Speed = GPIO_Speed_2MHz,
 			.GPIO_Mode  = GPIO_Mode_AF,
 			.GPIO_OType = GPIO_OType_PP,
