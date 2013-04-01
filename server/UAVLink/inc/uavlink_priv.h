@@ -31,7 +31,10 @@
 
 //#include "uavobjectsinit.h"
 #include <stdint.h>
-#include "crc.h"
+#include <stdbool.h>
+#include <crc.h>
+#include <stddef.h>
+#include <stdlib.h>
 
 // Private types and constants
 typedef struct {
@@ -53,12 +56,12 @@ typedef struct {
 
 typedef uint8_t uavlink_checksum;
 #define UAVLINK_CHECKSUM_LENGTH	        sizeof(uavlink_checksum)
-#define UAVLINK_MAX_PAYLOAD_LENGTH      (UAVOBJECTS_LARGEST + 1)
+#define UAVLINK_MAX_PAYLOAD_LENGTH      (255)
 #define UAVLINK_MIN_PACKET_LENGTH	UAVLINK_MAX_HEADER_LENGTH + UAVLINK_CHECKSUM_LENGTH
 #define UAVLINK_MAX_PACKET_LENGTH       UAVLINK_MIN_PACKET_LENGTH + UAVLINK_MAX_PAYLOAD_LENGTH
 
 typedef struct {
-    UAVObjHandle obj;
+    uint32_t objId;
     uint8_t type;
     uint16_t packet_size;
     uint32_t rxId;

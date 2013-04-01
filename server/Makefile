@@ -20,15 +20,28 @@ CC = gcc
 CFLAGS = -g -Wall
 
 
-SRC = server.c
+SRC = server.c 
+SRC += serial.c 
+SRC += UAVLink/uavlink.c
+SRC += UAVLink/crc.c
 
-INCDIRS = uavlink/inc
+INCDIRS = inc
+INCDIRS += UAVLink/inc
 
 INCFLAGS = $(patsubst %,-I%,$(INCDIRS))
 
-	
-$(OBJDIR)/%.o : $(SRC) $(BLD)
-	$(CC) $(CFLAGS) $(INCFLAGS) -c $< -o $@
+# Compile: create object files from C source files.
+define COMPILE_C_TEMPLATE
+$(OBJDIR)/$(notdir $(basename $(1))).o : $(1)
+	@echo $(MSG_COMPILING) $$(call toprel, $$<)
+	$(CC) $(CFLAGS) $(INCFLAGS) -c $$< -o $$@
+endef
+
+
+$(foreach src, $(SRC), $(eval $(call COMPILE_C_TEMPLATE, $(src))))
+
+
+
 
 ALLSRCBASE = $(notdir $(basename $(SRC)))
 OBJECTS = $(addprefix $(OBJDIR)/, $(addsuffix .o, $(ALLSRCBASE)))
