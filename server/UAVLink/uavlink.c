@@ -455,6 +455,7 @@ static int32_t receivePacket(UAVLinkConnectionData *connection, uint8_t type, ui
 {
 	int32_t ret = 0;
 
+	printf("Received Type: %d",type);
 	// Process message type
 	switch (type) {
 		case UAVLINK_TYPE_OBJ:

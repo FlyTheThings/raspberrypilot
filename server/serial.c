@@ -16,13 +16,13 @@ static int serial_fd_write;
 // opens and configures the serial port, returns its file descriptor, stores its file descriptor
 int32_t serial_open(void) {
 	// open the port
-	serial_fd_read = open (portname, B57600 | O_RDONLY| O_NOCTTY | O_SYNC);
+	serial_fd_read = open (portname, O_RDONLY| O_NOCTTY | O_SYNC);
 	if (serial_fd_read < 0)
 	{
 		perror("While opening read serial port ");
 		return -1;
 	}
-	serial_fd_write = open (portname, B57600 | O_WRONLY| O_NOCTTY | O_SYNC);
+	serial_fd_write = open (portname,  O_WRONLY| O_NOCTTY | O_SYNC);
 	if (serial_fd_write < 0)
 	{
 		perror("While opening write serial port ");

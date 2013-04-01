@@ -56,19 +56,21 @@ int main(int argc, char**argv)
 
    int n;
 
-
+   while(1) {
    n = read(fd_uavlink_read, uavlink_read_buffer, UAVLINK_READ_BUFFER_LEN);
+   if (n < 0) {
+     perror ("Error rx");
+   }
+
    int i = 0;
    while (n>0) {
 	   UAVLinkProcessInputStream(uav_link_conn, uavlink_read_buffer[i]);
 	   i++;
 	   n--;
    }
-
-
-   for (;;) {
-
    }
+
+   
    /*
    for (;;)
    {
