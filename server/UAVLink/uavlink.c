@@ -47,9 +47,6 @@
 
 
 // Private functions
-static int32_t objectTransaction(UAVLinkConnectionData *connection, uint32_t objId, uint16_t instId, uint8_t type, int32_t timeout);
-static int32_t sendObject(UAVLinkConnectionData *connection, uint32_t objId, uint16_t instId, uint8_t type);
-static int32_t sendSingleObject(UAVLinkConnectionData *connection, uint32_t objId, uint16_t instId, uint8_t type);
 static int32_t sendNack(UAVLinkConnectionData *connection, uint32_t objId);
 static int32_t receivePacket(UAVLinkConnectionData *connection, uint8_t type, uint32_t rxId, uint16_t instId, uint8_t* data, int32_t length);
 static void updateAck(UAVLinkConnectionData *connection, uint32_t rxId);
@@ -196,6 +193,7 @@ int32_t UAVLinkSendStream(UAVLinkConnection connectionHandle, uint8_t Id, uint8_
 	connection->resp = 0;
 	connection->respId = Id;
 	sendStreamPacket(connection, Id, length, buf);
+	return 0;
 }
 
 /**
@@ -455,7 +453,7 @@ static int32_t receivePacket(UAVLinkConnectionData *connection, uint8_t type, ui
 {
 	int32_t ret = 0;
 
-	printf("Received Type: %d",type);
+	printf("Received Type: %d\n",type);
 	// Process message type
 	switch (type) {
 		case UAVLINK_TYPE_OBJ:
@@ -472,7 +470,8 @@ static int32_t receivePacket(UAVLinkConnectionData *connection, uint8_t type, ui
 			if (connection->streamForwarder) {
 				(connection->streamForwarder)(objId,data,length);
 			}
-		case UAVLINK_TYPE_OBJ_REQ:
+			break;
+	case UAVLINK_TYPE_OBJ_REQ:
 			// The in uavlink the autopilot board never requests an object from the computer (this code)
 			sendNack(connection, objId);
 			break;

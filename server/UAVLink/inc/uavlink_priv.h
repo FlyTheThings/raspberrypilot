@@ -35,6 +35,9 @@
 #include <crc.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 // Private types and constants
 typedef struct {
