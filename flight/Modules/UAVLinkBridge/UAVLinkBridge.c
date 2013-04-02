@@ -229,7 +229,6 @@ static void uavlinkbridgeTxPriTask(void *parameters)
 static void uavlinkbridgeRxTask(void *parameters)
 {
 	uint32_t inputPort;
-	UAVLinkRxState state;
 
 	// Task loop
 	while (1) {

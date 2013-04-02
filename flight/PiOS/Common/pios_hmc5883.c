@@ -191,6 +191,7 @@ int32_t PIOS_HMC5883_ReadMag(int16_t out[3])
 			break;
 		default:
 			PIOS_Assert(0);
+			break;
 	}
 	
 	for (int i = 0; i < 3; i++) {

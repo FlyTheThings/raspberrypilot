@@ -619,7 +619,7 @@ static void i2c_adapter_inject_event(struct pios_i2c_adapter *i2c_adapter, enum 
 	 * state.  This way, it cannot ever know what the previous state was.
 	 */
 	enum i2c_adapter_state prev_state = i2c_adapter->curr_state;
-	if (prev_state) ;
+	if (prev_state) {};
 
 	i2c_adapter->curr_state = i2c_adapter_transitions[i2c_adapter->curr_state].next_state[event];
 
@@ -639,7 +639,7 @@ static void i2c_adapter_process_auto(struct pios_i2c_adapter *i2c_adapter)
 	PIOS_IRQ_Disable();
 
 	enum i2c_adapter_state prev_state = i2c_adapter->curr_state;
-	if (prev_state) ;
+	if (prev_state) {};
 
 	while (i2c_adapter_transitions[i2c_adapter->curr_state].next_state[I2C_EVENT_AUTO]) {
 		i2c_adapter->curr_state = i2c_adapter_transitions[i2c_adapter->curr_state].next_state[I2C_EVENT_AUTO];
