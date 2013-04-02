@@ -13,9 +13,10 @@
 #include <sys/select.h>
 
 #define UAVLINK_READ_BUFFER_LEN 1
-
+#define UDP_MSG_BFR_LEN 512
 
 static uint8_t uavlink_read_buffer[UAVLINK_READ_BUFFER_LEN];
+static uint8_t mesg_buffer[UDP_MSG_BFR_LEN];
 
 int open_socket_uavlink(void){
 	int sockfd;
@@ -55,8 +56,9 @@ void handle_serial_rx(int fd_uavlink_serial, UAVLinkConnection uav_link_conn) {
 
 int main(int argc, char**argv)
 {
-   int sockfd;
-   int fd_uavlink_serial;
+   int sock_fd;
+   int uavlink_serial_fd;
+   int max_fd;
    struct timeval tv;
    fd_set rfds;
    int selret;
@@ -64,22 +66,32 @@ int main(int argc, char**argv)
    printf("opening socket\n");
    
    //open the UDP port
-   //sockfd = open_socket_uavlink();
+   sock_fd = open_socket_uavlink();
    printf("opening serial ports\n");
    // open the serial port
-   fd_uavlink_serial = serial_open();
+   uavlink_serial_fd = serial_open();
 
    printf("configure uavlink\n");
    // configure uavlink session on serial port
    uav_link_conn = UAVLinkInitialize( (UAVLinkOutputStream) serial_write);
 
+   max_fd = uavlink_serial_fd > sock_fd ? uavlink_serial_fd : sock_fd;
    while(1) {
      // build the fd_set for the select
      FD_ZERO(&rfds);
-     FD_SET(fd_uavlink_serial,&rfds);
-     selret = select(fd_uavlink_serial+1,&rfds,NULL,NULL,NULL);
-     if (FD_ISSET(fd_uavlink_serial,&rfds)) 
-       handle_serial_rx(fd_uavlink_serial,uav_link_conn);
+     FD_SET(uavlink_serial_fd,&rfds);
+     FD_SET(sock_fd,&rfds);
+     selret = select(max_fd+1,&rfds,NULL,NULL,NULL);
+     if (FD_ISSET(uavlink_serial_fd,&rfds)) 
+       handle_serial_rx(uavlink_serial_fd,uav_link_conn);
+     if (FD_ISSET(sock_fd,&rfds)) {
+       int n;
+       struct sockaddr_in cliaddr;
+       int len = sizeof(cliaddr);
+       printf("got packet\n");
+       n = recvfrom(sock_fd,mesg_buffer,UDP_MSG_BFR_LEN,0,(struct sockaddr *)&cliaddr,&len);
+       sendto(sock_fd,mesg_buffer,n,0,(struct sockaddr *)&cliaddr,sizeof(cliaddr));
+       }
    }
 
    
@@ -87,8 +99,7 @@ int main(int argc, char**argv)
    for (;;)
    {
       len = sizeof(cliaddr);
-      n = recvfrom(sockfd,mesg,1000,0,(struct sockaddr *)&cliaddr,&len);
-      sendto(sockfd,mesg,n,0,(struct sockaddr *)&cliaddr,sizeof(cliaddr));
+      
       printf("-------------------------------------------------------\n");
       mesg[n] = 0;
       printf("Received the following:\n");
