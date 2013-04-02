@@ -58,15 +58,26 @@
 #define PIOS_INCLUDE_COM_LOOPBACK
 
 /* Select the sensors to include */
-//#define PIOS_INCLUDE_BMA180
-//#define PIOS_INCLUDE_BMP180
-//#define PIOS_INCLUDE_HMC5883
-//#define PIOS_INCLUDE_MAG3110
+#define PIOS_INCLUDE_MAG3110
+//#define PIOS_INCLUDE_BMP085
+#define PIOS_INCLUDE_BMP180
+#define PIOS_INCLUDE_MPXV
+//#define PIOS_INCLUDE_HCSR04
+#define PIOS_INCLUDE_HMC5883
+
+
+// TODO dump all below as not part of Raspberry Pilot
+//#define PIOS_INCLUDE_HMC5843
+//#define PIOS_INCLUDE_IMU3000
+//#define PIOS_INCLUDE_MPU6050
 //#define PIOS_INCLUDE_MPU6000
-//#define PIOS_MPU6000_ACCEL
 //#define PIOS_INCLUDE_L3GD20
 //#define PIOS_INCLUDE_MS5611
-//#define PIOS_INCLUDE_HCSR04
+//#define PIOS_INCLUDE_ADXL345
+//#define PIOS_INCLUDE_BMA180
+//#define PIOS_MPU6000_ACCEL
+
+
 #define PIOS_FLASH_ON_ACCEL /* true for second revo */
 #define FLASH_FREERTOS
 /* Com systems to include */
@@ -103,20 +114,20 @@
 #define PIOS_INCLUDE_GPS_UBX_PARSER  /* Include the UBX protocol parser */
 
 /* Alarm Thresholds */
-#define HEAP_LIMIT_WARNING		4000
-#define HEAP_LIMIT_CRITICAL		1000
+#define HEAP_LIMIT_WARNING			4000
+#define HEAP_LIMIT_CRITICAL			1000
 #define IRQSTACK_LIMIT_WARNING		150
 #define IRQSTACK_LIMIT_CRITICAL		80
 #define CPULOAD_LIMIT_WARNING		80
 #define CPULOAD_LIMIT_CRITICAL		95
 
 #define PIOS_BMP180_OSS				3 // PIOS_BMP180_ULTRA_HIGH_RESOLUTION_MODE
+#define PIOS_BMP085_OSS				3 // PIOS_BMP085_ULTRA_HIGH_RESOLUTION_MODE
 // This actually needs calibrating
 #define IDLE_COUNTS_PER_SEC_AT_NO_LOAD (8379692)
 
 #define REVOLUTION
 
-#define PIOS_LED_HEARTBEAT /*added by us*/
 #endif /* PIOS_CONFIG_H */
 /**
  * @}
