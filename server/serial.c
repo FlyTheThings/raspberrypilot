@@ -11,32 +11,34 @@
 char *portname = "/dev/ttyAMA0";
 
 static int serial_fd_read;
-static int serial_fd_write;
+//static int serial_fd_write;
 
 // opens and configures the serial port, returns its file descriptor, stores its file descriptor
 int32_t serial_open(void) {
 	// open the port
-	serial_fd_read = open (portname, O_RDONLY| O_NOCTTY | O_SYNC);
+	serial_fd_read = open (portname, O_RDWR| O_NOCTTY | O_SYNC);
 	if (serial_fd_read < 0)
 	{
 		perror("While opening read serial port ");
 		return -1;
 	}
-	serial_fd_write = open (portname,  O_WRONLY| O_NOCTTY | O_SYNC);
-	if (serial_fd_write < 0)
-	{
-		perror("While opening write serial port ");
-		return -1;
-	}
+	//serial_fd_write = open (portname,  O_WRONLY| O_NOCTTY | O_SYNC);
+	//if (serial_fd_write < 0)
+	//{
+	//	perror("While opening write serial port ");
+	//	return -1;
+	//}
 
-	/*
-	struct termios tty;
-	memset (&tty, 0, sizeof tty);
-	if (tcgetattr (serail_fd, &tty) != 0) {
-		perror("While configuring serial port ");
-		return -1;
-	}
-	*/
+
+	struct termios options;
+	tcgetattr(serial_fd_read, &options);
+	cfsetispeed(&options,B57600);
+	cfsetospeed(&options,B57600);
+	options.c_cflag = B57600 | CS8 | CLOCAL | CREAD;
+	options.c_iflag = IGNPAR | ICRNL;
+	options.c_oflag = 0;
+	tcflush(serial_fd_read, TCIFLUSH);
+	tcsetattr(serial_fd_read,TCSANOW, &options);
 	return serial_fd_read;
 }
 
