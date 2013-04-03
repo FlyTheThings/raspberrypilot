@@ -8,10 +8,16 @@
 #include <string.h>
 #include <sys/select.h>
 
+//project specific
+#include <uavlink.h>
+
 //char *portname = "/dev/ttyS0";
 char *portname = "/dev/ttyAMA0";
 
 static int serial_fd;
+
+#define UAVLINK_READ_BUFFER_LEN 255
+static uint8_t uavlink_read_buffer[UAVLINK_READ_BUFFER_LEN];
 
 // opens and configures the serial port, returns its file descriptor, stores its file descriptor
 int32_t serial_open(void) {
@@ -56,4 +62,43 @@ int32_t serial_write(uint8_t *buf, uint32_t len) {
   return n;
 }
 
+void handle_serial_rx(int fd_uavlink_serial, UAVLinkConnection uav_link_conn) {
+     int n = read(fd_uavlink_serial, uavlink_read_buffer, UAVLINK_READ_BUFFER_LEN);
+     if (n < 0) {
+       perror ("Error rx\n");
+       exit(-1);
+     }
+     int i = 0;
+     while (n>0) {
+	   UAVLinkProcessInputStream(uav_link_conn, uavlink_read_buffer[i]);
+	   i++;
+	   n--;
+     }
+}
+
+bool wait_uavlink_ack(UAVLinkConnection uav_link_conn, int serial_fd) {
+  // returns true if an ack was received
+  struct timeval tv;
+  uint64_t end_time;
+  int64_t wait_time;
+  bool waiting = 1;
+  fd_set rfds;
+  int selret;
+  end_time = get_time_stamp() + 50000;  //timeout in 50ms
+  while(waiting) {
+    wait_time = end_time - get_time_stamp();
+    // if we timeout out return 0
+    if (wait_time < 0) return 0;
+    tv.tv_usec = wait_time;
+    tv.tv_sec = 0;
+    selret = select(2,&rfds,NULL,NULL,&tv);
+    // if it timed out return 0
+    if (selret == 0) return 0;
+    // now process the serial data one byte at a time 
+    read(serial_fd, uavlink_read_buffer, 1);
+    UAVLinkProcessInputStream(uav_link_conn,uavlink_read_buffer[0]);
+    // check if there was a response
+    if (UAVLinkGetResponse(uav_link_conn,NULL,NULL)) return 1;
+  }
+} 
 
