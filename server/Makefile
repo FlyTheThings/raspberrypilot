@@ -22,6 +22,7 @@ CFLAGS = -g -Wall
 
 SRC = server.c 
 SRC += serial.c 
+SRC += udp.c
 SRC += UAVLink/uavlink.c
 SRC += UAVLink/crc.c
 
@@ -45,16 +46,15 @@ $(foreach src, $(SRC), $(eval $(call COMPILE_C_TEMPLATE, $(src))))
 
 ALLSRCBASE = $(notdir $(basename $(SRC)))
 OBJECTS = $(addprefix $(OBJDIR)/, $(addsuffix .o, $(ALLSRCBASE)))
- 
+
 
 uavlink_server: $(OBJECTS)
-	$(CC) $(OBJECTS) -Wall $(LIBS) $(CFLAGS) -o $(BUILDDIR)/$@
-	
+	$(CC) $(OBJECTS) $(LIBS) $(CFLAGS) -o $(BUILDDIR)/$@
+
 clean:
 	-rm -f $(OBJDIR)/*.o
-	-rm -f $(TARGET)
-	
+	-rm -f $(BUILDDIR)/$(TARGET)
+
 serve: uavlink_server
 	$(info ------ MAKE COMPLETE - NOW RUNNING SERVER ---------)
 	$(shell $(BUILDDIR)/uavlink_server)
-	

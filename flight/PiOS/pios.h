@@ -101,6 +101,7 @@
 /* PIOS Hardware Includes (Common) */
 #include <pios_sdcard.h>
 #include <pios_com.h>
+
 #if defined(PIOS_INCLUDE_MAG3110)
 #include <pios_mag3110.h>
 #endif
@@ -113,11 +114,14 @@
 #if defined(PIOS_INCLUDE_HCSR04)
 #include <pios_hcsr04.h>
 #endif
-#if defined(PIOS_INCLUDE_HMC5843)
-#include <pios_hmc5843.h>
-#endif
 #if defined(PIOS_INCLUDE_HMC5883)
 #include <pios_hmc5883.h>
+#endif
+
+
+
+#if defined(PIOS_INCLUDE_HMC5843)
+#include <pios_hmc5843.h>
 #endif
 #if defined(PIOS_INCLUDE_I2C_ESC)
 #include <pios_i2c_esc.h>

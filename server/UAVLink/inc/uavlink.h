@@ -61,14 +61,14 @@ UAVLinkConnection UAVLinkInitialize(UAVLinkOutputStream outputStream);
 int32_t UAVLinkSetOutputStream(UAVLinkConnection connection, UAVLinkOutputStream outputStream);
 UAVLinkOutputStream UAVLinkGetOutputStream(UAVLinkConnection connection);
 
-int32_t sendPacket(UAVLinkConnection connectionHandle, uint32_t objId, uint8_t type, uint8_t *buf, uint16_t data_length);
-int32_t UAVLinkSendStream(UAVLinkConnection connection, uint8_t Id,   uint8_t *buf, uint8_t length);
+int32_t UAVLinkSendPacket(UAVLinkConnection connectionHandle, uint32_t objId, uint8_t type, uint8_t *buf, uint16_t data_length);
+int32_t UAVLinkSendStream(UAVLinkConnection connection, uint8_t Id, uint8_t *buf, uint8_t length);
 
 int32_t UAVLinkSendAck(UAVLinkConnection connectionHandle, uint32_t objId);
 int32_t UAVLinkSendNack(UAVLinkConnection connectionHandle, uint32_t objId);
 
 UAVLinkRxState UAVLinkProcessInputStream(UAVLinkConnection connection, uint8_t rxbyte);
-bool getResponse(UAVLinkConnection connectionHandle, uint8_t *buf, uint32_t max_len);
+bool UAVLinkGetResponse(UAVLinkConnection connectionHandle, uint8_t *buf, uint32_t max_len);
 
 void UAVLinkGetStats(UAVLinkConnection connection, UAVLinkStats *stats);
 void UAVLinkResetStats(UAVLinkConnection connection);

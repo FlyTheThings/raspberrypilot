@@ -57,11 +57,11 @@ FLASH_TOOL = OPENOCD
 #MODULES = Sensors Attitude/revolution ManualControl Stabilization Altitude/revolution Actuator GPS FirmwareIAP 
 #MODULES =  ManualControl  Stabilization Actuator GPS
 #MODULES += AltitudeHold
-#MODULES += Altitude
-#MODULES += Sensors
+MODULES += Altitude
+MODULES += Sensors
 MODULES += UAVLinkBridge
 MODULES += Telemetry
-#MODULES += Airspeed
+MODULES += Airspeed
 #MODULES += OveroSync
 
 
@@ -141,15 +141,21 @@ SRC += $(MATHLIB)/pid.c
 include $(PIOS)/STM32F4xx/library.mk
 
 ## PIOS Hardware (Common)
-##SRC += $(PIOSCOMMON)/pios_etasv3.c
-##SRC += $(PIOSCOMMON)/pios_mpxv.c
-SRC += $(PIOSCOMMON)/pios_hmc5883.c
-SRC += $(PIOSCOMMON)/pios_bmp180.c
 SRC += $(PIOSCOMMON)/pios_mag3110.c
+SRC += $(PIOSCOMMON)/pios_bmp085.c
+SRC += $(PIOSCOMMON)/pios_bmp180.c
+SRC += $(PIOSCOMMON)/pios_mpxv.c
+SRC += $(PIOSCOMMON)/pios_etasv3.c
+SRC += $(PIOSCOMMON)/pios_hcsr04.c
+SRC += $(PIOSCOMMON)/pios_hmc5883.c
+
+
 SRC += $(PIOSCOMMON)/pios_mpu6000.c
 SRC += $(PIOSCOMMON)/pios_bma180.c
 SRC += $(PIOSCOMMON)/pios_l3gd20.c
 SRC += $(PIOSCOMMON)/pios_ms5611.c
+
+
 SRC += $(PIOSCOMMON)/pios_crc.c
 SRC += $(PIOSCOMMON)/pios_com.c
 SRC += $(PIOSCOMMON)/pios_com_loopback.c

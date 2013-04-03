@@ -47,9 +47,6 @@
 
 
 // Private functions
-static int32_t objectTransaction(UAVLinkConnectionData *connection, uint32_t objId, uint16_t instId, uint8_t type, int32_t timeout);
-static int32_t sendObject(UAVLinkConnectionData *connection, uint32_t objId, uint16_t instId, uint8_t type);
-static int32_t sendSingleObject(UAVLinkConnectionData *connection, uint32_t objId, uint16_t instId, uint8_t type);
 static int32_t sendNack(UAVLinkConnectionData *connection, uint32_t objId);
 static int32_t receivePacket(UAVLinkConnectionData *connection, uint8_t type, uint32_t rxId, uint16_t instId, uint8_t* data, int32_t length);
 static void updateAck(UAVLinkConnectionData *connection, uint32_t rxId);
@@ -196,6 +193,7 @@ int32_t UAVLinkSendStream(UAVLinkConnection connectionHandle, uint8_t Id, uint8_
 	connection->resp = 0;
 	connection->respId = Id;
 	sendStreamPacket(connection, Id, length, buf);
+	return 0;
 }
 
 /**
@@ -455,6 +453,7 @@ static int32_t receivePacket(UAVLinkConnectionData *connection, uint8_t type, ui
 {
 	int32_t ret = 0;
 
+	
 	// Process message type
 	switch (type) {
 		case UAVLINK_TYPE_OBJ:
@@ -471,7 +470,8 @@ static int32_t receivePacket(UAVLinkConnectionData *connection, uint8_t type, ui
 			if (connection->streamForwarder) {
 				(connection->streamForwarder)(objId,data,length);
 			}
-		case UAVLINK_TYPE_OBJ_REQ:
+			break;
+	case UAVLINK_TYPE_OBJ_REQ:
 			// The in uavlink the autopilot board never requests an object from the computer (this code)
 			sendNack(connection, objId);
 			break;
@@ -505,7 +505,7 @@ static void updateAck(UAVLinkConnectionData *connection, uint32_t rxId)
 }
 
 
-bool getResponse(UAVLinkConnection connectionHandle, uint8_t *buf, uint32_t max_len) {
+bool UAVLinkGetResponse(UAVLinkConnection connectionHandle, uint8_t *buf, uint32_t max_len) {
 	UAVLinkConnectionData *connection;
 	CHECKCONHANDLE(connectionHandle,connection,return -1);
 	uint32_t len;
@@ -531,7 +531,7 @@ bool getResponse(UAVLinkConnection connectionHandle, uint8_t *buf, uint32_t max_
  * \return 0 Success
  * \return -1 Failure
  */
-int32_t sendPacket(UAVLinkConnection connectionHandle, uint32_t objId, uint8_t type, uint8_t *buf, uint16_t data_length)
+int32_t UAVLinkSendPacket(UAVLinkConnection connectionHandle, uint32_t objId, uint8_t type, uint8_t *buf, uint16_t data_length)
 {
 	UAVLinkConnectionData *connection;
 	CHECKCONHANDLE(connectionHandle,connection,return -1);
