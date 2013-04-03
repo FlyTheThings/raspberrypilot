@@ -1,4 +1,4 @@
-#include <udp.h>
+#include <uavlink_server_udp.h>
 #include <uavlink_utils.h>
 
 #define UDP_MSG_BFR_LEN 512

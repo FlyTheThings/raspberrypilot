@@ -10,9 +10,10 @@
 
 //project specific
 #include <uavlink.h>
+#include <uavlink_server_serial.h>
 
 //char *portname = "/dev/ttyS0";
-char *portname = "/dev/ttyAMA0";
+char *portname = "/dev/ttyAMA0"; //this is hardcoded since its just on the raspberry pi (for now)
 
 static int serial_fd;
 

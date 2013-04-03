@@ -20,9 +20,10 @@ CC = gcc
 CFLAGS = -g -Wall
 
 
-SRC = server.c 
-SRC += serial.c 
-SRC += udp.c
+SRC = main.c 
+SRC += uavlink_server_serial.c 
+SRC += uavlink_server_udp.c
+SRC += uavlink_server_utils.c
 SRC += UAVLink/uavlink.c
 SRC += UAVLink/crc.c
 

@@ -8,8 +8,8 @@
 
 
 // project include files
-#include <serial.h>
-#include <uavlink.h>
+#include <uavlink_server_serial.h>
+#include <uavlink_server_uavlink.h>
 
 
 
