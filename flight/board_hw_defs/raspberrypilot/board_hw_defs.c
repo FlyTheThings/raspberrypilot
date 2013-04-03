@@ -36,7 +36,7 @@ static const struct pios_led pios_leds[] = {
 		.pin = {
 			.gpio = GPIOE,
 			.init = {
-				.GPIO_Pin   = GPIO_Pin_4,
+				.GPIO_Pin   = GPIO_Pin_4,//YELLOW_LED
 				.GPIO_Speed = GPIO_Speed_50MHz,
 				.GPIO_Mode  = GPIO_Mode_OUT,
 				.GPIO_OType = GPIO_OType_PP,
@@ -48,7 +48,43 @@ static const struct pios_led pios_leds[] = {
 		.pin = {
 			.gpio = GPIOC,
 			.init = {
-				.GPIO_Pin   = GPIO_Pin_15,
+				.GPIO_Pin   = GPIO_Pin_15,//RED_LED
+				.GPIO_Speed = GPIO_Speed_50MHz,
+				.GPIO_Mode  = GPIO_Mode_OUT,
+				.GPIO_OType = GPIO_OType_PP,
+				.GPIO_PuPd = GPIO_PuPd_UP
+			},
+		},
+	},
+	[PIOS_LED_UNUSED1] = {
+		.pin = {
+			.gpio = GPIOC,
+			.init = {
+				.GPIO_Pin   = GPIO_Pin_14,//GREEN_LED
+				.GPIO_Speed = GPIO_Speed_50MHz,
+				.GPIO_Mode  = GPIO_Mode_OUT,
+				.GPIO_OType = GPIO_OType_PP,
+				.GPIO_PuPd = GPIO_PuPd_UP
+			},
+		},
+	},
+	[PIOS_LED_UNUSED2] = {
+		.pin = {
+			.gpio = GPIOC,
+			.init = {
+				.GPIO_Pin   = GPIO_Pin_13,//ORANGE_LED
+				.GPIO_Speed = GPIO_Speed_50MHz,
+				.GPIO_Mode  = GPIO_Mode_OUT,
+				.GPIO_OType = GPIO_OType_PP,
+				.GPIO_PuPd = GPIO_PuPd_UP
+			},
+		},
+	},
+	[PIOS_LED_UNUSED3] = {
+		.pin = {
+			.gpio = GPIOE,
+			.init = {
+				.GPIO_Pin   = GPIO_Pin_3,//RED_ORANGE_LED
 				.GPIO_Speed = GPIO_Speed_50MHz,
 				.GPIO_Mode  = GPIO_Mode_OUT,
 				.GPIO_OType = GPIO_OType_PP,
