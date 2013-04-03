@@ -140,8 +140,10 @@ MODULE_INITCALL(SensorsInitialize, SensorsStart)
 
 int32_t accel_test;
 int32_t gyro_test;
-int32_t mag_test;
+int32_t mag_test1, mag_test2;
+int32_t altitude_test;
 //int32_t pressure_test;
+//int32_t airspeed_test;
 
 
 /**
@@ -193,12 +195,31 @@ static void SensorsTask(void *parameters)
 	}
 
 #if defined(PIOS_INCLUDE_HMC5883)
-	mag_test = PIOS_HMC5883_Test();
+	mag_test1 = PIOS_HMC5883_Test();
 #else
-	mag_test = 0;
+	mag_test1 = 0;
 #endif
 
-	if(accel_test < 0 || gyro_test < 0 || mag_test < 0) {
+#if defined(PIOS_INCLUDE_MAG3110)
+	mag_test2 = PIOS_MAG3110_Test();
+#else
+	mag_test2 = 0;
+#endif
+
+#if defined(PIOS_INCLUDE_BMP180)
+	altitude_test = PIOS_BMP180_Test();
+#else
+	altitude_test = 0;
+#endif
+
+#if defined(PIOS_INCLUDE_BMP085)
+	altitude_test = PIOS_BMP085_Test();
+#else
+	altitude_test = 0;
+#endif
+
+
+	if(accel_test < 0 || gyro_test < 0 || mag_test1 < 0 || altitude_test < 0 || mag_test2 < 0) {
 		AlarmsSet(SYSTEMALARMS_ALARM_SENSORS, SYSTEMALARMS_ALARM_CRITICAL);
 		while(1) {
 			PIOS_WDG_UpdateFlag(PIOS_WDG_SENSORS);

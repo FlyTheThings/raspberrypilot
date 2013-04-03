@@ -482,12 +482,6 @@ void PIOS_Board_Init(void) {
 	}
 
 
-
-
-
-	
-
-	
 	PIOS_DELAY_WaitmS(50);
 
 
@@ -499,6 +493,13 @@ void PIOS_Board_Init(void) {
 	PIOS_MAG3110_Init(&pios_mag3110_cfg);
 #endif
 
+#if defined(PIOS_INCLUDE_BMP180)
+	PIOS_BMP180_Init();
+#endif
+
+#if defined(PIOS_INCLUDE_BMP085)
+	PIOS_BMP085_Init();
+#endif
 
 }
 
