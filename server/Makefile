@@ -22,6 +22,7 @@ CFLAGS = -g -Wall
 
 SRC = server.c 
 SRC += serial.c 
+SRC += udp.c
 SRC += UAVLink/uavlink.c
 SRC += UAVLink/crc.c
 

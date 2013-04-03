@@ -453,7 +453,7 @@ static int32_t receivePacket(UAVLinkConnectionData *connection, uint8_t type, ui
 {
 	int32_t ret = 0;
 
-	printf("Received Type: %d\n",type);
+	
 	// Process message type
 	switch (type) {
 		case UAVLINK_TYPE_OBJ:
@@ -505,7 +505,7 @@ static void updateAck(UAVLinkConnectionData *connection, uint32_t rxId)
 }
 
 
-bool getResponse(UAVLinkConnection connectionHandle, uint8_t *buf, uint32_t max_len) {
+bool UAVLinkGetResponse(UAVLinkConnection connectionHandle, uint8_t *buf, uint32_t max_len) {
 	UAVLinkConnectionData *connection;
 	CHECKCONHANDLE(connectionHandle,connection,return -1);
 	uint32_t len;
@@ -531,7 +531,7 @@ bool getResponse(UAVLinkConnection connectionHandle, uint8_t *buf, uint32_t max_
  * \return 0 Success
  * \return -1 Failure
  */
-int32_t sendPacket(UAVLinkConnection connectionHandle, uint32_t objId, uint8_t type, uint8_t *buf, uint16_t data_length)
+int32_t UAVLinkSendPacket(UAVLinkConnection connectionHandle, uint32_t objId, uint8_t type, uint8_t *buf, uint16_t data_length)
 {
 	UAVLinkConnectionData *connection;
 	CHECKCONHANDLE(connectionHandle,connection,return -1);
