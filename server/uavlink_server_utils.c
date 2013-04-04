@@ -1,4 +1,6 @@
 #include <sys/time.h>
+#include <stdlib.h>
+#include <stdint.h>
 
 uint64_t get_time_stamp() {
   struct timeval tv;

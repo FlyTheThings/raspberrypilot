@@ -73,10 +73,12 @@ UAVLinkConnection UAVLinkInitialize(UAVLinkOutputStream outputStream)
 	connection->outStream = outputStream;
 	connection->streamForwarder = 0;
 	// allocate buffers
-	connection->rxBuffer = malloc(512);
+	connection->rxBuffer = malloc(512);       // stores the data in the packet
 	if (!connection->rxBuffer) return 0;
 	connection->txBuffer = malloc(512);
 	if (!connection->txBuffer) return 0;
+	connection->rxPacketBuffer = malloc(512); // stores the entire packet
+	if (!connection->rxPacketBuffer) return 0;
 	UAVLinkResetStats( (UAVLinkConnection) connection );
 	return (UAVLinkConnection) connection;
 }
@@ -213,9 +215,11 @@ UAVLinkRxState UAVLinkProcessInputStreamQuiet(UAVLinkConnection connectionHandle
 	if (iproc->state == UAVLINK_STATE_ERROR || iproc->state == UAVLINK_STATE_COMPLETE || iproc->state == UAVLINK_STATE_STREAM_COMPLETE)
 		iproc->state = UAVLINK_STATE_SYNC;
 	
-	if (iproc->rxPacketLength < 0xffff)
+	if (iproc->rxPacketLength < 512)
 		iproc->rxPacketLength++;   // update packet byte count
 	
+	connection->rxPacketBuffer[iproc->rxPacketLength] = rxbyte;
+
 	// Receive state machine
 	switch (iproc->state)
 	{
@@ -227,6 +231,7 @@ UAVLinkRxState UAVLinkProcessInputStreamQuiet(UAVLinkConnection connectionHandle
 			iproc->cs = CRC_updateByte(0, rxbyte);
 			
 			iproc->rxPacketLength = 1;
+			connection->rxPacketBuffer[0] = rxbyte;
 			
 			iproc->state = UAVLINK_STATE_TYPE;
 			break;
@@ -460,11 +465,11 @@ static int32_t receivePacket(UAVLinkConnectionData *connection, uint8_t type, ui
 			// Check if an ack is pending
 			updateAck(connection, objId);
 			break;
-		case UAVLINK_TYPE_OBJ_ACK:
+	case UAVLINK_TYPE_OBJ_ACK:
 			// Always Transmit ACK
 			sendAck(connection, objId);
 			break;
-		case UAVLINK_TYPE_STREAM:
+	case UAVLINK_TYPE_STREAM:
 			// Transmit ACK
 			sendAck(connection,objId);
 			if (connection->streamForwarder) {
@@ -504,20 +509,23 @@ static void updateAck(UAVLinkConnectionData *connection, uint32_t rxId)
 	}
 }
 
-
-bool UAVLinkGetResponse(UAVLinkConnection connectionHandle, uint8_t *buf, uint32_t max_len) {
+// returns if a response was received, if one was write packet to buf and update len to the length of the packet
+// uavlink connection to use
+// buffer where packet is to be copied
+// length of the buffer, set to length copied
+bool UAVLinkGetResponsePacket(UAVLinkConnection connectionHandle, uint8_t *buf, uint16_t *len) {
 	UAVLinkConnectionData *connection;
 	CHECKCONHANDLE(connectionHandle,connection,return -1);
-	uint32_t len;
 	
 	if (connection->resp) {
 		connection->resp = 0;
 		// use the smaller of the max_len and the received size
-		len = max_len < connection->iproc.length ? max_len : connection->iproc.length  ;
-		memcpy(buf,connection->rxBuffer,len);
+		*len = *len < connection->iproc.rxPacketLength ? *len : connection->iproc.rxPacketLength  ;
+		memcpy(buf,connection->rxPacketBuffer,*len);
 		return 1;
 	} else {
-		return 0;
+	  len = 0;
+	  return 0;
 	}
 }
 
