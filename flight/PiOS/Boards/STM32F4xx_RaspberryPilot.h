@@ -76,8 +76,11 @@ TIM8  |           |           |           |
 //------------------------
 // PIOS_LED
 //------------------------
-#define PIOS_LED_HEARTBEAT	1 // Steve was here
+#define PIOS_LED_HEARTBEAT	0
 #define PIOS_LED_ALARM		1
+#define PIOS_LED_UNUSED1	2
+#define PIOS_LED_UNUSED2	3
+#define PIOS_LED_UNUSED3	4
 
 //------------------------
 // PIOS_SPI

@@ -58,7 +58,7 @@ static uint16_t calibrationCount = 0;
 
 PIOS_MPXV_descriptor sensor = { .type = PIOS_MPXV_UNKNOWN };
 
-void baro_airspeedGetMPXV(AirspeedSensorData *airspeedSensor, AirspeedSettingsData *airspeedSettings, int8_t airspeedADCPin){
+void baro_airspeedGetMPXV(AirspeedSensorData *airspeedSensor, AirspeedSettingsData *airspeedSettings, uint8_t airspeedADCPin){
 
 	// Ensure that the ADC pin is properly configured
 	if(airspeedADCPin < 0){
