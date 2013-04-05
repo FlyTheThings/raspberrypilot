@@ -148,12 +148,16 @@ SRC += $(PIOSCOMMON)/pios_mpxv.c
 SRC += $(PIOSCOMMON)/pios_etasv3.c
 SRC += $(PIOSCOMMON)/pios_hcsr04.c
 SRC += $(PIOSCOMMON)/pios_hmc5883.c
+SRC += $(PIOSCOMMON)/pios_lsm330.c
+SRC += $(PIOSCOMMON)/pios_lsm303.c
 
-
+# Stuff in this section needs to be dumped as not used on RP
+#################################################################
 SRC += $(PIOSCOMMON)/pios_mpu6000.c
 SRC += $(PIOSCOMMON)/pios_bma180.c
 SRC += $(PIOSCOMMON)/pios_l3gd20.c
 SRC += $(PIOSCOMMON)/pios_ms5611.c
+#################################################################
 
 
 SRC += $(PIOSCOMMON)/pios_crc.c
