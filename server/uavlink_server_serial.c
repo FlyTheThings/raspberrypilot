@@ -11,6 +11,7 @@
 //project specific
 #include <uavlink.h>
 #include <uavlink_server_serial.h>
+#include <uavlink_server_utils.h>
 
 //char *portname = "/dev/ttyS0";
 char *portname = "/dev/ttyAMA0"; //this is hardcoded since its just on the raspberry pi (for now)
@@ -45,20 +46,13 @@ int32_t serial_open(void) {
 
 int32_t serial_write(uint8_t *buf, uint32_t len) {
   int n = 0;
-  struct timeval tv;
   fd_set wfds;
-  int ret;
-  printf("write called len %d\n",len);
   // build the descriptor list for the select
   FD_ZERO(&wfds);
   FD_SET(serial_fd,&wfds);
-  tv.tv_sec = 0;
-  tv.tv_usec = 50000;
   while (len > n) {
-    printf("in while");
-    ret = select(serial_fd+1, NULL, &wfds, NULL, NULL);
+    select(serial_fd+1, NULL, &wfds, NULL, NULL);
     n += write(serial_fd,&buf[n],len);
-    printf ("wrote serial %d", n);
   }
   return n;
 }
@@ -77,29 +71,37 @@ void handle_serial_rx(int fd_uavlink_serial, UAVLinkConnection uav_link_conn) {
      }
 }
 
-bool wait_uavlink_ack(UAVLinkConnection uav_link_conn, int serial_fd) {
-  // returns true if an ack was received
+bool wait_uavlink_response(UAVLinkConnection uav_link_conn, uint8_t *buf, uint16_t *len) {
+  // returns true if an response was received
   struct timeval tv;
   uint64_t end_time;
   int64_t wait_time;
-  bool waiting = 1;
   fd_set rfds;
   int selret;
   end_time = get_time_stamp() + 50000;  //timeout in 50ms
-  while(waiting) {
+  while(1) {
     wait_time = end_time - get_time_stamp();
+    printf ("wait time: %llu\n",wait_time);
     // if we timeout out return 0
-    if (wait_time < 0) return 0;
+    if (wait_time < 0) {
+      printf("wait time too short");
+      return 0;
+    }
     tv.tv_usec = wait_time;
     tv.tv_sec = 0;
-    selret = select(2,&rfds,NULL,NULL,&tv);
+    FD_ZERO(&rfds);
+    FD_SET(serial_fd,&rfds);
+    selret = select(serial_fd+1,&rfds,NULL,NULL,&tv);
     // if it timed out return 0
-    if (selret == 0) return 0;
+    if (selret == 0) {
+      printf("sel timeout\n");
+      return 0;
+    }
     // now process the serial data one byte at a time 
     read(serial_fd, uavlink_read_buffer, 1);
     UAVLinkProcessInputStream(uav_link_conn,uavlink_read_buffer[0]);
     // check if there was a response
-    if (UAVLinkGetResponse(uav_link_conn,NULL,NULL)) return 1;
+    if (UAVLinkGetResponsePacket(uav_link_conn,buf,len)) return 1;
   }
 } 
 

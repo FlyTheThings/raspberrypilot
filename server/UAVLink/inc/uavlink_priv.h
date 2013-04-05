@@ -90,6 +90,7 @@ typedef struct {
     uint8_t *rxBuffer;
     uint32_t txSize;
     uint8_t *txBuffer;
+    uint8_t *rxPacketBuffer;
     uavLinkStreamForwarder streamForwarder;
 } UAVLinkConnectionData;
 
