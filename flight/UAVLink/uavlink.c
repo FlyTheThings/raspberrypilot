@@ -711,8 +711,6 @@ static int32_t receivePacket(UAVLinkConnectionData *connection, uint8_t type, ui
 			}
 			break;
 		case UAVLINK_TYPE_STREAM:
-			// Transmit ACK
-			sendAck(connection,rxId);
 			if (connection->streamForwarder) {
 				(connection->streamForwarder)(rxId,data,length);
 			}
