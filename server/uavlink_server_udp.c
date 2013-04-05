@@ -56,13 +56,14 @@ type - 1 byte
 id - 4 bytes (lsbyte first)
 data - n bytes (can optionally start with an instance)
  */
-void handle_udp_uavlink_rx(int udp_stream_fd, UAVLinkConnection uav_link_conn) {
+void handle_udp_uavlink_rx(int udp_link_fd, UAVLinkConnection uav_link_conn) {
   int n;
-  uint size = sizeof(stream_addr);
+  struct sockaddr link_addr;
+  uint size = sizeof(link_addr);
   uint32_t objid;
   uint8_t ptype;
   uint16_t len;
-  n = recvfrom(udp_stream_fd,rx_buffer,UDP_BFR_LEN,0,&stream_addr,&size);
+  n = recvfrom(udp_link_fd,rx_buffer,UDP_BFR_LEN,0,&link_addr,&size);
   // the udp packets are already synced so just copy out the bytes
   len = n - 5;  // len is the length of the data, not including the header
   ptype = rx_buffer[0];
@@ -81,6 +82,10 @@ void handle_udp_uavlink_rx(int udp_stream_fd, UAVLinkConnection uav_link_conn) {
       tx_buffer[3] = rx_buffer[6]; 
       tx_buffer[4] = rx_buffer[7]; // copy the objid msb 
       // copy the rest of the data except the checksum
+      len -= 8;
       memcpy(&tx_buffer[5],&rx_buffer[8],len);
+      len += 5;
+      printf("replying\n");
+      sendto(udp_link_fd,&tx_buffer,len,0,&link_addr,size);
   }
 }

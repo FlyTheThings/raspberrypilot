@@ -50,6 +50,7 @@ int main(int argc, char**argv)
    max_fd = uavlink_serial_fd > max_fd ? uavlink_serial_fd : max_fd;
    max_fd = sock_stream_fd > max_fd ? sock_stream_fd : max_fd;
    max_fd = sock_link_fd > max_fd ? sock_link_fd : max_fd;
+   printf ("entering while");
    while(1) {
      // build the fd_set for the select
      FD_ZERO(&rfds);
@@ -63,6 +64,7 @@ int main(int argc, char**argv)
        handle_udp_stream_rx(sock_stream_fd,uav_link_conn);
        }
      if (FD_ISSET(sock_link_fd,&rfds)) {
+       printf("rx link packet\n");
        handle_udp_uavlink_rx(sock_link_fd,uav_link_conn);
        }
    }

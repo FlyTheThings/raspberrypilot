@@ -215,10 +215,12 @@ UAVLinkRxState UAVLinkProcessInputStreamQuiet(UAVLinkConnection connectionHandle
 	if (iproc->state == UAVLINK_STATE_ERROR || iproc->state == UAVLINK_STATE_COMPLETE || iproc->state == UAVLINK_STATE_STREAM_COMPLETE)
 		iproc->state = UAVLINK_STATE_SYNC;
 	
+	connection->rxPacketBuffer[iproc->rxPacketLength] = rxbyte;
+	
 	if (iproc->rxPacketLength < 512)
 		iproc->rxPacketLength++;   // update packet byte count
 	
-	connection->rxPacketBuffer[iproc->rxPacketLength] = rxbyte;
+	
 
 	// Receive state machine
 	switch (iproc->state)
