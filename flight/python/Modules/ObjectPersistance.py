@@ -82,8 +82,9 @@ def UAVObjDeleteAll(cur):
     
     
 def run():
-
-    objMgr = uavlink.connectObjMgr(host="127.0.0.1",port=8075)
+    
+    conn = uavlink.uavLinkConnection_UDP(addr="192.168.1.115",port=32001)
+    objMgr = uavlink.objManager(conn)
     objper = objMgr.getObjByName("ObjectPersistence")
     con = sqlite3.connect('uavobjects.sqlite')
     cur = con.cursor()
