@@ -26,7 +26,7 @@
 #define LSM330_G_PER_LSB (float) 4000.0/65535
 
 // public api
-bool PIOS_lsm330_init_gyro(void) ;
-bool PIOS_lsm330_read_gyro(float gyro_vector[3]);
+bool PIOS_LSM330_init_gyro(void) ;
+bool PIOS_LSM330_read_gyro(float gyro_vector[3]);
 
 #endif /* PIOS_LSM330_I2C_H_ */

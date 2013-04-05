@@ -49,11 +49,11 @@ struct vector_3d {
 
 
 // public api
-bool PIOS_lsm303_init_accel(void) ;
-bool PIOS_lsm303_read_accel(float accel_vector[]);
+bool PIOS_LSM303_init_accel(void) ;
+bool PIOS_LSM303_read_accel(float accel_vector[]);
 
-bool PIOS_lsm303_init_mag(void) ;
-bool PIOS_lsm303_read_mag(float mag_vector[]);
+bool PIOS_LSM303_init_mag(void) ;
+bool PIOS_LSM303_read_mag(float mag_vector[]);
 
 
 #endif /* PIOS_LSM303_H_ */

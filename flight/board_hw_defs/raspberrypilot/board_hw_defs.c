@@ -1105,7 +1105,7 @@ __attribute__ ((alias("PIOS_I2C_mag_adapter_er_irq_handler")));
 
 static const struct pios_i2c_adapter_cfg pios_i2c_mag_adapter_cfg = {
 	.regs = I2C1,
-	.remap = GPIO_AF_I2C1,
+	.remap = GPIO_AF_I2C1, // PIOS_I2C_MAIN_ADAPTER
 	.init = {
 		.I2C_Mode = I2C_Mode_I2C,
 		.I2C_OwnAddress1 = 0,
@@ -1118,7 +1118,7 @@ static const struct pios_i2c_adapter_cfg pios_i2c_mag_adapter_cfg = {
 	.scl = {
 		.gpio = GPIOB,
 		.init = {
-			.GPIO_Pin = GPIO_Pin_6,
+			.GPIO_Pin = GPIO_Pin_8,
             .GPIO_Mode  = GPIO_Mode_AF,
             .GPIO_Speed = GPIO_Speed_50MHz,
             .GPIO_OType = GPIO_OType_OD,
@@ -1128,7 +1128,7 @@ static const struct pios_i2c_adapter_cfg pios_i2c_mag_adapter_cfg = {
 	.sda = {
 		.gpio = GPIOB,
 		.init = {
-			.GPIO_Pin = GPIO_Pin_7,
+			.GPIO_Pin = GPIO_Pin_9,
             .GPIO_Mode  = GPIO_Mode_AF,
             .GPIO_Speed = GPIO_Speed_50MHz,
             .GPIO_OType = GPIO_OType_OD,
