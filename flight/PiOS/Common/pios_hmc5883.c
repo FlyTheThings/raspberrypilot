@@ -294,7 +294,7 @@ static int32_t PIOS_HMC5883_Write(uint8_t address, uint8_t buffer)
 		}
 		,
 	};
-	;
+
 	return PIOS_I2C_Transfer(PIOS_I2C_MAIN_ADAPTER, txn_list, NELEMENTS(txn_list));
 }
 
@@ -311,7 +311,6 @@ int32_t PIOS_HMC5883_Test(void)
 	uint8_t ctrl_b_read;	
 	uint8_t mode_read;
 	int16_t values[3];
-	
 	
 	
 	/* Verify that ID matches (HMC5883 ID is null-terminated ASCII string "H43") */

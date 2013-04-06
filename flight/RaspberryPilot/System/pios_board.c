@@ -54,7 +54,7 @@
 
 #if defined(PIOS_INCLUDE_HMC5883)
 #include "pios_hmc5883.h"
-static const struct pios_exti_cfg pios_exti_hmc5883_cfg __exti_config = {
+static const struct pios_exti_cfg pios_exti_hmc5883_cfg __exti_config = { // TODO disable interrupts for this sensor
 	.vector = PIOS_HMC5883_IRQHandler,
 	.line = EXTI_Line5,
 	.pin = {
@@ -483,7 +483,21 @@ void PIOS_Board_Init(void) {
 
 
 	PIOS_DELAY_WaitmS(50);
-
+	
+#if defined(PIOS_INCLUDE_I2C)
+{
+	if (PIOS_I2C_Init(&pios_i2c_mag_adapter_id, &pios_i2c_mag_adapter_cfg)) {
+		PIOS_DEBUG_Assert(0);
+	}
+//	if (PIOS_I2C_Init(&pios_i2c_flexiport_adapter_id, &pios_i2c_flexiport_adapter_cfg)) {
+//		PIOS_Assert(0);
+//	}
+}
+#endif
+	
+#if defined(PIOS_INCLUDE_ADC)
+	PIOS_ADC_Init(&pios_adc_cfg);
+#endif
 
 #if defined(PIOS_INCLUDE_HMC5883)
 	PIOS_HMC5883_Init(&pios_hmc5883_cfg);
@@ -500,6 +514,18 @@ void PIOS_Board_Init(void) {
 #if defined(PIOS_INCLUDE_BMP085)
 	PIOS_BMP085_Init();
 #endif
+
+#if defined(PIOS_INCLUDE_LSM330)
+	#include "pios_lsm330.h"
+	PIOS_LSM330_init_gyro();
+#endif
+
+#if defined(PIOS_INCLUDE_LSM303)
+	#include "pios_lsm303.h"
+	PIOS_LSM303_init_accel();
+	PIOS_LSM303_init_mag();
+#endif
+
 
 }
 
