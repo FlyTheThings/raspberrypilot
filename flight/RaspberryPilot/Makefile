@@ -55,14 +55,18 @@ FLASH_TOOL = OPENOCD
 
 # List of modules to include
 #MODULES = Sensors Attitude/revolution ManualControl Stabilization Altitude/revolution Actuator GPS FirmwareIAP 
-#MODULES =  ManualControl  Stabilization Actuator GPS
+#MODULES =  ManualControl  Stabilization GPS
+MODULES += Actuator
 #MODULES += AltitudeHold
-MODULES += Altitude
+MODULES += Altitude 
 ##MODULES += Sensors
+#MODULES += Airspeed
+
+#these must be last
 MODULES += UAVLinkBridge
 MODULES += Telemetry
-#MODULES += Airspeed
-#MODULES += OveroSync
+
+
 
 
 # Paths

@@ -376,12 +376,16 @@ void PIOS_Board_Init(void) {
 //#endif
 //	PIOS_FLASHFS_Init(&flashfs_m25p_cfg);
 	
+//<<<<<<< HEAD
 //#if defined(PIOS_OVERO_SPI)
 	/* Set up the SPI interface to the gyro */
 //	if (PIOS_SPI_Init(&pios_spi_overo_id, &pios_spi_overo_cfg)) {
 //		PIOS_DEBUG_Assert(0);
 //	}
 //#endif
+//=======
+
+//>>>>>>> ea4ad285390f54ce73a16eeeced7dc318e22320f
 
 	/* Initialize UAVObject libraries */
 	EventDispatcherInitialize();
@@ -408,20 +412,22 @@ void PIOS_Board_Init(void) {
 	PIOS_TIM_InitClock(&tim_10_cfg);
 	PIOS_TIM_InitClock(&tim_11_cfg);
 
+#ifdef PIOS_INCLUDE_SERVO
+	PIOS_Servo_Init(&pios_servo_cfg);
+#endif
 	/* IAP System Setup */
+	/*
 	PIOS_IAP_Init();
 	uint16_t boot_count = PIOS_IAP_ReadBootCount();
 	if (boot_count < 3) {
 		PIOS_IAP_WriteBootCount(++boot_count);
 		AlarmsClear(SYSTEMALARMS_ALARM_BOOTFAULT);
 	} else {
-		/* Too many failed boot attempts, force hwsettings to defaults */
+		// Too many failed boot attempts, force hwsettings to defaults
 		HwSettingsSetDefaults(HwSettingsHandle(), 0);
 		AlarmsSet(SYSTEMALARMS_ALARM_BOOTFAULT, SYSTEMALARMS_ALARM_CRITICAL);
 	}
-	
-	
-	//PIOS_IAP_Init();
+	*/
 
 	// RaspberryPilot removed large section of USB code that would not compile, don't need anyway for raspberrypilot
 	
