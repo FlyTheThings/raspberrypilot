@@ -78,7 +78,7 @@ void PIOS_BMP180_Init(void)
 {
 	/* Read all 22 bytes of calibration data in one transfer */
 	uint8_t Data[PIOS_BMP180_CALIB_LEN];
-	while (!PIOS_BMP180_Read(PIOS_BMP180_CALIBRATE, Data, PIOS_BMP180_CALIB_LEN))
+	while (PIOS_BMP180_Read(PIOS_BMP180_CALIBRATE, Data, PIOS_BMP180_CALIB_LEN))
 		continue;
 
 	/* Parameters AC1-AC6 */
@@ -132,7 +132,7 @@ static int32_t PIOS_BMP180_ReadADC(ConversionTypeTypeDef ADC_Conversion_Type)
 	uint8_t Data[3] = {0,0,0};
 	
 	if (ADC_Conversion_Type == TEMPERATURE) {
-		while (!PIOS_BMP180_Read(PIOS_BMP180_ADC_MSB, Data, 2))
+		while (PIOS_BMP180_Read(PIOS_BMP180_ADC_MSB, Data, 2))
 			continue;
 		
 		RawTemperature = (Data[0] << 8) | Data[1];
@@ -145,7 +145,7 @@ static int32_t PIOS_BMP180_ReadADC(ConversionTypeTypeDef ADC_Conversion_Type)
 		return Temperature;
 		
 	} else { /* if (ADC_Conversion_Type == PRESSURE) */
-		while (!PIOS_BMP180_Read(PIOS_BMP180_ADC_MSB, Data, 3))
+		while (PIOS_BMP180_Read(PIOS_BMP180_ADC_MSB, Data, 3))
 			continue;
 		
 		RawPressure = ((Data[0] << 16) | (Data[1] << 8) | Data[2]) >> (8 - PIOS_BMP180_OVERSAMPLING);
@@ -190,6 +190,7 @@ int32_t PIOS_BMP180_GetPressure(void)
 int32_t PIOS_BMP180_Data_Ready_Time_us(void)
 {
 	uint32_t waiting_time;			// In ms
+	int32_t return_value;
 	
 	PIOS_Assert(ADC_is_Running);	// Because you shouldn't have asked.
 
@@ -199,8 +200,10 @@ int32_t PIOS_BMP180_Data_Ready_Time_us(void)
 	else
 		waiting_time = PIOS_BMP180_PRESSURE_WAITING_TIME;
 	
-	if (PIOS_DELAY_GetuSSince(ADC_Start_Time) < waiting_time)
-		return (waiting_time - PIOS_DELAY_GetuSSince(ADC_Start_Time));
+	if (PIOS_DELAY_GetuSSince(ADC_Start_Time) < waiting_time) {
+		return_value = (waiting_time - PIOS_DELAY_GetuSSince(ADC_Start_Time));
+		return return_value;
+	}
 	else {
 		ADC_is_Running = false;
 		return 0;
