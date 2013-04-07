@@ -32,7 +32,8 @@ int32_t serial_open(void) {
 	}
 
 	struct termios options;
-	tcgetattr(serial_fd, &options);
+	//tcgetattr(serial_fd, &options);
+	memset(&options, 0, sizeof(options));
 	cfsetispeed(&options,B57600);
 	cfsetospeed(&options,B57600);
 	options.c_cflag = B57600 | CS8 | CLOCAL | CREAD;
