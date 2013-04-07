@@ -21,14 +21,14 @@ static int32_t PIOS_LSM330_Write(uint8_t address, uint8_t * buffer);
  */
 bool PIOS_LSM330_init_gyro(void) {
 	
-	uint8_t subaddr = LSM330_CTL_REG1_G | LSM330_G_REPEATED;
+	uint8_t subaddr = PIOS_LSM330_CTRL_REG1_G | PIOS_LSM330_G_REPEATED;
 	
 		uint8_t init_data_G[] = {
-		LSM330_CTL_REG1_G_SETTING,
-		LSM330_CTL_REG2_G_SETTING,
-		LSM330_CTL_REG3_G_SETTING,
-		LSM330_CTL_REG4_G_SETTING,
-		LSM330_CTL_REG5_G_SETTING
+		PIOS_LSM330_CTL_REG1_G_SETTING,
+		PIOS_LSM330_CTL_REG2_G_SETTING,
+		PIOS_LSM330_CTL_REG3_G_SETTING,
+		PIOS_LSM330_CTL_REG4_G_SETTING,
+		PIOS_LSM330_CTL_REG5_G_SETTING
 	};
 
 	if ( !PIOS_LSM330_Write(subaddr, init_data_G) )
@@ -40,19 +40,19 @@ bool PIOS_LSM330_init_gyro(void) {
  * \return 0 for success or -1 for failure
  */
 bool PIOS_LSM330_read_gyro(float gyro_vector[]) {
-	static /*volatile*/ uint8_t result[6];
-	
-	uint8_t subaddr = LSM330_G_READ_START | LSM330_G_REPEATED;
+	static uint8_t result[6];
+
+	uint8_t subaddr = PIOS_LSM330_G_READ_START | PIOS_LSM330_G_REPEATED;
 
 	if (!PIOS_LSM330_Read(subaddr, result, sizeof(result)))
 		return -1;
-		
+
 	gyro_vector[0] = ( int16_t ) (result[1] << 8) | result[0];
 	gyro_vector[1] = ( int16_t ) (result[3] << 8) | result[2];
 	gyro_vector[2] = ( int16_t ) (result[5] << 8) | result[4];
-	gyro_vector[0] *= LSM330_G_PER_LSB ;
-	gyro_vector[1] *= LSM330_G_PER_LSB ;
-	gyro_vector[2] *= LSM330_G_PER_LSB ;
+	gyro_vector[0] *= PIOS_LSM330_G_PER_LSB;
+	gyro_vector[1] *= PIOS_LSM330_G_PER_LSB;
+	gyro_vector[2] *= PIOS_LSM330_G_PER_LSB;
 	return 0;
 }
 
@@ -62,8 +62,8 @@ bool PIOS_LSM330_read_gyro(float gyro_vector[]) {
  * \param[out] buffer destination buffer
  * \param[in] len number of bytes which should be read
  * \return 0 if operation was successful
- * \return -1 if error during I2C transfer
- * \return -2 if unable to claim i2c device
+ * \return -1 if error during I²C transfer
+ * \return -2 if unable to claim I²C device
  */
 static int32_t PIOS_LSM330_Read(uint8_t address, uint8_t *buffer, uint8_t len)
 {
@@ -89,7 +89,7 @@ static int32_t PIOS_LSM330_Read(uint8_t address, uint8_t *buffer, uint8_t len)
 		}
 	};
 	
-	return PIOS_I2C_Transfer(PIOS_I2C_MAIN_ADAPTER, txn_list, NELEMENTS(txn_list));
+	return PIOS_I2C_Transfer(PIOS_LSM330_I2C_ADAPTER, txn_list, NELEMENTS(txn_list));
 }
 
 /**
@@ -97,8 +97,8 @@ static int32_t PIOS_LSM330_Read(uint8_t address, uint8_t *buffer, uint8_t len)
  * \param[in] address Register address
  * \param[in] buffer source buffer
  * \return 0 if operation was successful
- * \return -1 if error during I2C transfer
- * \return -2 if unable to claim i2c device
+ * \return -1 if error during I²C transfer
+ * \return -2 if unable to claim I²C device
  */
 static int32_t PIOS_LSM330_Write(uint8_t address, uint8_t *buffer)
 {
@@ -118,7 +118,7 @@ static int32_t PIOS_LSM330_Write(uint8_t address, uint8_t *buffer)
 		,
 	};
 
-	return PIOS_I2C_Transfer(PIOS_I2C_MAIN_ADAPTER, txn_list, NELEMENTS(txn_list));
+	return PIOS_I2C_Transfer(PIOS_LSM330_I2C_ADAPTER, txn_list, NELEMENTS(txn_list));
 }
 #endif /* PIOS_INCLUDE_LSM330 */
 
