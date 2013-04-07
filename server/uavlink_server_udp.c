@@ -34,7 +34,7 @@ int open_socket_uavlink(int port){
 
 // these next two functions use last_stream_rx and stream_addr to keep track of who if anyone gets the stream forwarded to them
 // this only works for one stream and one client, will have to rethink this to handle more if its needed
-static uint64_t last_stream_rx;
+static uint64_t last_stream_rx = 0;
 static struct sockaddr stream_addr;
 static int stream_fd;
 void handle_udp_stream_rx(int udp_stream_fd, UAVLinkConnection uav_link_conn) {
@@ -46,8 +46,11 @@ void handle_udp_stream_rx(int udp_stream_fd, UAVLinkConnection uav_link_conn) {
 	stream_fd = udp_stream_fd;
 }
 void udp_stream_tx(uint8_t *buf, uint16_t len) {
-  uint size = sizeof(stream_addr);
-  sendto(stream_fd,buf,len,0,&stream_addr,size);	
+  if (get_time_stamp() < (last_stream_rx + 20000000)) {
+      uint size = sizeof(stream_addr);
+      printf("udp stream tx\n");
+      sendto(stream_fd,buf,len,0,&stream_addr,size);
+  }
 }
 
 
@@ -73,6 +76,7 @@ void handle_udp_uavlink_rx(int udp_link_fd, UAVLinkConnection uav_link_conn) {
   objid += rx_buffer[4] << 24;
   UAVLinkSendPacket(uav_link_conn, objid, ptype, &rx_buffer[5], len);
   len = UDP_BFR_LEN;
+  printf("waiting response\n");
   if (wait_uavlink_response(uav_link_conn,rx_buffer,&len)) {
       // rx_buffer should now contain the uavlink response packet
       // to convert it to a udp_uavlink packet only some parts are copied
