@@ -436,9 +436,7 @@ void PIOS_Board_Init(void) {
 	uint8_t hwsettings_DSMxBind;
 	HwSettingsDSMxBindGet(&hwsettings_DSMxBind);
 	
-	/* Configure Telemetry port */
-	uint8_t hwsettings_rv_telemetryport;
-	HwSettingsRV_TelemetryPortGet(&hwsettings_rv_telemetryport);
+	PIOS_Board_configure_com(&pios_usart_gps_cfg, PIOS_COM_AUX_RX_BUF_LEN, PIOS_COM_AUX_TX_BUF_LEN, &pios_usart_com_driver, &pios_com_gps_id);
 
 
 	//configure the loop back com device
