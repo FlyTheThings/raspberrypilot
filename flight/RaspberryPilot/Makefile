@@ -57,11 +57,11 @@ FLASH_TOOL = OPENOCD
 #MODULES = Sensors Attitude/revolution ManualControl Stabilization Altitude/revolution Actuator GPS FirmwareIAP 
 #MODULES =  ManualControl  Stabilization Actuator GPS
 #MODULES += AltitudeHold
-##MODULES += Altitude
+MODULES += Altitude
 ##MODULES += Sensors
 MODULES += UAVLinkBridge
 MODULES += Telemetry
-##MODULES += Airspeed
+#MODULES += Airspeed
 #MODULES += OveroSync
 
 
@@ -318,7 +318,7 @@ CFLAGS += -g$(DEBUGF)
 
 #CFLAGS += -ffast-math
 
-CFLAGS += -mcpu=$(MCU) -mfpu=vfp -mfloat-abi=softfp
+#CFLAGS += -mcpu=$(MCU) -mfpu=vfp -mfloat-abi=softfp  #defined in library.mk
 CFLAGS += $(CDEFS)
 CFLAGS += $(patsubst %,-I%,$(EXTRAINCDIRS)) -I.
 

@@ -59,7 +59,7 @@
 
 /* Select the sensors to include */
 //#define PIOS_INCLUDE_MAG3110
-//#define PIOS_INCLUDE_BMP180
+#define PIOS_INCLUDE_BMP180
 //#define PIOS_INCLUDE_MPXV
 #define PIOS_INCLUDE_HMC5883
 #define PIOS_INCLUDE_LSM330
