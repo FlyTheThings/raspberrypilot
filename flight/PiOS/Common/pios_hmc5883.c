@@ -266,7 +266,7 @@ static int32_t PIOS_HMC5883_Read(uint8_t address, uint8_t * buffer, uint8_t len)
 		}
 	};
 	
-	return PIOS_I2C_Transfer(PIOS_I2C_MAIN_ADAPTER, txn_list, NELEMENTS(txn_list));
+	return PIOS_I2C_Transfer(PIOS_HMC5883_I2C_ADAPTER, txn_list, NELEMENTS(txn_list));
 }
 
 /**
@@ -295,7 +295,7 @@ static int32_t PIOS_HMC5883_Write(uint8_t address, uint8_t buffer)
 		,
 	};
 
-	return PIOS_I2C_Transfer(PIOS_I2C_MAIN_ADAPTER, txn_list, NELEMENTS(txn_list));
+	return PIOS_I2C_Transfer(PIOS_HMC5883_I2C_ADAPTER, txn_list, NELEMENTS(txn_list));
 }
 
 /**

@@ -21,17 +21,17 @@ static int32_t PIOS_LSM303_Write(uint8_t address, uint8_t subaddress, uint8_t * 
  */
 bool PIOS_LSM303_init_accel(void) {
 
-	uint8_t subaddr = LSM303_CTL_REG1_A | LSM303_A_REPEATED;
+	uint8_t subaddr = PIOS_LSM303_CTL_REG1_A | PIOS_LSM303_A_REPEATED;
 
 		uint8_t init_data_A[] = {
-		LSM303_CTL_REG1_A_SETTING,
-		LSM303_CTL_REG2_A_SETTING,
-		LSM303_CTL_REG3_A_SETTING,
-		LSM303_CTL_REG4_A_SETTING,
-		LSM303_CTL_REG5_A_SETTING
+		PIOS_LSM303_CTL_REG1_A_SETTING,
+		PIOS_LSM303_CTL_REG2_A_SETTING,
+		PIOS_LSM303_CTL_REG3_A_SETTING,
+		PIOS_LSM303_CTL_REG4_A_SETTING,
+		PIOS_LSM303_CTL_REG5_A_SETTING
 	};
 	
-	if ( !PIOS_LSM303_Write(LSM303_A_ADDR, subaddr, init_data_A) )
+	if ( !PIOS_LSM303_Write(PIOS_LSM303_A_ADDR, subaddr, init_data_A) )
 		return 0;
 	return -1;
 }
@@ -42,15 +42,15 @@ bool PIOS_LSM303_init_accel(void) {
  */
 bool PIOS_LSM303_init_mag(void) {
 
-	uint8_t subaddr = LSM303_CRA_REG_M;
+	uint8_t subaddr = PIOS_LSM303_CRA_REG_M;
 
 		uint8_t init_data_M[] = {
-		LSM303_CRA_REG_M_SETTING,
-		LSM303_CRB_REG_M_SETTING,
-		LSM303_MR_REG_M_SETTING
+		PIOS_LSM303_CRA_REG_M_SETTING,
+		PIOS_LSM303_CRB_REG_M_SETTING,
+		PIOS_LSM303_MR_REG_M_SETTING
 	};
 	
-	if ( !PIOS_LSM303_Write(LSM303_M_ADDR, subaddr, init_data_M) )
+	if ( !PIOS_LSM303_Write(PIOS_LSM303_M_ADDR, subaddr, init_data_M) )
 		return 0;
 	return -1;
 }
@@ -62,17 +62,17 @@ bool PIOS_LSM303_init_mag(void) {
 bool PIOS_LSM303_read_accel(float accel_vector[]) {
 	static /* volatile */ uint8_t result[6];
 	
-	uint8_t subaddr = LSM303_A_READ_START | LSM303_A_REPEATED;
+	uint8_t subaddr = PIOS_LSM303_A_READ_START | PIOS_LSM303_A_REPEATED;
 
-	if (!PIOS_LSM303_Read(LSM303_A_ADDR, subaddr, result, sizeof(result)))
+	if (!PIOS_LSM303_Read(PIOS_LSM303_A_ADDR, subaddr, result, sizeof(result)))
 		return -1;
 
 	accel_vector[0] = ( int16_t ) (result[1] << 8) | result[0];
 	accel_vector[1] = ( int16_t ) (result[3] << 8) | result[2];
 	accel_vector[2] = ( int16_t ) (result[5] << 8) | result[4];
-	accel_vector[0] *= LSM303_A_PER_LSB * 9.81;
-	accel_vector[1] *= LSM303_A_PER_LSB * 9.81;
-	accel_vector[2] *= LSM303_A_PER_LSB * 9.81;
+	accel_vector[0] *= PIOS_LSM303_A_PER_LSB * 9.81;
+	accel_vector[1] *= PIOS_LSM303_A_PER_LSB * 9.81;
+	accel_vector[2] *= PIOS_LSM303_A_PER_LSB * 9.81;
 	return 0;
 }
 
@@ -84,19 +84,19 @@ bool PIOS_LSM303_read_mag(float mag_vector[]) {
 	static /* volatile */ uint8_t result[6];
 	float tmp;
 	
-	uint8_t subaddr = LSM303_M_READ_START;
+	uint8_t subaddr = PIOS_LSM303_M_READ_START;
 	
-	if (!PIOS_LSM303_Read(LSM303_M_ADDR, subaddr, result, sizeof(result)))
+	if (!PIOS_LSM303_Read(PIOS_LSM303_M_ADDR, subaddr, result, sizeof(result)))
 		return -1;
 		
 	tmp =	(int16_t) (result[0] << 8 | result[1]) ;
-	mag_vector[0] = tmp * LSM303_M_X_PER_LSB; 
+	mag_vector[0] = tmp * PIOS_LSM303_M_X_PER_LSB;
 	
 	tmp =	(int16_t) (result[2] << 8 | result[3]) ;  
-	mag_vector[2] = tmp * LSM303_M_Y_PER_LSB;
+	mag_vector[2] = tmp * PIOS_LSM303_M_Y_PER_LSB;
 	
 	tmp =	(int16_t) (result[4] << 8 | result[5]);
-	mag_vector[1] = tmp * LSM303_M_Z_PER_LSB;
+	mag_vector[1] = tmp * PIOS_LSM303_M_Z_PER_LSB;
 	return 0;
 }
 
@@ -133,7 +133,7 @@ static int32_t PIOS_LSM303_Read(uint8_t address, uint8_t subaddress, uint8_t *bu
 		}
 	};
 	
-	return PIOS_I2C_Transfer(PIOS_I2C_MAIN_ADAPTER, txn_list, NELEMENTS(txn_list));
+	return PIOS_I2C_Transfer(PIOS_LSM303_I2C_ADPTER, txn_list, NELEMENTS(txn_list));
 }
 
 /**
@@ -162,7 +162,7 @@ static int32_t PIOS_LSM303_Write(uint8_t address, uint8_t subaddress, uint8_t *b
 		,
 	};
 
-	return PIOS_I2C_Transfer(PIOS_I2C_MAIN_ADAPTER, txn_list, NELEMENTS(txn_list));
+	return PIOS_I2C_Transfer(PIOS_LSM303_I2C_ADPTER, txn_list, NELEMENTS(txn_list));
 }
 
 #endif /* PIOS_INCLUDE_LSM303 */
