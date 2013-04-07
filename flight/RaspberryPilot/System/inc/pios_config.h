@@ -58,12 +58,14 @@
 #define PIOS_INCLUDE_COM_LOOPBACK
 
 /* Select the sensors to include */
-#define PIOS_INCLUDE_MAG3110
-//#define PIOS_INCLUDE_BMP085
+//#define PIOS_INCLUDE_MAG3110
 #define PIOS_INCLUDE_BMP180
-#define PIOS_INCLUDE_MPXV
-//#define PIOS_INCLUDE_HCSR04
+//#define PIOS_INCLUDE_MPXV
 #define PIOS_INCLUDE_HMC5883
+#define PIOS_INCLUDE_LSM330
+#define PIOS_INCLUDE_LSM303
+//#define PIOS_INCLUDE_BMP085
+//#define PIOS_INCLUDE_HCSR04
 
 
 // TODO dump all below as not part of Raspberry Pilot

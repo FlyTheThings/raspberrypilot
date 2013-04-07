@@ -111,7 +111,7 @@ It has a "fast" read mode which skips the least significant data bytes if CTRL_R
 #define PIOS_MAG3110_ODR_0p16_64	(30 << 3)				//	0.16		64		80		8.6		0.3
 #define PIOS_MAG3110_ODR_0p08_128	(31 << 3)				//	0.08		128		80		8.6		0.25
 
-#define PIOS_MAG3110_FAST_READ		(1 << 2)				//			Skips the low byte if autoincrement reading
+#define PIOS_MAG3110_FAST_READ		(1 << 2)				//			Skips the low byte if auto-increment reading
 															//	TM/AC
 #define PIOS_MAG3110_STANDBY		((0 << 1) | (0 << 0))	//	0	0	ASIC is in low power standby mode.
 #define PIOS_MAG3110_ONESHOT		((1 << 1) | (0 << 0))	//	1	0	The ASIC will exit standby mode, perform one measurement cycle based on the
@@ -206,7 +206,7 @@ It has a "fast" read mode which skips the least significant data bytes if CTRL_R
 
 struct pios_MAG3110_cfg{
 	uint8_t data_rate;			// ADC Conversion rate and noise tradeoff.
-	uint8_t fast_read;			// Whether or not to use fast mode to retreive the data (8 bits vs 16 on continuous I²C read).
+	uint8_t fast_read;			// Whether or not to use fast mode to retrieve the data (8 bits vs 16 on continuous I²C read).
 	uint8_t trig_mode;			// One of four trigger modes, see above.
 	uint8_t auto_degauss;		// Perform automatic degauss of the sensor before each reading.
 	uint8_t raw_read;			// Use the factory calibration only, ignore the user calibration registers.

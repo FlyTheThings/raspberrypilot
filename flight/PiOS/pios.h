@@ -117,9 +117,15 @@
 #if defined(PIOS_INCLUDE_HMC5883)
 #include <pios_hmc5883.h>
 #endif
+#if defined(PIOS_INCLUDE_LSM303)
+#include <pios_lsm303.h>
+#endif
+#if defined(PIOS_INCLUDE_LSM330)
+#include <pios_lsm330.h>
+#endif
 
-
-
+// TODO Remove the following as not part of RP
+// ##############################################
 #if defined(PIOS_INCLUDE_HMC5843)
 #include <pios_hmc5843.h>
 #endif
@@ -150,6 +156,7 @@
 #if defined(PIOS_INCLUDE_BMA180)
 #include <pios_bma180.h>
 #endif
+// ##############################################
 
 #if defined(PIOS_INCLUDE_FLASH)
 #include <pios_flash_jedec.h>

@@ -54,7 +54,7 @@
 
 #if defined(PIOS_INCLUDE_HMC5883)
 #include "pios_hmc5883.h"
-static const struct pios_exti_cfg pios_exti_hmc5883_cfg __exti_config = {
+static const struct pios_exti_cfg pios_exti_hmc5883_cfg __exti_config = { // TODO disable interrupts for this sensor
 	.vector = PIOS_HMC5883_IRQHandler,
 	.line = EXTI_Line5,
 	.pin = {
@@ -349,7 +349,7 @@ static void PIOS_Board_configure_dsm(const struct pios_usart_cfg *pios_usart_dsm
 
 void PIOS_Board_Init(void) {
 
-	const struct pios_board_info * bdinfo = &pios_board_info_blob;	
+//	const struct pios_board_info * bdinfo = &pios_board_info_blob;
 	
 	/* Delay system */
 	PIOS_DELAY_Init();
@@ -357,31 +357,35 @@ void PIOS_Board_Init(void) {
 	PIOS_LED_Init(&pios_led_cfg);
 
 	/* Set up the SPI interface to the accelerometer*/
-	if (PIOS_SPI_Init(&pios_spi_accel_id, &pios_spi_accel_cfg)) {
-		PIOS_DEBUG_Assert(0);
-	}
+//	if (PIOS_SPI_Init(&pios_spi_accel_id, &pios_spi_accel_cfg)) {
+//		PIOS_DEBUG_Assert(0);
+//	}
 	
 	/* Set up the SPI interface to the gyro */
-	if (PIOS_SPI_Init(&pios_spi_gyro_id, &pios_spi_gyro_cfg)) {
-		PIOS_DEBUG_Assert(0);
-	}
-#if !defined(PIOS_FLASH_ON_ACCEL)
+//	if (PIOS_SPI_Init(&pios_spi_gyro_id, &pios_spi_gyro_cfg)) {
+//		PIOS_DEBUG_Assert(0);
+//	}
+//#if !defined(PIOS_FLASH_ON_ACCEL)
 	/* Set up the SPI interface to the flash */
-	if (PIOS_SPI_Init(&pios_spi_flash_id, &pios_spi_flash_cfg)) {
-		PIOS_DEBUG_Assert(0);
-	}
-	PIOS_Flash_Jedec_Init(pios_spi_flash_id, 0, &flash_m25p_cfg);
-#else
-	PIOS_Flash_Jedec_Init(pios_spi_accel_id, 1, &flash_m25p_cfg);
-#endif
+//	if (PIOS_SPI_Init(&pios_spi_flash_id, &pios_spi_flash_cfg)) {
+//		PIOS_DEBUG_Assert(0);
+//	}
+//	PIOS_Flash_Jedec_Init(pios_spi_flash_id, 0, &flash_m25p_cfg);
+//#else
+//	PIOS_Flash_Jedec_Init(pios_spi_accel_id, 1, &flash_m25p_cfg);
+//#endif
 //	PIOS_FLASHFS_Init(&flashfs_m25p_cfg);
 	
-#if defined(PIOS_OVERO_SPI)
+//<<<<<<< HEAD
+//#if defined(PIOS_OVERO_SPI)
 	/* Set up the SPI interface to the gyro */
-	if (PIOS_SPI_Init(&pios_spi_overo_id, &pios_spi_overo_cfg)) {
-		PIOS_DEBUG_Assert(0);
-	}
-#endif
+//	if (PIOS_SPI_Init(&pios_spi_overo_id, &pios_spi_overo_cfg)) {
+//		PIOS_DEBUG_Assert(0);
+//	}
+//#endif
+//=======
+
+//>>>>>>> ea4ad285390f54ce73a16eeeced7dc318e22320f
 
 	/* Initialize UAVObject libraries */
 	EventDispatcherInitialize();
@@ -408,20 +412,22 @@ void PIOS_Board_Init(void) {
 	PIOS_TIM_InitClock(&tim_10_cfg);
 	PIOS_TIM_InitClock(&tim_11_cfg);
 
+#ifdef PIOS_INCLUDE_SERVO
+	PIOS_Servo_Init(&pios_servo_cfg);
+#endif
 	/* IAP System Setup */
+	/*
 	PIOS_IAP_Init();
 	uint16_t boot_count = PIOS_IAP_ReadBootCount();
 	if (boot_count < 3) {
 		PIOS_IAP_WriteBootCount(++boot_count);
 		AlarmsClear(SYSTEMALARMS_ALARM_BOOTFAULT);
 	} else {
-		/* Too many failed boot attempts, force hwsettings to defaults */
+		// Too many failed boot attempts, force hwsettings to defaults
 		HwSettingsSetDefaults(HwSettingsHandle(), 0);
 		AlarmsSet(SYSTEMALARMS_ALARM_BOOTFAULT, SYSTEMALARMS_ALARM_CRITICAL);
 	}
-	
-	
-	//PIOS_IAP_Init();
+	*/
 
 	// RaspberryPilot removed large section of USB code that would not compile, don't need anyway for raspberrypilot
 	
@@ -483,7 +489,21 @@ void PIOS_Board_Init(void) {
 
 
 	PIOS_DELAY_WaitmS(50);
-
+	
+#if defined(PIOS_INCLUDE_I2C)
+{
+	if (PIOS_I2C_Init(&pios_i2c_mag_adapter_id, &pios_i2c_mag_adapter_cfg)) {
+		PIOS_DEBUG_Assert(0);
+	}
+//	if (PIOS_I2C_Init(&pios_i2c_flexiport_adapter_id, &pios_i2c_flexiport_adapter_cfg)) {
+//		PIOS_Assert(0);
+//	}
+}
+#endif
+	
+#if defined(PIOS_INCLUDE_ADC)
+	PIOS_ADC_Init(&pios_adc_cfg);
+#endif
 
 #if defined(PIOS_INCLUDE_HMC5883)
 	PIOS_HMC5883_Init(&pios_hmc5883_cfg);
@@ -500,6 +520,18 @@ void PIOS_Board_Init(void) {
 #if defined(PIOS_INCLUDE_BMP085)
 	PIOS_BMP085_Init();
 #endif
+
+#if defined(PIOS_INCLUDE_LSM330)
+	#include "pios_lsm330.h"
+	PIOS_LSM330_init_gyro();
+#endif
+
+#if defined(PIOS_INCLUDE_LSM303)
+	#include "pios_lsm303.h"
+	PIOS_LSM303_init_accel();
+	PIOS_LSM303_init_mag();
+#endif
+
 
 }
 

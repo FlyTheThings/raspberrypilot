@@ -55,14 +55,18 @@ FLASH_TOOL = OPENOCD
 
 # List of modules to include
 #MODULES = Sensors Attitude/revolution ManualControl Stabilization Altitude/revolution Actuator GPS FirmwareIAP 
-#MODULES =  ManualControl  Stabilization Actuator GPS
+#MODULES =  ManualControl  Stabilization GPS
+MODULES += Actuator
 #MODULES += AltitudeHold
-MODULES += Altitude
-MODULES += Sensors
+MODULES += Altitude 
+##MODULES += Sensors
+#MODULES += Airspeed
+
+#these must be last
 MODULES += UAVLinkBridge
 MODULES += Telemetry
-MODULES += Airspeed
-#MODULES += OveroSync
+
+
 
 
 # Paths
@@ -148,12 +152,16 @@ SRC += $(PIOSCOMMON)/pios_mpxv.c
 SRC += $(PIOSCOMMON)/pios_etasv3.c
 SRC += $(PIOSCOMMON)/pios_hcsr04.c
 SRC += $(PIOSCOMMON)/pios_hmc5883.c
+SRC += $(PIOSCOMMON)/pios_lsm330.c
+SRC += $(PIOSCOMMON)/pios_lsm303.c
 
-
+# Stuff in this section needs to be dumped as not used on RP
+#################################################################
 SRC += $(PIOSCOMMON)/pios_mpu6000.c
 SRC += $(PIOSCOMMON)/pios_bma180.c
 SRC += $(PIOSCOMMON)/pios_l3gd20.c
 SRC += $(PIOSCOMMON)/pios_ms5611.c
+#################################################################
 
 
 SRC += $(PIOSCOMMON)/pios_crc.c
@@ -314,7 +322,7 @@ CFLAGS += -g$(DEBUGF)
 
 #CFLAGS += -ffast-math
 
-CFLAGS += -mcpu=$(MCU) -mfpu=vfp -mfloat-abi=softfp
+#CFLAGS += -mcpu=$(MCU) -mfpu=vfp -mfloat-abi=softfp  #defined in library.mk
 CFLAGS += $(CDEFS)
 CFLAGS += $(patsubst %,-I%,$(EXTRAINCDIRS)) -I.
 
