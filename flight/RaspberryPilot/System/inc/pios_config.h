@@ -66,8 +66,6 @@
 #define PIOS_INCLUDE_LSM303
 //#define PIOS_INCLUDE_BMP085
 //#define PIOS_INCLUDE_HCSR04
-#define PIOS_INCLUDE_HMC5883
-//#define PIOS_INCLUDE_HMC5883
 
 
 // TODO dump all below as not part of Raspberry Pilot

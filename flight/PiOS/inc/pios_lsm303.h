@@ -15,7 +15,7 @@
 
 //LSM303 Accelerometer Register Information
 #define PIOS_LSM303_I2C_ADPTER				PIOS_I2C_MAIN_ADAPTER
-#define PIOS_LSM303_A_ADDR					0x19	// 7 Bit address
+#define PIOS_LSM303_A_ADDR					0x19	// 7 Bit address SAO_A pin high on RP
 #define PIOS_LSM303_A_REPEATED				0x80
 #define PIOS_LSM303_CTL_REG1_A				0x20
 #define PIOS_LSM303_CTL_LEN_A				5
