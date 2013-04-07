@@ -37,8 +37,8 @@
 #include "homelocation.h"
 #include "gpstime.h"
 #include "gpssatellites.h"
+#include "gpssettings.h"
 #include "gpsvelocity.h"
-#include "systemsettings.h"
 #include "WorldMagModel.h"
 #include "CoordinateConversions.h"
 #include "hwsettings.h"
@@ -61,7 +61,7 @@ static float GravityAccel(float latitude, float longitude, float altitude);
 // ****************
 // Private constants
 
-#define GPS_TIMEOUT_MS                  500
+#define GPS_TIMEOUT_MS                  1500
 
 
 #ifdef PIOS_GPS_SETS_HOMELOCATION
@@ -165,13 +165,13 @@ int32_t GPSInitialize(void)
 #endif
 
 	if (gpsPort && gpsEnabled) {
-		SystemSettingsInitialize();
-		SystemSettingsGPSDataProtocolGet(&gpsProtocol);
+		GPSSettingsInitialize();
+		GPSSettingsDataProtocolGet(&gpsProtocol);
 		switch (gpsProtocol) {
-			case SYSTEMSETTINGS_GPSDATAPROTOCOL_NMEA:
+			case GPSSETTINGS_DATAPROTOCOL_NMEA:
 				gps_rx_buffer = pvPortMalloc(NMEA_MAX_PACKET_LENGTH);
 				break;
-			case SYSTEMSETTINGS_GPSDATAPROTOCOL_UBX:
+			case GPSSETTINGS_DATAPROTOCOL_UBX:
 				gps_rx_buffer = pvPortMalloc(sizeof(struct UBXPacket));
 				break;
 			default:
@@ -200,7 +200,7 @@ static void gpsTask(void *parameters)
 	GPSPositionData gpsposition;
 	uint8_t	gpsProtocol;
 
-	SystemSettingsGPSDataProtocolGet(&gpsProtocol);
+	GPSSettingsDataProtocolGet(&gpsProtocol);
 
 	timeOfLastUpdateMs = timeNowMs;
 	timeOfLastCommandMs = timeNowMs;
@@ -212,17 +212,18 @@ static void gpsTask(void *parameters)
 		uint8_t c;
 
 		// This blocks the task until there is something on the buffer
-		while (PIOS_COM_ReceiveBuffer(gpsPort, &c, 1, xDelay) > 0)
+		//while (PIOS_COM_ReceiveBuffer(gpsPort, &c, 1, xDelay) > 0)
+		while (PIOS_COM_ReceiveBuffer(gpsPort, &c, 1, 0xFFFFFFFF) > 0)
 		{
 			int res;
 			switch (gpsProtocol) {
 #if defined(PIOS_INCLUDE_GPS_NMEA_PARSER)
-				case SYSTEMSETTINGS_GPSDATAPROTOCOL_NMEA:
+				case GPSSETTINGS_DATAPROTOCOL_NMEA:
 					res = parse_nmea_stream (c,gps_rx_buffer, &gpsposition, &gpsRxStats);
 					break;
 #endif
 #if defined(PIOS_INCLUDE_GPS_UBX_PARSER)
-				case SYSTEMSETTINGS_GPSDATAPROTOCOL_UBX:
+				case GPSSETTINGS_DATAPROTOCOL_UBX:
 					res = parse_ubx_stream (c,gps_rx_buffer, &gpsposition, &gpsRxStats);
 					break;
 #endif
