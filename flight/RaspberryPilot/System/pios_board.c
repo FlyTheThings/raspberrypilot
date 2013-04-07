@@ -349,7 +349,7 @@ static void PIOS_Board_configure_dsm(const struct pios_usart_cfg *pios_usart_dsm
 
 void PIOS_Board_Init(void) {
 
-	const struct pios_board_info * bdinfo = &pios_board_info_blob;	
+//	const struct pios_board_info * bdinfo = &pios_board_info_blob;
 	
 	/* Delay system */
 	PIOS_DELAY_Init();
@@ -357,31 +357,31 @@ void PIOS_Board_Init(void) {
 	PIOS_LED_Init(&pios_led_cfg);
 
 	/* Set up the SPI interface to the accelerometer*/
-	if (PIOS_SPI_Init(&pios_spi_accel_id, &pios_spi_accel_cfg)) {
-		PIOS_DEBUG_Assert(0);
-	}
+//	if (PIOS_SPI_Init(&pios_spi_accel_id, &pios_spi_accel_cfg)) {
+//		PIOS_DEBUG_Assert(0);
+//	}
 	
 	/* Set up the SPI interface to the gyro */
-	if (PIOS_SPI_Init(&pios_spi_gyro_id, &pios_spi_gyro_cfg)) {
-		PIOS_DEBUG_Assert(0);
-	}
-#if !defined(PIOS_FLASH_ON_ACCEL)
+//	if (PIOS_SPI_Init(&pios_spi_gyro_id, &pios_spi_gyro_cfg)) {
+//		PIOS_DEBUG_Assert(0);
+//	}
+//#if !defined(PIOS_FLASH_ON_ACCEL)
 	/* Set up the SPI interface to the flash */
-	if (PIOS_SPI_Init(&pios_spi_flash_id, &pios_spi_flash_cfg)) {
-		PIOS_DEBUG_Assert(0);
-	}
-	PIOS_Flash_Jedec_Init(pios_spi_flash_id, 0, &flash_m25p_cfg);
-#else
-	PIOS_Flash_Jedec_Init(pios_spi_accel_id, 1, &flash_m25p_cfg);
-#endif
+//	if (PIOS_SPI_Init(&pios_spi_flash_id, &pios_spi_flash_cfg)) {
+//		PIOS_DEBUG_Assert(0);
+//	}
+//	PIOS_Flash_Jedec_Init(pios_spi_flash_id, 0, &flash_m25p_cfg);
+//#else
+//	PIOS_Flash_Jedec_Init(pios_spi_accel_id, 1, &flash_m25p_cfg);
+//#endif
 //	PIOS_FLASHFS_Init(&flashfs_m25p_cfg);
 	
-#if defined(PIOS_OVERO_SPI)
+//#if defined(PIOS_OVERO_SPI)
 	/* Set up the SPI interface to the gyro */
-	if (PIOS_SPI_Init(&pios_spi_overo_id, &pios_spi_overo_cfg)) {
-		PIOS_DEBUG_Assert(0);
-	}
-#endif
+//	if (PIOS_SPI_Init(&pios_spi_overo_id, &pios_spi_overo_cfg)) {
+//		PIOS_DEBUG_Assert(0);
+//	}
+//#endif
 
 	/* Initialize UAVObject libraries */
 	EventDispatcherInitialize();
