@@ -168,7 +168,7 @@ extern uint32_t pios_com_uavlink_id;
 
 // Calculated as SYSCLK / APBPresc * (APBPre == 1 ? 1 : 2)   
 // Default APB1 Prescaler = 4 
-#define PIOS_PERIPHERAL_APB1_CLOCK					(PIOS_SYSCLK / 2)
+#define PIOS_PERIPHERAL_APB1_CLOCK					(PIOS_SYSCLK )
 
 //	Peripherals belonging to APB2
 //	SDIO			|EXTI				|SYSCFG			|SPI1
