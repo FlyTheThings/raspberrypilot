@@ -329,6 +329,7 @@ static void setHomeLocation(GPSPositionData * gpsData)
  */
 static void updateSettings()
 {
+	/*
 	if (gpsPort) {
 
 		// Retrieve settings
@@ -360,6 +361,7 @@ static void updateSettings()
 			break;
 		}
 	}
+	*/
 }
 
 /** 
