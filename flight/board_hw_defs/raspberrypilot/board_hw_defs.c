@@ -802,15 +802,16 @@ static const struct pios_usart_cfg pios_usart_gps_cfg = {
 
 #endif /* PIOS_INCLUDE_GPS */
 
-#ifdef PIOS_INCLUDE_COM_AUX
+
 /****************************************************************************
 *		(FRSky/Aux GPS) USART, Alternate: Spektrum/JR DSM USART Port #1		*
 *****************************************************************************/
-static const struct pios_usart_cfg pios_usart_aux_cfg = {
+#include "pios_dsm_priv.h"
+static const struct pios_usart_cfg pios_usart_dsm1_aux_cfg = {
 	.regs = USART1,
 	.remap = GPIO_AF_USART1,
 	.init = {
-		.USART_BaudRate = 9600,
+		.USART_BaudRate = 115200,
 		.USART_WordLength = USART_WordLength_8b,
 		.USART_Parity = USART_Parity_No,
 		.USART_StopBits = USART_StopBits_1,
@@ -848,7 +849,18 @@ static const struct pios_usart_cfg pios_usart_aux_cfg = {
 	},
 };
 
-#endif /* PIOS_COM_AUX */
+static const struct pios_dsm_cfg pios_dsm1_aux_cfg = {
+	.bind = {
+		.gpio = GPIOA,
+		.init = {
+			.GPIO_Pin   = GPIO_Pin_9,
+			.GPIO_Speed = GPIO_Speed_2MHz,
+			.GPIO_Mode  = GPIO_Mode_OUT,
+			.GPIO_OType = GPIO_OType_PP,
+			.GPIO_PuPd  = GPIO_PuPd_NOPULL
+		},
+	},
+};
 
 // #ifdef PIOS_INCLUDE_COM_AUXSBUS
 // /*
