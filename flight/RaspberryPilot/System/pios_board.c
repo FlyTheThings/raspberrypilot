@@ -376,16 +376,6 @@ void PIOS_Board_Init(void) {
 //#endif
 //	PIOS_FLASHFS_Init(&flashfs_m25p_cfg);
 	
-//<<<<<<< HEAD
-//#if defined(PIOS_OVERO_SPI)
-	/* Set up the SPI interface to the gyro */
-//	if (PIOS_SPI_Init(&pios_spi_overo_id, &pios_spi_overo_cfg)) {
-//		PIOS_DEBUG_Assert(0);
-//	}
-//#endif
-//=======
-
-//>>>>>>> ea4ad285390f54ce73a16eeeced7dc318e22320f
 
 	/* Initialize UAVObject libraries */
 	EventDispatcherInitialize();
@@ -488,6 +478,14 @@ void PIOS_Board_Init(void) {
 
 	PIOS_DELAY_WaitmS(50);
 	
+	enum pios_dsm_proto proto = PIOS_DSM_PROTO_DSM2;
+	uint8_t DSMxBind = 0;
+	PIOS_Board_configure_dsm(&pios_usart_dsm1_aux_cfg, &pios_dsm1_aux_cfg,
+			&pios_usart_com_driver,&proto,
+			MANUALCONTROLSETTINGS_CHANNELGROUPS_DSMMAINPORT, &DSMxBind);
+
+
+
 #if defined(PIOS_INCLUDE_I2C)
 {
 	if (PIOS_I2C_Init(&pios_i2c_mag_adapter_id, &pios_i2c_mag_adapter_cfg)) {
