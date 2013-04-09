@@ -108,9 +108,10 @@ def run():
                 obj =  objMgr.getObjByID(objper.ObjectID,objper.InstanceID)
                 if not obj:
                     print "can't load %s" % objper.ObjectID
-                    continue
-                # Load selected instance
-                retval = UAVObjLoad(cur,obj)
+                    retval = False
+                else:
+                    # Load selected instance
+                    retval = UAVObjLoad(cur,obj)
             elif objper.Selection == "ALLSETTINGS":
                 retval = UAVObjLoadSettings(cur,objMgr)
             elif objper.Selection == "ALLMETAOBJECTS":
@@ -122,12 +123,13 @@ def run():
                 # Get selected object
                 obj = objMgr.getObjByID(objper.ObjectID,objper.InstanceID)
                 if not obj:
-                    continue
-                # Save selected instance
-                retval = UAVObjSave(cur,obj)
-                # Verify saving worked
-                if (retval == 0):
-                    retval = UAVObjLoad(cur,obj)
+                    retval = False
+                else:
+                    # Save selected instance
+                    retval = UAVObjSave(cur,obj)
+                    # Verify saving worked
+                    if (retval == 0):
+                        retval = UAVObjLoad(cur,obj)
             if (objper.Selection == "ALLSETTINGS" or objper.Selection == "ALLOBJECTS"):
                 retval = UAVObjSaveSettings(cur,objMgr)
             if (objper.Selection == "ALLMETAOBJECTS" or objper.Selection == "ALLOBJECTS"):
@@ -137,9 +139,10 @@ def run():
                 # Get selected object
                 obj = objMgr.getObjByID(objper.ObjectID)
                 if not obj:
-                    continue
-                # Delete selected instance
-                retval = UAVObjDelete(obj, objper.InstanceID)
+                    retval = False
+                else:
+                    # Delete selected instance
+                    retval = UAVObjDelete(obj, objper.InstanceID)
             elif (objper.Selection == "ALLSETTINGS" or objper.Selection == "ALLOBJECTS") :
                 retval = UAVObjDeleteSettings(cur)
             elif (objper.Selection == "ALLMETAOBJECTS" or objper.Selection == "ALLOBJECTS") :
