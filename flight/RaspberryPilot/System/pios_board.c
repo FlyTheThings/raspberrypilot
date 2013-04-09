@@ -428,16 +428,18 @@ void PIOS_Board_Init(void) {
 	
 	PIOS_Board_configure_com(&pios_usart_gps_cfg, PIOS_COM_AUX_RX_BUF_LEN, PIOS_COM_AUX_TX_BUF_LEN, &pios_usart_com_driver, &pios_com_gps_id);
 	// This might not want to be here
+
 	const static char msg_set_update_rate[] = "$PMTK220,100*2F\r\n";
 	const static char msg_set_sentences[]  = "$PMTK314,1,1,1,1,1,5,0,0,0,0,0,0,0,0,0,0,0,0,0*2C\r\n";
 	const static char msg_change_baud[] = "$PMTK251,57600*2C\r\n";
-	PIOS_COM_SendBuffer(pios_com_gps_id, &msg_set_update_rate, sizeof(msg_set_update_rate));
-	PIOS_DELAY_WaitmS(250);
 	PIOS_COM_SendBuffer(pios_com_gps_id, &msg_set_sentences, sizeof(msg_set_sentences));
 	PIOS_DELAY_WaitmS(250);
 	PIOS_COM_SendBuffer(pios_com_gps_id, &msg_change_baud, sizeof(msg_change_baud));
 	PIOS_DELAY_WaitmS(250);
 	PIOS_COM_ChangeBaud(pios_com_gps_id,57600);
+	PIOS_DELAY_WaitmS(250);
+	PIOS_COM_SendBuffer(pios_com_gps_id, &msg_set_update_rate, sizeof(msg_set_update_rate));
+	PIOS_DELAY_WaitmS(250);
 
 	//configure the loop back com device
 	uint8_t * a_buffer = (uint8_t *) pvPortMalloc(PIOS_COM_TELEM_RF_RX_BUF_LEN);

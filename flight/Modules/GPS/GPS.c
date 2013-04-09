@@ -212,8 +212,7 @@ static void gpsTask(void *parameters)
 		uint8_t c;
 
 		// This blocks the task until there is something on the buffer
-		//while (PIOS_COM_ReceiveBuffer(gpsPort, &c, 1, xDelay) > 0)
-		while (PIOS_COM_ReceiveBuffer(gpsPort, &c, 1, 0xFFFFFFFF) > 0)
+		while (PIOS_COM_ReceiveBuffer(gpsPort, &c, 1, xDelay) > 0)
 		{
 			int res;
 			switch (gpsProtocol) {
