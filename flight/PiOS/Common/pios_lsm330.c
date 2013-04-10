@@ -31,9 +31,8 @@ bool PIOS_LSM330_init_gyro(void) {
 		PIOS_LSM330_CTL_REG5_G_SETTING
 	};
 
-	if ( !PIOS_LSM330_Write(subaddr, init_data_G) )
-		return 0;
-	return -1;
+	return PIOS_LSM330_Write(subaddr, init_data_G);
+
 }
 /**
  * @brief Read current X, Y, Z values
@@ -44,7 +43,7 @@ bool PIOS_LSM330_read_gyro(float gyro_vector[]) {
 
 	uint8_t subaddr = PIOS_LSM330_G_READ_START | PIOS_LSM330_G_REPEATED;
 
-	if (!PIOS_LSM330_Read(subaddr, result, sizeof(result)))
+	if (PIOS_LSM330_Read(subaddr, result, sizeof(result)) < 0)
 		return -1;
 
 	gyro_vector[0] = ( int16_t ) (result[1] << 8) | result[0];

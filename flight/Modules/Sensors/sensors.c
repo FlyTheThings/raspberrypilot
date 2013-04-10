@@ -62,7 +62,7 @@
 #include <pios_board_info.h>
 
 // Private constants
-#define STACK_SIZE_BYTES 1000
+#define STACK_SIZE_BYTES 1240
 #define TASK_PRIORITY (tskIDLE_PRIORITY+3)
 #define SENSOR_PERIOD 2
 
@@ -164,8 +164,8 @@ static void SensorsTask(void *parameters)
 	uint32_t gyro_samples = 0;
 	int32_t accel_accum[3] = {0, 0, 0};
 	int32_t gyro_accum[3] = {0,0,0};
-	float gyro_scaling = 0;
-	float accel_scaling = 0;
+	float gyro_scaling = 1;
+	float accel_scaling = 1;
 	static int32_t timeval;
 
 	AlarmsClear(SYSTEMALARMS_ALARM_SENSORS);
@@ -175,25 +175,11 @@ static void SensorsTask(void *parameters)
 
 	const struct pios_board_info * bdinfo = &pios_board_info_blob;	
 
-	switch(bdinfo->board_rev) {
-		case 0x01:
-#if defined(PIOS_INCLUDE_L3GD20)
-			gyro_test = PIOS_L3GD20_Test();
-#endif
-#if defined(PIOS_INCLUDE_BMA180)
-			accel_test = PIOS_BMA180_Test();
-#endif
-			break;
-		case 0x02:
-#if defined(PIOS_INCLUDE_MPU6000)
-			gyro_test = PIOS_MPU6000_Test();
-			accel_test = gyro_test;
-#endif
-			break;
-		default:
-			PIOS_DEBUG_Assert(0);
-	}
 
+	//should really do the tests sometime
+	gyro_test = 0;
+	accel_test = 0;
+	
 #if defined(PIOS_INCLUDE_HMC5883)
 	mag_test1 = PIOS_HMC5883_Test();
 #else
@@ -257,108 +243,14 @@ static void SensorsTask(void *parameters)
 		AccelsData accelsData;
 		GyrosData gyrosData;
 
-		switch(bdinfo->board_rev) {
-			case 0x01:  // L3GD20 + BMA180 board
-#if defined(PIOS_INCLUDE_BMA180)
-			{
-				struct pios_bma180_data accel;
-				
-				int32_t read_good;
-				int32_t count;
-				
-				count = 0;
-				while((read_good = PIOS_BMA180_ReadFifo(&accel)) != 0 && !error)
-					error = ((xTaskGetTickCount() - lastSysTime) > SENSOR_PERIOD) ? true : error;
-				if (error) {
-					// Unfortunately if the BMA180 ever misses getting read, then it will not
-					// trigger more interrupts.  In this case we must force a read to kickstarts
-					// it.
-					struct pios_bma180_data data;
-					PIOS_BMA180_ReadAccels(&data);
-					continue;
-				}
-				while(read_good == 0) {	
-					count++;
-					
-					accel_accum[1] += accel.x;
-					accel_accum[0] += accel.y;
-					accel_accum[2] -= accel.z;
-					
-					read_good = PIOS_BMA180_ReadFifo(&accel);
-				}
-				accel_samples = count;
-				accel_scaling = PIOS_BMA180_GetScale();
-				
-				// Get temp from last reading
-				accelsData.temperature = 25.0f + ((float) accel.temperature - 2.0f) / 2.0f;
-			}
-#endif
-#if defined(PIOS_INCLUDE_L3GD20)
-			{
-				struct pios_l3gd20_data gyro;
-				gyro_samples = 0;
-				xQueueHandle gyro_queue = PIOS_L3GD20_GetQueue();
-				
-				if(xQueueReceive(gyro_queue, (void *) &gyro, 4) == errQUEUE_EMPTY) {
-					error = true;
-					continue;
-				}
-				
-				gyro_samples = 1;
-				gyro_accum[1] += gyro.gyro_x;
-				gyro_accum[0] += gyro.gyro_y;
-				gyro_accum[2] -= gyro.gyro_z;
-				
-				gyro_scaling = PIOS_L3GD20_GetScale();
-
-				// Get temp from last reading
-				gyrosData.temperature = gyro.temperature;
-			}
-#endif
-				break;
-			case 0x02:  // MPU6000 board
-			case 0x03:  // MPU6000 board
-#if defined(PIOS_INCLUDE_MPU6000)
-			{
-				struct pios_mpu6000_data mpu6000_data;
-				xQueueHandle queue = PIOS_MPU6000_GetQueue();
-				
-				while(xQueueReceive(queue, (void *) &mpu6000_data, gyro_samples == 0 ? 10 : 0) != errQUEUE_EMPTY)
-				{
-					gyro_accum[0] += mpu6000_data.gyro_x;
-					gyro_accum[1] += mpu6000_data.gyro_y;
-					gyro_accum[2] += mpu6000_data.gyro_z;
-
-					accel_accum[0] += mpu6000_data.accel_x;
-					accel_accum[1] += mpu6000_data.accel_y;
-					accel_accum[2] += mpu6000_data.accel_z;
-
-					gyro_samples ++;
-					accel_samples ++;
-				}
-				
-				if (gyro_samples == 0) {
-					PIOS_MPU6000_ReadGyros(&mpu6000_data);
-					error = true;
-					continue;
-				}
-
-				gyro_scaling = PIOS_MPU6000_GetScale();
-				accel_scaling = PIOS_MPU6000_GetAccelScale();
-
-				gyrosData.temperature = 35.0f + ((float) mpu6000_data.temperature + 512.0f) / 340.0f;
-				accelsData.temperature = 35.0f + ((float) mpu6000_data.temperature + 512.0f) / 340.0f;
-			}
-#endif /* PIOS_INCLUDE_MPU6000 */
-				break;
-			default:
-				PIOS_DEBUG_Assert(0);
-		}
-
+		static volatile float accels[3];
+		//PIOS_LSM303_read_accel(accels);
+						
+		static volatile float gyros[3];
+		PIOS_LSM330_read_gyro(&gyro_accum);
+		
+		
 		// Scale the accels
-		float accels[3] = {(float) accel_accum[0] / accel_samples, 
-		                   (float) accel_accum[1] / accel_samples,
-		                   (float) accel_accum[2] / accel_samples};
 		float accels_out[3] = {accels[0] * accel_scaling * accel_scale[0] - accel_bias[0],
 		                       accels[1] * accel_scaling * accel_scale[1] - accel_bias[1],
 		                       accels[2] * accel_scaling * accel_scale[2] - accel_bias[2]};
@@ -375,9 +267,6 @@ static void SensorsTask(void *parameters)
 		AccelsSet(&accelsData);
 
 		// Scale the gyros
-		float gyros[3] = {(float) gyro_accum[0] / gyro_samples,
-		                  (float) gyro_accum[1] / gyro_samples,
-		                  (float) gyro_accum[2] / gyro_samples};
 		float gyros_out[3] = {gyros[0] * gyro_scaling,
 		                      gyros[1] * gyro_scaling,
 		                      gyros[2] * gyro_scaling};

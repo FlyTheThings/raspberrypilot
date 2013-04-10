@@ -31,9 +31,7 @@ bool PIOS_LSM303_init_accel(void) {
 		PIOS_LSM303_CTL_REG5_A_SETTING
 	};
 	
-	if ( !PIOS_LSM303_Write(PIOS_LSM303_A_ADDR, subaddr, init_data_A) )
-		return 0;
-	return -1;
+	return PIOS_LSM303_Write(PIOS_LSM303_A_ADDR, subaddr, init_data_A);
 }
 
 /**
@@ -50,9 +48,8 @@ bool PIOS_LSM303_init_mag(void) {
 		PIOS_LSM303_MR_REG_M_SETTING
 	};
 	
-	if ( !PIOS_LSM303_Write(PIOS_LSM303_M_ADDR, subaddr, init_data_M) )
-		return 0;
-	return -1;
+	return PIOS_LSM303_Write(PIOS_LSM303_M_ADDR, subaddr, init_data_M);
+
 }
 
 /**
@@ -64,7 +61,7 @@ bool PIOS_LSM303_read_accel(float accel_vector[]) {
 	
 	uint8_t subaddr = PIOS_LSM303_A_READ_START | PIOS_LSM303_A_REPEATED;
 
-	if (!PIOS_LSM303_Read(PIOS_LSM303_A_ADDR, subaddr, result, sizeof(result)))
+	if (PIOS_LSM303_Read(PIOS_LSM303_A_ADDR, subaddr, result, sizeof(result)) < 0)
 		return -1;
 
 	accel_vector[0] = ( int16_t ) (result[1] << 8) | result[0];
@@ -86,7 +83,7 @@ bool PIOS_LSM303_read_mag(float mag_vector[]) {
 	
 	uint8_t subaddr = PIOS_LSM303_M_READ_START;
 	
-	if (!PIOS_LSM303_Read(PIOS_LSM303_M_ADDR, subaddr, result, sizeof(result)))
+	if (PIOS_LSM303_Read(PIOS_LSM303_M_ADDR, subaddr, result, sizeof(result)) < 0)
 		return -1;
 		
 	tmp =	(int16_t) (result[0] << 8 | result[1]) ;

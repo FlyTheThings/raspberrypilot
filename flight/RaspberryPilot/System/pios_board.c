@@ -530,12 +530,12 @@ void PIOS_Board_Init(void) {
 #endif
 
 #if defined(PIOS_INCLUDE_LSM330)
-	#include "pios_lsm330.h"
+	//#include "pios_lsm330.h"
 	PIOS_LSM330_init_gyro();
 #endif
 
 #if defined(PIOS_INCLUDE_LSM303)
-	#include "pios_lsm303.h"
+	//#include "pios_lsm303.h"
 	PIOS_LSM303_init_accel();
 	PIOS_LSM303_init_mag();
 #endif
