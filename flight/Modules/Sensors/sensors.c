@@ -64,7 +64,7 @@
 // Private constants
 #define STACK_SIZE_BYTES 1240
 #define TASK_PRIORITY (tskIDLE_PRIORITY+3)
-#define SENSOR_PERIOD 2
+#define SENSOR_PERIOD 3
 
 #define F_PI 3.14159265358979323846f
 #define PI_MOD(x) (fmodf(x + F_PI, F_PI * 2) - F_PI)
@@ -147,13 +147,9 @@ int32_t altitude_test;
 
 
 /**
- * The sensor task.  This polls the gyros at 500 Hz and pumps that data to
+ * The sensor task.  This polls the gyros at 333 Hz and pumps that data to
  * stabilization and to the attitude loop
  * 
- * This function has a lot of if/defs right now to allow these configurations:
- * 1. BMA180 accel and MPU6000 gyro
- * 2. MPU6000 gyro and accel
- * 3. BMA180 accel and L3GD20 gyro
  */
 
 uint32_t sensor_dt_us;
@@ -222,10 +218,11 @@ static void SensorsTask(void *parameters)
 		sensor_dt_us = PIOS_DELAY_DiffuS(timeval);
 		timeval = PIOS_DELAY_GetRaw();
 
+		vTaskDelayUntil(&lastSysTime, SENSOR_PERIOD / portTICK_RATE_MS);
 		if (error) {
 			PIOS_WDG_UpdateFlag(PIOS_WDG_SENSORS);
 			lastSysTime = xTaskGetTickCount();
-			vTaskDelayUntil(&lastSysTime, SENSOR_PERIOD / portTICK_RATE_MS);
+
 			AlarmsSet(SYSTEMALARMS_ALARM_SENSORS, SYSTEMALARMS_ALARM_CRITICAL);
 			error = false;
 		} else {
@@ -244,7 +241,7 @@ static void SensorsTask(void *parameters)
 		GyrosData gyrosData;
 
 		static volatile float accels[3];
-		//PIOS_LSM303_read_accel(accels);
+		PIOS_LSM303_read_accel(accels);
 						
 		static volatile float gyros[3];
 		PIOS_LSM330_read_gyro(&gyro_accum);
