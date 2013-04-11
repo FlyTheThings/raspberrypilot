@@ -244,7 +244,7 @@ static void SensorsTask(void *parameters)
 		PIOS_LSM303_read_accel(accels);
 						
 		static volatile float gyros[3];
-		PIOS_LSM330_read_gyro(&gyro_accum);
+		PIOS_LSM330_read_gyro(&gyros);
 		
 		
 		// Scale the accels
