@@ -307,30 +307,30 @@ int32_t streamStream(UAVLinkConnection connectionHandle, uint8_t Id,  uint8_t le
 
 	// Send stream and wait for ack
 	// Get transaction lock (will block if a transaction is pending)
-	xSemaphoreTakeRecursive(connection->transLock, portMAX_DELAY);
+	//xSemaphoreTakeRecursive(connection->transLock, portMAX_DELAY);
 	// Send object
-	xSemaphoreTakeRecursive(connection->lock, portMAX_DELAY);
-	connection->respId = Id;
+	//xSemaphoreTakeRecursive(connection->lock, portMAX_DELAY);
+	//connection->respId = Id;
 	sendStreamPacket(connection, Id, length, buf);
-	xSemaphoreGiveRecursive(connection->lock);
+	//xSemaphoreGiveRecursive(connection->lock);
 	// Wait for response (or timeout)
-	respReceived = xSemaphoreTake(connection->respSema, timeoutMs/portTICK_RATE_MS);
+	//respReceived = xSemaphoreTake(connection->respSema, timeoutMs/portTICK_RATE_MS);
 	// Check if a response was received
-	if (respReceived == pdFALSE)
-	{
+	//if (respReceived == pdFALSE)
+	//{
 		// Cancel transaction
-		xSemaphoreTakeRecursive(connection->lock, portMAX_DELAY);
-		xSemaphoreTake(connection->respSema, 0); // non blocking call to make sure the value is reset to zero (binary sema)
-		connection->respId = 0;
-		xSemaphoreGiveRecursive(connection->lock);
-		xSemaphoreGiveRecursive(connection->transLock);
-		return -1;
-	}
-	else
-	{
-		xSemaphoreGiveRecursive(connection->transLock);
+		//xSemaphoreTakeRecursive(connection->lock, portMAX_DELAY);
+		//xSemaphoreTake(connection->respSema, 0); // non blocking call to make sure the value is reset to zero (binary sema)
+		//connection->respId = 0;
+		//xSemaphoreGiveRecursive(connection->lock);
+		//xSemaphoreGiveRecursive(connection->transLock);
+		//return -1;
+	//}
+	//else
+	//{
+	//	xSemaphoreGiveRecursive(connection->transLock);
 		return 0;
-	}
+	//}
 
 }
 
