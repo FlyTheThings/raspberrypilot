@@ -154,21 +154,21 @@ static void altitudeTask(void *parameters)
 			PIOS_HCSR04_Trigger();
 		}
 #endif
-		PIOS_BMP180_StartADC(TEMPERATURE);
-		vTaskDelay( ceil(PIOS_BMP180_Data_Ready_Time_us()/1000) / portTICK_RATE_MS); // vTaskDelay set to 1ms/tick
-		// BMP180 raw result in 0.1°C. Convert to °C.
-		raw_temperature = PIOS_BMP180_GetTemperature();
-		data.Temperature = (float)(raw_temperature) / 10 * TEMP_IIR_COEFF + (data.Temperature * (1 - TEMP_IIR_COEFF));
-		
-		PIOS_BMP180_StartADC(PRESSURE);
-		vTaskDelay( ceil(PIOS_BMP180_Data_Ready_Time_us()/1000) / portTICK_RATE_MS); // vTaskDelay set to 1ms/tick
-		// BMP180 raw result in 0.01hPa (= Pa). Convert to KPa.
-		raw_pressure = PIOS_BMP180_GetPressure();
-		data.Pressure = (float)(raw_pressure) / 1000 * PRES_IIR_COEFF + data.Pressure * (1 - PRES_IIR_COEFF);
+		if (!PIOS_BMP180_StartADC(TEMPERATURE)) {
+			vTaskDelay( ceil(PIOS_BMP180_Data_Ready_Time_us()/1000) / portTICK_RATE_MS); // vTaskDelay set to 1ms/tick
+			// BMP180 raw result in 0.1°C. Convert to °C.
+			raw_temperature = PIOS_BMP180_GetTemperature();
+			data.Temperature = (float)(raw_temperature) / 10 * TEMP_IIR_COEFF + (data.Temperature * (1 - TEMP_IIR_COEFF));
+		}
+		if (!PIOS_BMP180_StartADC(PRESSURE)) {
+			vTaskDelay( ceil(PIOS_BMP180_Data_Ready_Time_us()/1000) / portTICK_RATE_MS); // vTaskDelay set to 1ms/tick
+			// BMP180 raw result in 0.01hPa (= Pa). Convert to KPa.
+			raw_pressure = PIOS_BMP180_GetPressure();
+			data.Pressure = (float)(raw_pressure) / 1000 * PRES_IIR_COEFF + data.Pressure * (1 - PRES_IIR_COEFF);
 
-		// Compute the current altitude (all pressures in kPa)
-		data.Altitude = 44330.0 * (1.0 - powf((data.Pressure / (PIOS_BMP180_P0 / 1000.0)), (1.0 / 5.255)));
-		
+			// Compute the current altitude (all pressures in kPa)
+			data.Altitude = 44330.0 * (1.0 - powf((data.Pressure / (PIOS_BMP180_P0 / 1000.0)), (1.0 / 5.255)));
+		}
 		// TODO SM add temperature reading to pressure to get more accurate altitude
 		
 		// http://en.wikipedia.org/wiki/Density_altitude
