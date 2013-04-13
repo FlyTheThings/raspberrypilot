@@ -1,4 +1,5 @@
-import uavlink
+import raspberrypilot
+import raspberrypilot.uavlink
 import inspect
 import logging
 
@@ -17,10 +18,10 @@ class objManager():
         self.objDefs[objDef.OBJID] = objDef
         self.objNames[name] = objDef
     def importObjDefs(self):
-        import uavlink.uavobjects
-        for name,obj in inspect.getmembers(uavlink.uavobjects):
+        import raspberrypilot.uavobjects
+        for name,obj in inspect.getmembers(raspberrypilot.uavobjects):
             if inspect.isclass(obj):
-                if issubclass(obj,uavlink.uavObject):
+                if issubclass(obj,raspberrypilot.uavlink.uavObject):
                     self._addObjDef(name,obj)
 
     def receive(self,rxObjId,rxData):

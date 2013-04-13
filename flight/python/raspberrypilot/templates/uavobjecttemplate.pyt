@@ -31,7 +31,7 @@
 #
 
 
-import uavlink
+from raspberrypilot import uavlink
 
 $(DATAFIELDS)
 

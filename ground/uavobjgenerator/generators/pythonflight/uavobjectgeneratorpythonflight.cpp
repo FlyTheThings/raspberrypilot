@@ -29,7 +29,7 @@ using namespace std;
 
 bool UAVObjectGeneratorPythonFlight::generate(UAVObjectParser* parser,QString templatepath,QString outputpath) {
     // Load template and setup output directory
-    pythonCodePath = QDir( templatepath + QString("flight/python/uavlink/templates"));
+    pythonCodePath = QDir( templatepath + QString("flight/python/raspberrypilot/templates"));
     pythonOutputPath = QDir( outputpath + QString("pythonflight") );
     pythonOutputPath.mkpath(pythonOutputPath.absolutePath());
     pythonCodeTemplate = readFile( pythonCodePath.absoluteFilePath("uavobjecttemplate.pyt") );
@@ -52,8 +52,8 @@ bool UAVObjectGeneratorPythonFlight::generate(UAVObjectParser* parser,QString te
     setup += "		      version='1.0', \n\r";
     setup += "		      description='OpenPilot UAV Objects', \n\r";
     setup += "		      url='http://code.google.com/p/raspberrypilot', \n\r";
-    setup += "		      package_dir={'uavlink.uavobjects': '.'}, \n\r";
-    setup += "		      packages=['uavlink.uavobjects'], \n\r";
+    setup += "		      package_dir={'raspberrypilot.uavobjects': '.'}, \n\r";
+    setup += "		      packages=['raspberrypilot.uavobjects'], \n\r";
     setup += "		     ) \n\r";
 
     bool res = writeFileIfDiffrent( pythonOutputPath.absolutePath() + "/" + "setup.py", setup );

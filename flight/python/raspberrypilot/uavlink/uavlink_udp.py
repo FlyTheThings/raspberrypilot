@@ -1,8 +1,4 @@
-import threading
-import Queue
-import uavlink
 import socket
-import logging
 import time
 import select
 
