@@ -298,7 +298,7 @@ static int32_t objectTransaction(UAVLinkConnectionData *connection, UAVObjHandle
  * \return 0 Success
  * \return -1 Failure
  */
-int32_t streamStream(UAVLinkConnection connectionHandle, uint8_t Id,  uint8_t length, uint8_t *buf, int32_t timeoutMs)
+int32_t streamStream(UAVLinkConnection connectionHandle, uint8_t Id,  uint8_t length, uint8_t *buf)
 {
 	int32_t respReceived;
 
@@ -407,7 +407,7 @@ UAVLinkRxState UAVLinkProcessInputStreamQuiet(UAVLinkConnection connectionHandle
 			
 			iproc->packet_size += rxbyte << 8;
 			
-			if (iproc->packet_size < UAVLINK_MIN_PACKET_SIZE || iproc->packet_size > UAVLINK_MAX_HEADER_LENGTH + UAVLINK_MAX_PAYLOAD_LENGTH)
+			if (iproc->packet_size < UAVLINK_MIN_PACKET_SIZE || iproc->packet_size > UAVLINK_MAX_PACKET_LENGTH)
 			{   // incorrect packet size
 				iproc->state = UAVLINK_STATE_ERROR;
 				break;
@@ -714,6 +714,7 @@ static int32_t receivePacket(UAVLinkConnectionData *connection, uint8_t type, ui
 			if (connection->streamForwarder) {
 				(connection->streamForwarder)(rxId,data,length);
 			}
+			break;
 		case UAVLINK_TYPE_OBJ_REQ:
 			// Send requested object if message is of type OBJ_REQ
 			if (obj == 0)
@@ -929,7 +930,7 @@ static int32_t sendStreamPacket(UAVLinkConnection connectionHandle, uint8_t Id, 
 	connection->txBuffer[4] = Id;
 
 	// Check length
-	if ((length >= UAVLINK_MAX_PAYLOAD_LENGTH) | (length == 0))
+	if ((length >= UAVLINK_MAX_PACKET_LENGTH) | (length == 0))
 	{
 		return -1;
 	}

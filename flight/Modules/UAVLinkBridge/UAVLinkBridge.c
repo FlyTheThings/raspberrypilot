@@ -43,11 +43,10 @@
 #define TASK_PRIORITY_TX (tskIDLE_PRIORITY + 2)
 #define TASK_PRIORITY_TXPRI (tskIDLE_PRIORITY + 2)
 #define REQ_TIMEOUT_MS 250
-#define TELEM_STREAM_ACK_TIMEOUT 300
 #define MAX_RETRIES 2
 #define STATS_UPDATE_PERIOD_MS 4000
 #define CONNECTION_TIMEOUT_MS 8000
-#define BRIDGE_TELEM_TX_BUF_LEN 200
+#define BRIDGE_TELEM_TX_BUF_LEN 300
 // Private types
 
 // Private variables
@@ -201,7 +200,7 @@ static void uavlinkbridgeTelemTxTask(void *parameters)
 		uint32_t rx_bytes;
 		rx_bytes = PIOS_COM_ReceiveBuffer(PIOS_COM_TELEM_LOOP, bridge_telem_tx_buffer, BRIDGE_TELEM_TX_BUF_LEN, 500);
 		if (rx_bytes > 0) {
-			streamStream(uavLinkCon, TELEM_STREAM_ID,  rx_bytes, bridge_telem_tx_buffer, TELEM_STREAM_ACK_TIMEOUT);
+			streamStream(uavLinkCon, TELEM_STREAM_ID,  rx_bytes, bridge_telem_tx_buffer);
 		}
 	}
 }
