@@ -376,16 +376,6 @@ void PIOS_Board_Init(void) {
 //#endif
 //	PIOS_FLASHFS_Init(&flashfs_m25p_cfg);
 	
-//<<<<<<< HEAD
-//#if defined(PIOS_OVERO_SPI)
-	/* Set up the SPI interface to the gyro */
-//	if (PIOS_SPI_Init(&pios_spi_overo_id, &pios_spi_overo_cfg)) {
-//		PIOS_DEBUG_Assert(0);
-//	}
-//#endif
-//=======
-
-//>>>>>>> ea4ad285390f54ce73a16eeeced7dc318e22320f
 
 	/* Initialize UAVObject libraries */
 	EventDispatcherInitialize();
@@ -436,10 +426,23 @@ void PIOS_Board_Init(void) {
 	uint8_t hwsettings_DSMxBind;
 	HwSettingsDSMxBindGet(&hwsettings_DSMxBind);
 	
-	/* Configure Telemetry port */
-	uint8_t hwsettings_rv_telemetryport;
-	HwSettingsRV_TelemetryPortGet(&hwsettings_rv_telemetryport);
+	PIOS_Board_configure_com(&pios_usart_gps_cfg, PIOS_COM_AUX_RX_BUF_LEN, PIOS_COM_AUX_TX_BUF_LEN, &pios_usart_com_driver, &pios_com_gps_id);
+	// This might not want to be here
 
+	const static char msg_set_update_rate[] = "$PMTK220,100*2F\r\n";
+	const static char msg_set_sentences[]  = "$PMTK314,1,1,1,1,1,5,0,0,0,0,0,0,0,0,0,0,0,0,0*2C\r\n";
+	const static char msg_change_baud[] = "$PMTK251,57600*2C\r\n";
+	const static char msg_hot_start[] = "$PMTK101*32<CR><LF>";
+	PIOS_COM_SendBuffer(pios_com_gps_id, (uint8_t *) &msg_hot_start, sizeof(msg_hot_start));
+	PIOS_DELAY_WaitmS(500);
+	PIOS_COM_SendBuffer(pios_com_gps_id, (uint8_t *) &msg_set_sentences, sizeof(msg_set_sentences));
+	PIOS_DELAY_WaitmS(250);
+	PIOS_COM_SendBuffer(pios_com_gps_id,(uint8_t *)  &msg_change_baud, sizeof(msg_change_baud));
+	PIOS_DELAY_WaitmS(250);
+	PIOS_COM_ChangeBaud(pios_com_gps_id,57600);
+	PIOS_DELAY_WaitmS(250);
+	PIOS_COM_SendBuffer(pios_com_gps_id, (uint8_t *) &msg_set_update_rate, sizeof(msg_set_update_rate));
+	PIOS_DELAY_WaitmS(250);
 
 	//configure the loop back com device
 	uint8_t * a_buffer = (uint8_t *) pvPortMalloc(PIOS_COM_TELEM_RF_RX_BUF_LEN);
@@ -490,6 +493,14 @@ void PIOS_Board_Init(void) {
 
 	PIOS_DELAY_WaitmS(50);
 	
+	enum pios_dsm_proto proto = PIOS_DSM_PROTO_DSM2;
+	uint8_t DSMxBind = 0;
+	PIOS_Board_configure_dsm(&pios_usart_dsm1_aux_cfg, &pios_dsm1_aux_cfg,
+			&pios_usart_com_driver,&proto,
+			MANUALCONTROLSETTINGS_CHANNELGROUPS_DSMMAINPORT, &DSMxBind);
+
+
+
 #if defined(PIOS_INCLUDE_I2C)
 {
 	if (PIOS_I2C_Init(&pios_i2c_mag_adapter_id, &pios_i2c_mag_adapter_cfg)) {
@@ -522,14 +533,14 @@ void PIOS_Board_Init(void) {
 #endif
 
 #if defined(PIOS_INCLUDE_LSM330)
-	#include "pios_lsm330.h"
-	PIOS_LSM330_init_gyro();
+	//#include "pios_lsm330.h"
+	PIOS_LSM330_init_gyro(pios_i2c_mag_adapter_id);
 #endif
 
 #if defined(PIOS_INCLUDE_LSM303)
-	#include "pios_lsm303.h"
-	PIOS_LSM303_init_accel();
-	PIOS_LSM303_init_mag();
+	//#include "pios_lsm303.h"
+	PIOS_LSM303_init_accel(pios_i2c_mag_adapter_id);
+	PIOS_LSM303_init_mag(pios_i2c_mag_adapter_id);
 #endif
 
 

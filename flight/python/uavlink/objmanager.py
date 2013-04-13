@@ -71,8 +71,10 @@ class objManager():
                 return True
             elif data == False:
                 return False
-            logging.warning("Retry getObj")
+            logging.warning("Retry getObj: %s" % obj.get_name())
             attempt -= 1
+        logging.warning("Failed getObj: %s" % obj.get_name())
+        return False
     def setObj(self,obj):
         data = obj.getPackedData()
         attempt = self.retries
@@ -83,6 +85,8 @@ class objManager():
                 res = self.conn.transInstanceObjectAck(obj.OBJID,obj.instance,data)
             if res:
                 return True
-            logging.warning("Retry setObj")
+            logging.warning("Retry setObj: %s" % obj.get_name())
             attempt -= 1
+        logging.warning("Failed setObj: %s" % obj.get_name())
+        return False
         

@@ -14,7 +14,6 @@
 
 
 //LSM303 Accelerometer Register Information
-#define PIOS_LSM303_I2C_ADPTER				PIOS_I2C_MAIN_ADAPTER
 #define PIOS_LSM303_A_ADDR					0x19	// 7 Bit address SAO_A pin high on RP
 #define PIOS_LSM303_A_REPEATED				0x80
 #define PIOS_LSM303_CTL_REG1_A				0x20
@@ -50,10 +49,10 @@ struct vector_3d {
 
 
 // public api
-bool PIOS_LSM303_init_accel(void) ;
+bool PIOS_LSM303_init_accel(uint32_t pios_i2c_adapter_id) ;
 bool PIOS_LSM303_read_accel(float accel_vector[]);
 
-bool PIOS_LSM303_init_mag(void) ;
+bool PIOS_LSM303_init_mag(uint32_t pios_i2c_adapter_id) ;
 bool PIOS_LSM303_read_mag(float mag_vector[]);
 
 

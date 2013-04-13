@@ -13,7 +13,7 @@ def UAVObjLoad(cur, obj):
     return True
     
 def UAVObjLoadSettings(cur,objMgr):
-    for (objId,instance,data) in cur.execute("SELECT objId,instance,data FROM uavObjects WHERE isSettings=1"):
+    for (objId,instance,data) in cur.execute("SELECT objId,instance,data FROM uavObjects WHERE isSetting=1"):
         obj =  objMgr.getObjByID(objId,instance,read = False)
         obj.unpackData(data.decode('hex'))
         obj.set()
@@ -46,8 +46,8 @@ def UAVObjSaveSettings(cur,objMgr):
         obj = objMgr.getObjByID(objId,read = False)
         if obj.isSetting == True:
             if obj.isSingleInst:
-                obj.get()
-                UAVObjSave(cur,obj)
+                if obj.get():
+                    UAVObjSave(cur,obj)
             else:
                 inst = 0
                 while True:
@@ -82,17 +82,18 @@ def UAVObjDeleteAll(cur):
     
     
 def run():
-    
     conn = uavlink.uavLinkConnection_UDP(addr="192.168.1.115",port=32001)
     objMgr = uavlink.objManager(conn)
     objper = objMgr.getObjByName("ObjectPersistence")
+    while not objMgr.getObj(objper):
+        print "Unable to get objper"
+        pass
     con = sqlite3.connect('uavobjects.sqlite')
     cur = con.cursor()
     #check if the uavObjects table exists
     cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='uavObjects'")
     if not cur.fetchone():
         cur.execute("CREATE TABLE uavObjects(objId INT, instance INT, name TEXT, isMeta INT, isSetting INT, data TEXT)")
-
 
     while True:
         # Get object data
@@ -107,9 +108,10 @@ def run():
                 obj =  objMgr.getObjByID(objper.ObjectID,objper.InstanceID)
                 if not obj:
                     print "can't load %s" % objper.ObjectID
-                    continue
-                # Load selected instance
-                retval = UAVObjLoad(cur,obj)
+                    retval = False
+                else:
+                    # Load selected instance
+                    retval = UAVObjLoad(cur,obj)
             elif objper.Selection == "ALLSETTINGS":
                 retval = UAVObjLoadSettings(cur,objMgr)
             elif objper.Selection == "ALLMETAOBJECTS":
@@ -121,12 +123,13 @@ def run():
                 # Get selected object
                 obj = objMgr.getObjByID(objper.ObjectID,objper.InstanceID)
                 if not obj:
-                    continue
-                # Save selected instance
-                retval = UAVObjSave(cur,obj)
-                # Verify saving worked
-                if (retval == 0):
-                    retval = UAVObjLoad(cur,obj)
+                    retval = False
+                else:
+                    # Save selected instance
+                    retval = UAVObjSave(cur,obj)
+                    # Verify saving worked
+                    if (retval == 0):
+                        retval = UAVObjLoad(cur,obj)
             if (objper.Selection == "ALLSETTINGS" or objper.Selection == "ALLOBJECTS"):
                 retval = UAVObjSaveSettings(cur,objMgr)
             if (objper.Selection == "ALLMETAOBJECTS" or objper.Selection == "ALLOBJECTS"):
@@ -136,9 +139,10 @@ def run():
                 # Get selected object
                 obj = objMgr.getObjByID(objper.ObjectID)
                 if not obj:
-                    continue
-                # Delete selected instance
-                retval = UAVObjDelete(obj, objper.InstanceID)
+                    retval = False
+                else:
+                    # Delete selected instance
+                    retval = UAVObjDelete(obj, objper.InstanceID)
             elif (objper.Selection == "ALLSETTINGS" or objper.Selection == "ALLOBJECTS") :
                 retval = UAVObjDeleteSettings(cur)
             elif (objper.Selection == "ALLMETAOBJECTS" or objper.Selection == "ALLOBJECTS") :

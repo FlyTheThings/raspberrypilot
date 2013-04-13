@@ -141,10 +141,7 @@ class uavObject(object):
             ser += field.serialize()
         return ser
     def __str__(self):
-        if self.name != None:
-            return "uavObject: %s" % self.name
-        else:    
-            return "UAVObj %08x" % self.objId
+         return "uavObject: %s" % self.get_name()
     def getInstance(self):
         return self.instance
     def get(self):
@@ -153,7 +150,11 @@ class uavObject(object):
     def set(self):
         if self.objMgr:
             return self.objMgr.setObj(self)
-
+    def get_name(self):
+        if self.name != None:
+            return  self.name
+        else:    
+            return str(self.objId)
             
 class MetaflagsField(uavObjectField):
     name = 'flags'
