@@ -196,13 +196,14 @@ static void actuatorTask(void* parameters)
 			MixerSettingsGet (&mixerSettings);
 		}
 
-/*  ZDL HACK UNCOMMENT
+
 		if (rc != pdTRUE) {
-			// Update of ActuatorDesired timed out.  Go to failsafe
+			/* Update of ActuatorDesired timed out.  Go to failsafe */
 			setFailsafe(&actuatorSettings, &mixerSettings);
 			continue;
 		}
-*/
+
+
 		// Check how long since last update
 		thisSysTime = xTaskGetTickCount();
 		if(thisSysTime > lastSysTime) // reuse dt in case of wraparound
@@ -225,13 +226,14 @@ static void actuatorTask(void* parameters)
 				nMixers ++;
 			}
 		}
-/* ZDL -HACK uncomment
+
 		if((nMixers < 2) && !ActuatorCommandReadOnly()) //Nothing can fly with less than two mixers.
 		{
 			setFailsafe(&actuatorSettings, &mixerSettings); // So that channels like PWM buzzer keep working
 			continue;
 		}
-*/
+
+
 		AlarmsClear(SYSTEMALARMS_ALARM_ACTUATOR);
 
 		bool armed = flightStatus.Armed == FLIGHTSTATUS_ARMED_ARMED;
