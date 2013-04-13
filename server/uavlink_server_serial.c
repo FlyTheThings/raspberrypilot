@@ -82,10 +82,10 @@ bool wait_uavlink_response(UAVLinkConnection uav_link_conn, uint8_t *buf, uint16
   end_time = get_time_stamp() + 50000;  //timeout in 50ms
   while(1) {
     wait_time = end_time - get_time_stamp();
-    printf ("wait time: %llu\n",wait_time);
+    //printf ("wait time: %llu\n",wait_time);
     // if we timeout out return 0
     if (wait_time < 0) {
-      printf("wait time too short");
+      //printf("wait time too short");
       return 0;
     }
     tv.tv_usec = wait_time;
@@ -95,7 +95,7 @@ bool wait_uavlink_response(UAVLinkConnection uav_link_conn, uint8_t *buf, uint16
     selret = select(serial_fd+1,&rfds,NULL,NULL,&tv);
     // if it timed out return 0
     if (selret == 0) {
-      printf("sel timeout\n");
+      //printf("sel timeout\n");
       return 0;
     }
     // now process the serial data one byte at a time 

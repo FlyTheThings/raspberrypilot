@@ -48,7 +48,7 @@ void handle_udp_stream_rx(int udp_stream_fd, UAVLinkConnection uav_link_conn) {
 void udp_stream_tx(uint8_t *buf, uint16_t len) {
   if (get_time_stamp() < (last_stream_rx + 20000000)) {
       uint size = sizeof(stream_addr);
-      printf("udp stream tx\n");
+      //printf("udp stream tx\n");
       sendto(stream_fd,buf,len,0,&stream_addr,size);
   }
 }
@@ -76,7 +76,7 @@ void handle_udp_uavlink_rx(int udp_link_fd, UAVLinkConnection uav_link_conn) {
   objid += rx_buffer[4] << 24;
   UAVLinkSendPacket(uav_link_conn, objid, ptype, &rx_buffer[5], len);
   len = UDP_BFR_LEN;
-  printf("waiting response\n");
+  //printf("waiting response\n");
   if (wait_uavlink_response(uav_link_conn,rx_buffer,&len)) {
       // rx_buffer should now contain the uavlink response packet
       // to convert it to a udp_uavlink packet only some parts are copied
@@ -89,7 +89,7 @@ void handle_udp_uavlink_rx(int udp_link_fd, UAVLinkConnection uav_link_conn) {
       len -= 8;
       memcpy(&tx_buffer[5],&rx_buffer[8],len);
       len += 5;
-      printf("replying\n");
+      //printf("replying\n");
       sendto(udp_link_fd,&tx_buffer,len,0,&link_addr,size);
   }
 }
