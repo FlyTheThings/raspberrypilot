@@ -35,7 +35,7 @@ bool PIOS_LSM330_init_gyro(uint32_t pios_i2c_adapter_id) {
 	} ;
 
 	//FIXME add error checking
-	if ( !PIOS_I2C_Transfer(i2c_id, PIOS_lsm303_init_i2c_txn_A, 1) ) {
+	if ( PIOS_I2C_Transfer(i2c_id, PIOS_lsm303_init_i2c_txn_A, 1) ) {
 		return 0;
 	}
 
@@ -67,7 +67,7 @@ bool PIOS_LSM330_read_gyro(float gyro_vector[]) {
 		}
 	} ;
 	
-	if ( !PIOS_I2C_Transfer(i2c_id, PIOS_lsm330_read_i2c_txn_A, 2) ) {
+	if ( PIOS_I2C_Transfer(i2c_id, PIOS_lsm330_read_i2c_txn_A, 2) ) {
 		return 0;
 	}
 
