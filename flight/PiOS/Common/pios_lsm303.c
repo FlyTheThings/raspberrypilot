@@ -5,25 +5,19 @@
  *  Author: zlewko
  */ 
 
-#include "pios.h"
-
-#if defined(PIOS_INCLUDE_LSM303)
-#include "pios_lsm303.h"
+#include <pios.h>
+#include <pios_lsm303.h>
 
 // static vars
+static uint32_t accel_i2c_id;
+static uint32_t mag_i2c_id;
 
-static int32_t PIOS_LSM303_Read(uint8_t address, uint8_t subaddress, uint8_t * buffer, uint8_t len);
-static int32_t PIOS_LSM303_Write(uint8_t address, uint8_t subaddress, uint8_t * buffer);
+// returns 1 if successful
+bool PIOS_LSM303_init_accel(uint32_t pios_i2c_adapter_id) {
 
-/**
- * @brief initializes the LSM303 Accelerometer
- * \return 0 for success or -1 for failure
- */
-bool PIOS_LSM303_init_accel(void) {
-
-	uint8_t subaddr = PIOS_LSM303_CTL_REG1_A | PIOS_LSM303_A_REPEATED;
-
-		uint8_t init_data_A[] = {
+	accel_i2c_id = pios_i2c_adapter_id;
+	const uint8_t init_data_A[] = {
+		PIOS_LSM303_CTL_REG1_A | PIOS_LSM303_A_REPEATED,
 		PIOS_LSM303_CTL_REG1_A_SETTING,
 		PIOS_LSM303_CTL_REG2_A_SETTING,
 		PIOS_LSM303_CTL_REG3_A_SETTING,
@@ -31,140 +25,121 @@ bool PIOS_LSM303_init_accel(void) {
 		PIOS_LSM303_CTL_REG5_A_SETTING
 	};
 	
-	return PIOS_LSM303_Write(PIOS_LSM303_A_ADDR, subaddr, init_data_A);
+	const struct pios_i2c_txn PIOS_lsm303_init_i2c_txn_A[] = {
+		{
+				.info = "LSM303InitA",
+				.addr = PIOS_LSM303_A_ADDR,
+				.rw = PIOS_I2C_TXN_WRITE,
+				.len = sizeof(init_data_A),
+				.buf = (uint8_t *)&init_data_A
+		}
+	} ;
+
+	if ( PIOS_I2C_Transfer(accel_i2c_id, PIOS_lsm303_init_i2c_txn_A, 1) ) {
+		return 0;
+	}
+	
+	return 1;
 }
 
-/**
- * @brief initializes the LSM303 Accelerometer
- * \return 0 for success or -1 for failure
- */
-bool PIOS_LSM303_init_mag(void) {
 
-	uint8_t subaddr = PIOS_LSM303_CRA_REG_M;
-
-		uint8_t init_data_M[] = {
-		PIOS_LSM303_CRA_REG_M_SETTING,
-		PIOS_LSM303_CRB_REG_M_SETTING,
-		PIOS_LSM303_MR_REG_M_SETTING
+// returns 1 if successful
+bool PIOS_LSM303_init_mag(uint32_t pios_i2c_adapter_id) {
+	
+	mag_i2c_id = pios_i2c_adapter_id;
+	const uint8_t init_data_M[] = {
+			PIOS_LSM303_CRA_REG_M ,
+			PIOS_LSM303_CRA_REG_M_SETTING,
+			PIOS_LSM303_CRB_REG_M_SETTING,
+			PIOS_LSM303_MR_REG_M_SETTING
 	};
 	
-	return PIOS_LSM303_Write(PIOS_LSM303_M_ADDR, subaddr, init_data_M);
+	const struct pios_i2c_txn PIOS_lsm303_init_i2c_txn_M[] = {
+		{
+				.info = "LSM303InitM",
+				.addr = PIOS_LSM303_M_ADDR,
+				.rw = PIOS_I2C_TXN_WRITE,
+				.len = sizeof(init_data_M),
+				.buf = (uint8_t *) &init_data_M
+		}
+	} ;
 
+	if (PIOS_I2C_Transfer(mag_i2c_id, PIOS_lsm303_init_i2c_txn_M, 1) ) {
+		return 0;
+	}
+	
+	return 1;
 }
 
-/**
- * @brief Read current X, Y, Z Accelerometer values
- * \return 0 for success or -1 for failure
- */
+//returns 1 for success
 bool PIOS_LSM303_read_accel(float accel_vector[]) {
-	static /* volatile */ uint8_t result[6];
+	uint8_t res[6];
 	
 	uint8_t subaddr = PIOS_LSM303_A_READ_START | PIOS_LSM303_A_REPEATED;
+	const struct pios_i2c_txn PIOS_lsm303_read_i2c_txn_A[] = {
+		{
+			.info = "LSM303readM",
+			.addr = PIOS_LSM303_A_ADDR ,
+			.rw = PIOS_I2C_TXN_WRITE,
+			.len = sizeof(subaddr),
+			.buf = (uint8_t *) &subaddr
+		},
+		{
+			.info = "LSM303readM",
+			.addr = PIOS_LSM303_A_ADDR,
+			.rw = PIOS_I2C_TXN_READ,
+			.len = sizeof(res),
+			.buf =  (uint8_t *) &res
+		}
+	} ;
+	
+	if (PIOS_I2C_Transfer(accel_i2c_id, PIOS_lsm303_read_i2c_txn_A, 2) ) {
+		return 0;
+	}
 
-	if (PIOS_LSM303_Read(PIOS_LSM303_A_ADDR, subaddr, result, sizeof(result)) < 0)
-		return -1;
-
-	accel_vector[0] = ( int16_t ) (result[1] << 8) | result[0];
-	accel_vector[1] = ( int16_t ) (result[3] << 8) | result[2];
-	accel_vector[2] = ( int16_t ) (result[5] << 8) | result[4];
+	accel_vector[0] =   ( int16_t ) (res[1] << 8) | res[0];
+	accel_vector[1] =  ( int16_t ) (res[3] << 8) | res[2];
+	accel_vector[2] =   ( int16_t ) (res[5] << 8) | res[4];
 	accel_vector[0] *= PIOS_LSM303_A_PER_LSB * 9.81;
 	accel_vector[1] *= PIOS_LSM303_A_PER_LSB * 9.81;
 	accel_vector[2] *= PIOS_LSM303_A_PER_LSB * 9.81;
-	return 0;
+	return 1;
 }
 
-/**
- * @brief Read current X, Y, Z Magnetomter values
- * \return 0 for success or -1 for failure
- */
+//returns 1 for success
 bool PIOS_LSM303_read_mag(float mag_vector[]) {
-	static /* volatile */ uint8_t result[6];
+	static volatile char res[6];
 	float tmp;
 	
 	uint8_t subaddr = PIOS_LSM303_M_READ_START;
-	
-	if (PIOS_LSM303_Read(PIOS_LSM303_M_ADDR, subaddr, result, sizeof(result)) < 0)
-		return -1;
-		
-	tmp =	(int16_t) (result[0] << 8 | result[1]) ;
-	mag_vector[0] = tmp * PIOS_LSM303_M_X_PER_LSB;
-	
-	tmp =	(int16_t) (result[2] << 8 | result[3]) ;  
-	mag_vector[2] = tmp * PIOS_LSM303_M_Y_PER_LSB;
-	
-	tmp =	(int16_t) (result[4] << 8 | result[5]);
-	mag_vector[1] = tmp * PIOS_LSM303_M_Z_PER_LSB;
-	return 0;
-}
-
-/**
- * @brief Reads one or more bytes into a buffer
- * \param[in] address LSM303 register address
- * \param[out] buffer destination buffer
- * \param[in] len number of bytes which should be read
- * \return 0 if operation was successful
- * \return -1 if error during I2C transfer
- * \return -2 if unable to claim i2c device
- */
-static int32_t PIOS_LSM303_Read(uint8_t address, uint8_t subaddress, uint8_t *buffer, uint8_t len)
-{
-	uint8_t addr_buffer[] = {
-		subaddress,
-	};
-	
-	const struct pios_i2c_txn txn_list[] = {
+	const struct pios_i2c_txn PIOS_lsm303_read_i2c_txn_M[] = {
 		{
-			.info = __func__,
-			.addr = address,
+			.info = "LSM303readA",
+			.addr = PIOS_LSM303_M_ADDR ,
 			.rw = PIOS_I2C_TXN_WRITE,
-			.len = sizeof(addr_buffer),
-			.buf = addr_buffer,
-		}
-		,
+			.len = sizeof(subaddr),
+			.buf = (uint8_t *) &subaddr
+		},
 		{
-			.info = __func__,
-			.addr = address,
+			.info = "LSM303readA",
+			.addr = PIOS_LSM303_M_ADDR,
 			.rw = PIOS_I2C_TXN_READ,
-			.len = len,
-			.buf = buffer,
+			.len = sizeof(res),
+			.buf =(uint8_t *)  &res
 		}
-	};
-	
-	return PIOS_I2C_Transfer(PIOS_LSM303_I2C_ADPTER, txn_list, NELEMENTS(txn_list));
+	} ;
+
+	if (PIOS_I2C_Transfer(mag_i2c_id, PIOS_lsm303_read_i2c_txn_M, 2) ) {
+		return 0;
+	}
+
+	tmp =   (int16_t) (res[0] << 8 | res[1]) ;
+	mag_vector[0] = tmp * PIOS_LSM303_M_X_PER_LSB;
+
+	tmp =   (int16_t) (res[2] << 8 | res[3]) ;
+	mag_vector[2] = tmp* PIOS_LSM303_M_Y_PER_LSB;
+
+	tmp =    (int16_t) (res[4] << 8 | res[5]);
+	mag_vector[1] = tmp * PIOS_LSM303_M_Z_PER_LSB;
+	return 1;
 }
-
-/**
- * @brief Writes one or more bytes to the LSM303
- * \param[in] address Register address
- * \param[in] buffer source buffer
- * \return 0 if operation was successful
- * \return -1 if error during I2C transfer
- * \return -2 if unable to claim i2c device
- */
-static int32_t PIOS_LSM303_Write(uint8_t address, uint8_t subaddress, uint8_t *buffer)
-{
-	uint8_t data[] = {
-		subaddress,
-		*buffer,
-	};
-	
-	const struct pios_i2c_txn txn_list[] = {
-		{
-			.info = __func__,
-			.addr = address,
-			.rw = PIOS_I2C_TXN_WRITE,
-			.len = sizeof(data),
-			.buf = data,
-		}
-		,
-	};
-
-	return PIOS_I2C_Transfer(PIOS_LSM303_I2C_ADPTER, txn_list, NELEMENTS(txn_list));
-}
-
-#endif /* PIOS_INCLUDE_LSM303 */
-
-/**
- * @}
- * @}
- */

@@ -13,13 +13,12 @@
 
 // LSM330 I²C Address
 // -------------------------------------------------------------------------
-#define PIOS_LSM330_I2C_ADAPTER				PIOS_I2C_MAIN_ADAPTER
 // 7 Bit LSB follows the SDO_A pin. This address assumes grounded.
 #define PIOS_LSM330_A_I2C_ADDR_DATASHEET	0x30 // Add 2 if SDO_A == 1
-#define PIOS_LSM330_A_I2C_ADDR				(PIOS_LSM330_A_I2C_ADDR_DATASHEET >> 1)
+#define PIOS_LSM330_A_ADDR				(PIOS_LSM330_A_I2C_ADDR_DATASHEET >> 1)
 // 7 Bit LSB follows the SDO_G pin. This address assumes grounded.
 #define PIOS_LSM330_G_I2C_ADDR_DATASHEET	0xD4 // Add 2 if SDO_G == 1
-#define PIOS_LSM330_G_I2C_ADDR				(PIOS_LSM330_G_I2C_ADDR_DATASHEET >> 1)
+#define PIOS_LSM330_G_ADDR				(PIOS_LSM330_G_I2C_ADDR_DATASHEET >> 1)
 
 /*  In order to read multiple bytes, it is necessary to assert the most significant
  bit of the subaddress field. In other words, SUB(7) must be equal to 1 while SUB(6-0)
@@ -159,21 +158,21 @@
 // Raspberry Pilot LSM330 Gyro Register Settings
 // ------------------------------------------------------------------------------------------------
 // 380 samples, 50hz bw, all axis enabled - may want to speed this up later.
-#define PIOS_LSM330_CTL_REG1_G_SETTING		(PIOS_LSM330_ODR_A_G	| \
+#define PIOS_LSM330_CTRL_REG1_G_SETTING		(PIOS_LSM330_ODR_A_G	| \
 											 PIOS_LSM330_PD_G		| \
 											 PIOS_LSM330_ZEN_G		| \
 											 PIOS_LSM330_YEN_G		| \
 											 PIOS_LSM330_XEN_G)
-#define PIOS_LSM330_CTL_REG2_G_SETTING		0x00 // default
-#define PIOS_LSM330_CTL_REG3_G_SETTING		0x00 // default
-#define PIOS_LSM330_CTL_REG4_G_SETTING		0xB0 // block data update between msb and lsb, 2000 deg/s fs
-#define PIOS_LSM330_CTL_REG5_G_SETTING		0x00 // default value
+#define PIOS_LSM330_CTRL_REG2_G_SETTING		0x00 // default
+#define PIOS_LSM330_CTRL_REG3_G_SETTING		0x00 // default
+#define PIOS_LSM330_CTRL_REG4_G_SETTING		0xB0 // block data update between msb and lsb, 2000 deg/s fs
+#define PIOS_LSM330_CTRL_REG5_G_SETTING		0x00 // default value
 #define PIOS_LSM330_G_READ_START			PIOS_LSM330_OUT_X_L_G
 #define PIOS_LSM330_G_PER_LSB				(float) 4000.0/65535
 
 
 // public api
-bool PIOS_LSM330_init_gyro(void);
+bool PIOS_LSM330_init_gyro(uint32_t pios_i2c_adapter_id);
 bool PIOS_LSM330_read_gyro(float gyro_vector[3]);
 
 #endif /* PIOS_LSM330_I2C_H_ */
