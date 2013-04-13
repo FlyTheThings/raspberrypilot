@@ -460,7 +460,7 @@ static int32_t receivePacket(UAVLinkConnectionData *connection, uint8_t type, ui
 {
 	int32_t ret = 0;
 
-	printf("receive packet\n");	// Process message type
+	//printf("receive packet\n");	// Process message type
 	switch (type) {
 		case UAVLINK_TYPE_OBJ:
 			// Check if an ack is pending
@@ -471,8 +471,6 @@ static int32_t receivePacket(UAVLinkConnectionData *connection, uint8_t type, ui
 			sendAck(connection, objId);
 			break;
 	case UAVLINK_TYPE_STREAM:
-			// Transmit ACK
-			sendAck(connection,objId);
 			if (connection->streamForwarder) {
 				(connection->streamForwarder)(objId,data,length);
 			}
