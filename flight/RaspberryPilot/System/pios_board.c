@@ -433,15 +433,15 @@ void PIOS_Board_Init(void) {
 	const static char msg_set_sentences[]  = "$PMTK314,1,1,1,1,1,5,0,0,0,0,0,0,0,0,0,0,0,0,0*2C\r\n";
 	const static char msg_change_baud[] = "$PMTK251,57600*2C\r\n";
 	const static char msg_hot_start[] = "$PMTK101*32<CR><LF>";
-	PIOS_COM_SendBuffer((uint8_t *) pios_com_gps_id, &msg_hot_start, sizeof(msg_hot_start));
+	PIOS_COM_SendBuffer(pios_com_gps_id, (uint8_t *) &msg_hot_start, sizeof(msg_hot_start));
 	PIOS_DELAY_WaitmS(500);
-	PIOS_COM_SendBuffer((uint8_t *)pios_com_gps_id, &msg_set_sentences, sizeof(msg_set_sentences));
+	PIOS_COM_SendBuffer(pios_com_gps_id, (uint8_t *) &msg_set_sentences, sizeof(msg_set_sentences));
 	PIOS_DELAY_WaitmS(250);
-	PIOS_COM_SendBuffer((uint8_t *)pios_com_gps_id, &msg_change_baud, sizeof(msg_change_baud));
+	PIOS_COM_SendBuffer(pios_com_gps_id,(uint8_t *)  &msg_change_baud, sizeof(msg_change_baud));
 	PIOS_DELAY_WaitmS(250);
-	PIOS_COM_ChangeBaud((uint8_t *)pios_com_gps_id,57600);
+	PIOS_COM_ChangeBaud(pios_com_gps_id,57600);
 	PIOS_DELAY_WaitmS(250);
-	PIOS_COM_SendBuffer((uint8_t *)pios_com_gps_id, &msg_set_update_rate, sizeof(msg_set_update_rate));
+	PIOS_COM_SendBuffer(pios_com_gps_id, (uint8_t *) &msg_set_update_rate, sizeof(msg_set_update_rate));
 	PIOS_DELAY_WaitmS(250);
 
 	//configure the loop back com device
