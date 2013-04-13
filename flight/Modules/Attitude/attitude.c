@@ -197,7 +197,7 @@ static void AttitudeTask(void *parameters)
 	while (1) {
 	
 		// This  function blocks on data queue
-		if(1) 
+		if(0)
 			updateAttitudeComplimentary(first_run);
 		else
 			updateAttitudeINSGPS(first_run);

@@ -46,6 +46,17 @@
  *
  */
  
+
+/*
+ * Sensors on the raspberry pilot board are not mounted in alignement
+ *
+ * Board 	x	y	z	(x toward airspeed, y toward gps, z down through board)
+ * LM303	-x	y	-z
+ * LSM330	-x	y	-z
+ * mag3110	y	x	z
+ * hmc5883	-x	y	-z
+ *
+ */
 #include "pios.h"
 #include "homelocation.h"
 #include "magnetometer.h"
@@ -241,7 +252,7 @@ static void SensorsTask(void *parameters)
 		GyrosData gyrosData;
 
 		static volatile float accels[3];
-		PIOS_LSM303_read_accel(accels);
+		PIOS_LSM303_read_accel(&accels);
 						
 		static volatile float gyros[3];
 		PIOS_LSM330_read_gyro(&gyros);
@@ -261,6 +272,7 @@ static void SensorsTask(void *parameters)
 			accelsData.y = accels_out[1];
 			accelsData.z = accels_out[2];
 		}
+
 		AccelsSet(&accelsData);
 
 		// Scale the gyros
@@ -282,10 +294,11 @@ static void SensorsTask(void *parameters)
 			// Apply bias correction to the gyros from the state estimator
 			GyrosBiasData gyrosBias;
 			GyrosBiasGet(&gyrosBias);
-			gyrosData.x -= gyrosBias.x;
-			gyrosData.y -= gyrosBias.y;
-			gyrosData.z -= gyrosBias.z;
+			gyrosData.x += gyrosBias.x;
+			gyrosData.y += gyrosBias.y;
+			gyrosData.z += gyrosBias.z;
 		}
+
 		GyrosSet(&gyrosData);
 		
 		// Because most crafts wont get enough information from gravity to zero yaw gyro, we try
@@ -296,9 +309,9 @@ static void SensorsTask(void *parameters)
 		if (PIOS_HMC5883_NewDataAvailable() || PIOS_DELAY_DiffuS(mag_update_time) > 150000) {
 			int16_t values[3];
 			PIOS_HMC5883_ReadMag(values);
-			float mags[3] = {(float) values[1] * mag_scale[0] - mag_bias[0],
-			                (float) values[0] * mag_scale[1] - mag_bias[1],
-			                -(float) values[2] * mag_scale[2] - mag_bias[2]};
+			float mags[3] = {(float) values[0] * mag_scale[0] - mag_bias[0],
+			                (float) values[1] * mag_scale[1] - mag_bias[1],
+			                (float) values[2] * mag_scale[2] - mag_bias[2]};
 			if (rotate) {
 				float mag_out[3];
 				rot_mult(R, mags, mag_out);
