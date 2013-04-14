@@ -110,7 +110,7 @@ class uavObjectField():
     def str_to_enum(self,value):
         if (self.ftype == uavObjectField.FType.ENUM) and (value in self.enums):
             value = self.enums.index(value)
-        return int(value)
+        return value
 
           
 class uavObject(object):
