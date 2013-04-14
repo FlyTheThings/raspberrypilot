@@ -13,7 +13,10 @@ cd ..
 cp -f build/uavlink_server/uavlink_server /usr/local/bin/uavlink_server
 cp -f python/raspberrypilot/service.py /usr/local/bin/raspberrypilot
 chmod 755 /usr/local/bin/raspberrypilot
-
+cp -f uavlinkserver_init /etc/init.d/uavlinkserver
+chmod 755 /etc/init.d/uavlinkserver
+cp -f raspberrypilot_init /etc/init.d/raspberrypilot
+chmod 755 /etc/init.d/raspberrypilot
 rm -Rf ./build
 rm -Rf pythonflight/build
 rm -Rf python/build
