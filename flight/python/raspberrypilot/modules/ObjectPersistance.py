@@ -100,12 +100,12 @@ class objectPersistance(raspberrypilot.raspberryPilotModule):
         while True:
             # Get object data
             if retval == None:
-                sleeptime *= 2
-                if sleeptime > 0.5:
-                    sleeptime = 0.5 
+                sleep_time *= 2
+                if sleep_time > 0.5:
+                    sleep_time = 0.5 
                 time.sleep(sleep_time)
             else:
-                sleeptime = 0.001
+                sleep_time = 0.001
                 time.sleep()
             objper.get()
             
@@ -171,7 +171,7 @@ class objectPersistance(raspberrypilot.raspberryPilotModule):
                 pass
 
 if __name__ == "__main__":
-    conn = uavlink.uavLinkConnection_UDP(addr="192.168.1.115",port=32001)
+    conn = uavlink.uavLinkConnection_UDP(addr="192.168.1.116",port=32001)
     objMgr = uavlink.objManager(conn)
     op = objectPersistance(objMgr)
     op.run()
