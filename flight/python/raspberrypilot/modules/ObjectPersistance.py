@@ -96,12 +96,17 @@ class objectPersistance(raspberrypilot.raspberryPilotModule):
             cur.execute("CREATE TABLE uavObjects(objId INT, instance INT, name TEXT, isMeta INT, isSetting INT, data TEXT)")
 
         retval = None
+        sleep_time = 0.001
         while True:
             # Get object data
             if retval == None:
-                time.sleep(0.5)
+                sleeptime *= 2
+                if sleeptime > 0.5:
+                    sleeptime = 0.5 
+                time.sleep(sleep_time)
             else:
-                time.sleep(0.05)
+                sleeptime = 0.001
+                time.sleep()
             objper.get()
             
             # Execute action each action returns true for success, false for failure
