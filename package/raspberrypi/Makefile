@@ -8,6 +8,6 @@ build_package: clean
 	rm -Rf ../../build/raspberrypi/pythonflight/build
 	tr -d '\15\32'  < raspberrypilot_init > ../../build/raspberrypi/raspberrypilot_init
 	tr -d '\15\32'  < uavlinkserver_init > ../../build/raspberrypi/uavlinkserver_init
-	tr -d '\15\32'  < install > ../../build/raspberrypi/install
+	tr -d '\15\32'  < install.sh > ../../build/raspberrypi/install.sh
 clean:
 	rm -Rf ../../build/raspberrypi
