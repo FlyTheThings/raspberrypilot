@@ -106,7 +106,7 @@ class objectPersistance(raspberrypilot.raspberryPilotModule):
                 time.sleep(sleep_time)
             else:
                 sleep_time = 0.001
-                time.sleep()
+                time.sleep(sleep_time)
             objper.get()
             
             # Execute action each action returns true for success, false for failure
