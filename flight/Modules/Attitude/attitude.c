@@ -440,7 +440,8 @@ static int32_t updateAttitudeINSGPS(bool first_run)
 	baro_updated |= xQueueReceive(baroQueue, &ev, 0 / portTICK_RATE_MS) == pdTRUE;
 	gps_updated |= xQueueReceive(gpsQueue, &ev, 0 / portTICK_RATE_MS) == pdTRUE;
 	
-	if (!inited && (!mag_updated || !baro_updated || !gps_updated)) {
+	if (!inited && (!mag_updated || !baro_updated)) {
+//KLUDGE	if (!inited && (!mag_updated || !baro_updated || !gps_updated)) {
 		// Don't initialize until all sensors are read
 		return -1;
 	} else if (!inited ) {

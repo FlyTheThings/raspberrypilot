@@ -248,9 +248,11 @@ static void SensorsTask(void *parameters)
 		accels[2] = -accels[2];
 						
 		static float gyros[3];
+		float temp;
 		PIOS_LSM330_read_gyro( (float *) gyros);
-		gyros[0] = -gyros[0];
-		gyros[1] = gyros[1];
+		temp = gyros[0];
+		gyros[0] = gyros[1];
+		gyros[1] = temp;
 		gyros[2] = -gyros[2];
 		// Scale the accels
 		float accels_out[3] = {accels[0] * accel_scaling * accel_scale[0] - accel_bias[0],
@@ -294,16 +296,16 @@ static void SensorsTask(void *parameters)
 
 		GyrosSet(&gyrosData);
 		
-		// Because most crafts wont get enough information from gravity to zero yaw gyro, we try
-		// and make it average zero (weakly)
 
 #if defined(PIOS_INCLUDE_HMC5883)
 		MagnetometerData mag;
 		if (PIOS_HMC5883_NewDataAvailable() || PIOS_DELAY_DiffuS(mag_update_time) > 150000) {
 			int16_t mag_values[3];
 			PIOS_HMC5883_ReadMag(mag_values);
-			mag_values[0] = -mag_values[0];
-			mag_values[1] =  mag_values[1];
+			float mag_temp;
+			mag_temp = mag_values[0];
+			mag_values[0] =  -mag_values[1];
+			mag_values[1] =  -mag_temp;
 			mag_values[2] = -mag_values[2];
 			float mags[3] = {(float) mag_values[0] * mag_scale[0] - mag_bias[0],
 			                (float) mag_values[1] * mag_scale[1] - mag_bias[1],
@@ -329,6 +331,8 @@ static void SensorsTask(void *parameters)
 			mag_update_time = PIOS_DELAY_GetRaw();
 		}
 #endif
+
+
 
 		PIOS_WDG_UpdateFlag(PIOS_WDG_SENSORS);
 
