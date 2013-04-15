@@ -6,8 +6,8 @@ build_package: clean
 	cp -R ../../build/uavobject-synthetics/pythonflight ../../build/raspberrypi
 	cp -R ../../flight/python ../../build/raspberrypi
 	rm -Rf ../../build/raspberrypi/pythonflight/build
-	tr -d '\15\32'  < raspberrypilot_init > ../../build/raspberrypi/raspberrypilot_init
-	tr -d '\15\32'  < uavlinkserver_init > ../../build/raspberrypi/uavlinkserver_init
-	tr -d '\15\32'  < install.sh > ../../build/raspberrypi/install.sh
+	perl -p -e \'s/\r$//\'  < raspberrypilot_init > ../../build/raspberrypi/raspberrypilot_init
+	perl -p -e \'s/\r$//\'  < uavlinkserver_init > ../../build/raspberrypi/uavlinkserver_init
+	perl -p -e \'s/\r$//\'  < install.sh > ../../build/raspberrypi/install.sh
 clean:
 	rm -Rf ../../build/raspberrypi
