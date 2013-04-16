@@ -84,9 +84,9 @@ static void forwardStream(uint32_t id, uint8_t * buf, uint16_t buf_len);
  */
 int32_t UavlinkbridgeStart(void)
 {
-	// Process all registered objects and connect queue for updates
-	//UAVObjIterate(&registerObject);
-    
+	// Update uavlinkbridge settings
+	uavlinkbridgePort = PIOS_COM_UAVLINK;
+
 	// Listen to objects of interest
 	CompUavlinkStatsConnectQueue(priorityQueue);
 	FlightUavlinkStatsConnectQueue(priorityQueue);
@@ -123,10 +123,6 @@ int32_t UavlinkbridgeInitialize(void)
 
 	// Create object queue
 	priorityQueue = xQueueCreate(MAX_QUEUE_SIZE, sizeof(UAVObjEvent));
-
-
-	// Update uavlinkbridge settings
-	uavlinkbridgePort = PIOS_COM_UAVLINK;
     
 	// Initialise UAVLink
 	uavLinkCon = UAVLinkInitialize(&transmitData);
@@ -140,10 +136,15 @@ int32_t UavlinkbridgeInitialize(void)
 	memset(&ev, 0, sizeof(UAVObjEvent));
 	EventPeriodicQueueCreate(&ev, priorityQueue, STATS_UPDATE_PERIOD_MS);
 
+	UavlinkbridgeStart();
 	return 0;
 }
 
-MODULE_INITCALL(UavlinkbridgeInitialize, UavlinkbridgeStart)
+
+/* UavlinkBridge is structured after the telemetry module however it does not start as a module, it starts
+ * in pios_board_init
+ */
+//MODULE_INITCALL(UavlinkbridgeInitialize, UavlinkbridgeStart)
 
 
 /**

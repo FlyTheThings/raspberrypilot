@@ -36,6 +36,7 @@
 #include "openpilot.h"
 #include "uavobjectsinit.h"
 #include "systemmod.h"
+#include "objectpersistence.h"
 
 /* Task Priorities */
 #define PRIORITY_TASK_HOOKS             (tskIDLE_PRIORITY + 3)
@@ -132,7 +133,19 @@ initTask(void *parameters)
 	/* Initialize modules */
 	MODULE_INITIALISE_ALL;
 
+	/* Now all uavobjects have been initialized, wait for objectpersistance (on the other side of uavlink) to load them
+	 * wait in a busy loop here until the objects load operation is complete.  The default for ObjectPersistence is load
+	 * all settings, so just wait for the operation to be completed.
+	 */
+	ObjectPersistenceData objper;
+	while(true) {
+		vTaskDelay(100);
+		ObjectPersistenceGet(&objper);
+		if (objper.Operation == OBJECTPERSISTENCE_OPERATION_COMPLETED) break;
+	}
 
+	/* Start the system module, this will bring up the rest of the system */
+	SystemModStart();
 	
 	/* terminate this task */
 	vTaskDelete(NULL);

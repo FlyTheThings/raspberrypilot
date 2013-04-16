@@ -339,6 +339,60 @@ static void PIOS_Board_configure_dsm(const struct pios_usart_cfg *pios_usart_dsm
 	pios_rcvr_group_map[channelgroup] = pios_dsm_rcvr_id;
 }
 
+
+
+/*
+ * This function setups up the uavlink hardware port and the loopboack devices for telemetry
+ */
+static void PIOS_Board_configure_uavlink() {
+	//configure the loop back com device
+	uint8_t * a_buffer = (uint8_t *) pvPortMalloc(PIOS_COM_TELEM_RF_RX_BUF_LEN);
+	PIOS_Assert(a_buffer);
+	uint8_t * b_buffer = (uint8_t *) pvPortMalloc(PIOS_COM_TELEM_RF_TX_BUF_LEN);
+	PIOS_Assert(b_buffer);
+	uint32_t pios_com_loopback_id;
+	PIOS_com_loopback_Init(&pios_com_loopback_id, a_buffer, PIOS_COM_TELEM_RF_RX_BUF_LEN, b_buffer, PIOS_COM_TELEM_RF_TX_BUF_LEN);
+
+	// make two com ports using the loopback device,
+	uint8_t * rx_buffer_loopback_a = (uint8_t *) pvPortMalloc(PIOS_COM_TELEM_RF_RX_BUF_LEN);
+	PIOS_Assert(rx_buffer_loopback_a);
+	uint8_t * tx_buffer_loopback_a = (uint8_t *) pvPortMalloc(PIOS_COM_TELEM_RF_TX_BUF_LEN);
+	PIOS_Assert(tx_buffer_loopback_a);
+	if (PIOS_COM_Init(&pios_com_telem_rf_id, &pios_com_loopback_com_driver_a, pios_com_loopback_id,
+			rx_buffer_loopback_a, PIOS_COM_TELEM_RF_RX_BUF_LEN,
+			tx_buffer_loopback_a, PIOS_COM_TELEM_RF_TX_BUF_LEN)) {
+		PIOS_Assert(0);
+	}
+	uint8_t * rx_buffer_loopback_b = (uint8_t *) pvPortMalloc(PIOS_COM_TELEM_RF_RX_BUF_LEN);
+	PIOS_Assert(rx_buffer_loopback_b);
+	uint8_t * tx_buffer_loopback_b = (uint8_t *) pvPortMalloc(PIOS_COM_TELEM_RF_TX_BUF_LEN);
+	PIOS_Assert(tx_buffer_loopback_b);
+	if (PIOS_COM_Init(&pios_com_telem_loop_id, &pios_com_loopback_com_driver_b, pios_com_loopback_id,
+			rx_buffer_loopback_b, PIOS_COM_TELEM_RF_RX_BUF_LEN,
+			tx_buffer_loopback_b, PIOS_COM_TELEM_RF_TX_BUF_LEN)) {
+		PIOS_Assert(0);
+	}
+
+
+	// configure the uavlink serial port
+	uint32_t pios_uavlink_usart_id;
+	if (PIOS_USART_Init(&pios_uavlink_usart_id, &pios_usart_telem_cfg)) {
+		PIOS_Assert(0);
+	}
+
+	uint8_t * rx_buffer = (uint8_t *) pvPortMalloc(PIOS_COM_TELEM_RF_RX_BUF_LEN);
+	PIOS_Assert(rx_buffer);
+	uint8_t * tx_buffer = (uint8_t *) pvPortMalloc(PIOS_COM_TELEM_RF_TX_BUF_LEN);
+	PIOS_Assert(tx_buffer);
+
+	if (PIOS_COM_Init(&pios_com_uavlink_id, &pios_usart_com_driver, pios_uavlink_usart_id,
+			rx_buffer, PIOS_COM_TELEM_RF_RX_BUF_LEN,
+			tx_buffer, PIOS_COM_TELEM_RF_TX_BUF_LEN)) {
+		PIOS_Assert(0);
+	}
+}
+
+
 /**
  * PIOS_Board_Init()
  * initializes all the core subsystems on this specific hardware
@@ -346,6 +400,7 @@ static void PIOS_Board_configure_dsm(const struct pios_usart_cfg *pios_usart_dsm
  */
 
 #include <pios_board_info.h>
+#include <UAVLinkBridge.h>
 
 void PIOS_Board_Init(void) {
 
@@ -355,33 +410,11 @@ void PIOS_Board_Init(void) {
 	PIOS_DELAY_Init();
 
 	PIOS_LED_Init(&pios_led_cfg);
-
-	/* Set up the SPI interface to the accelerometer*/
-//	if (PIOS_SPI_Init(&pios_spi_accel_id, &pios_spi_accel_cfg)) {
-//		PIOS_DEBUG_Assert(0);
-//	}
 	
-	/* Set up the SPI interface to the gyro */
-//	if (PIOS_SPI_Init(&pios_spi_gyro_id, &pios_spi_gyro_cfg)) {
-//		PIOS_DEBUG_Assert(0);
-//	}
-//#if !defined(PIOS_FLASH_ON_ACCEL)
-	/* Set up the SPI interface to the flash */
-//	if (PIOS_SPI_Init(&pios_spi_flash_id, &pios_spi_flash_cfg)) {
-//		PIOS_DEBUG_Assert(0);
-//	}
-//	PIOS_Flash_Jedec_Init(pios_spi_flash_id, 0, &flash_m25p_cfg);
-//#else
-//	PIOS_Flash_Jedec_Init(pios_spi_accel_id, 1, &flash_m25p_cfg);
-//#endif
-//	PIOS_FLASHFS_Init(&flashfs_m25p_cfg);
-	
-
 	/* Initialize UAVObject libraries */
 	EventDispatcherInitialize();
 	UAVObjInitialize();
 	
-	HwSettingsInitialize();
 	
 #if defined(PIOS_INCLUDE_RTC)
 	PIOS_RTC_Init(&pios_rtc_main_cfg);
@@ -392,6 +425,16 @@ void PIOS_Board_Init(void) {
 
 	/* Initialize the task monitor library */
 	TaskMonitorInitialize();
+
+
+	/* setup the minimum hardware needed for uavlink bridge */
+	PIOS_Board_configure_uavlink();
+
+
+	/* Boot up uav linkbridge */
+	UavlinkbridgeInitialize();
+
+	HwSettingsInitialize();
 
 	/* Set up pulse timers */
 	PIOS_TIM_InitClock(&tim_1_cfg);
@@ -446,51 +489,7 @@ void PIOS_Board_Init(void) {
 	PIOS_COM_SendBuffer(pios_com_gps_id, (uint8_t *) &msg_set_update_rate, sizeof(msg_set_update_rate));
 	PIOS_DELAY_WaitmS(200);
 
-	//configure the loop back com device
-	uint8_t * a_buffer = (uint8_t *) pvPortMalloc(PIOS_COM_TELEM_RF_RX_BUF_LEN);
-	PIOS_Assert(a_buffer);
-	uint8_t * b_buffer = (uint8_t *) pvPortMalloc(PIOS_COM_TELEM_RF_TX_BUF_LEN);
-	PIOS_Assert(b_buffer);
-	uint32_t pios_com_loopback_id;
-	PIOS_com_loopback_Init(&pios_com_loopback_id, a_buffer, PIOS_COM_TELEM_RF_RX_BUF_LEN, b_buffer, PIOS_COM_TELEM_RF_TX_BUF_LEN);
 
-	// make two com ports using the loopback device,
-	uint8_t * rx_buffer_loopback_a = (uint8_t *) pvPortMalloc(PIOS_COM_TELEM_RF_RX_BUF_LEN);
-	PIOS_Assert(rx_buffer_loopback_a);
-	uint8_t * tx_buffer_loopback_a = (uint8_t *) pvPortMalloc(PIOS_COM_TELEM_RF_TX_BUF_LEN);
-	PIOS_Assert(tx_buffer_loopback_a);
-	if (PIOS_COM_Init(&pios_com_telem_rf_id, &pios_com_loopback_com_driver_a, pios_com_loopback_id,
-			rx_buffer_loopback_a, PIOS_COM_TELEM_RF_RX_BUF_LEN,
-			tx_buffer_loopback_a, PIOS_COM_TELEM_RF_TX_BUF_LEN)) {
-		PIOS_Assert(0);
-	}
-	uint8_t * rx_buffer_loopback_b = (uint8_t *) pvPortMalloc(PIOS_COM_TELEM_RF_RX_BUF_LEN);
-	PIOS_Assert(rx_buffer_loopback_b);
-	uint8_t * tx_buffer_loopback_b = (uint8_t *) pvPortMalloc(PIOS_COM_TELEM_RF_TX_BUF_LEN);
-	PIOS_Assert(tx_buffer_loopback_b);
-	if (PIOS_COM_Init(&pios_com_telem_loop_id, &pios_com_loopback_com_driver_b, pios_com_loopback_id,
-			rx_buffer_loopback_b, PIOS_COM_TELEM_RF_RX_BUF_LEN,
-			tx_buffer_loopback_b, PIOS_COM_TELEM_RF_TX_BUF_LEN)) {
-		PIOS_Assert(0);
-	}
-
-
-	// configure the uavlink serial port
-	uint32_t pios_uavlink_usart_id;
-	if (PIOS_USART_Init(&pios_uavlink_usart_id, &pios_usart_telem_cfg)) {
-		PIOS_Assert(0);
-	}
-
-	uint8_t * rx_buffer = (uint8_t *) pvPortMalloc(PIOS_COM_TELEM_RF_RX_BUF_LEN);
-	PIOS_Assert(rx_buffer);
-	uint8_t * tx_buffer = (uint8_t *) pvPortMalloc(PIOS_COM_TELEM_RF_TX_BUF_LEN);
-	PIOS_Assert(tx_buffer);
-
-	if (PIOS_COM_Init(&pios_com_uavlink_id, &pios_usart_com_driver, pios_uavlink_usart_id,
-			rx_buffer, PIOS_COM_TELEM_RF_RX_BUF_LEN,
-			tx_buffer, PIOS_COM_TELEM_RF_TX_BUF_LEN)) {
-		PIOS_Assert(0);
-	}
 
 
 	PIOS_DELAY_WaitmS(50);

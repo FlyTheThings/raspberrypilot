@@ -127,7 +127,11 @@ int32_t SystemModInitialize(void)
 	if (objectPersistenceQueue == NULL)
 		return -1;
 
-	SystemModStart();
+	/* Edited for raspberry pilot, the systemodstart is not automatically called
+	 * it is called just after MODULE_INITIALISE_ALL in initTask(), but the system
+	 * waits for objectpersitance (over uavlink) to load all the settings
+	 */
+	//SystemModStart();
 
 	return 0;
 }

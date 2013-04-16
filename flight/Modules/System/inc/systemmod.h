@@ -31,5 +31,6 @@
 #define SYSTEMMOD_H
 
 int32_t SystemModInitialize(void);
+int32_t SystemModStart(void);
 
 #endif // SYSTEMMOD_H

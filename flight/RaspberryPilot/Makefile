@@ -57,14 +57,11 @@ FLASH_TOOL = OPENOCD
 #MODULES = Sensors Attitude/revolution ManualControl Stabilization Altitude/revolution Actuator GPS FirmwareIAP  
 MODULES += Altitude FirmwareIAP
 MODULES += Actuator ManualControl GPS Sensors Stabilization Attitude
-MODULES += Guidance
+MODULES += Guidance 
 #MODULES += AltitudeHold
-
 ##MODULES += Sensors
 #MODULES += Airspeed
-
 #these must be last
-MODULES += UAVLinkBridge
 MODULES += Telemetry
 
 
@@ -121,6 +118,7 @@ SRC += ${foreach MOD, ${MODULES}, ${wildcard ${OPMODULEDIR}/${MOD}/*.c}}
 SRC += ${OPMODULEDIR}/System/systemmod.c
 SRC += $(OPSYSTEM)/raspberrypilot.c
 SRC += $(OPSYSTEM)/pios_board.c
+SRC += $(OPSYSTEM)/UAVLinkBridge.c
 #SRC += $(OPSYSTEM)/pios_usb_board_data.c
 SRC += $(OPSYSTEM)/alarms.c
 SRC += $(OPUAVTALK)/uavtalk.c
