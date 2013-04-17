@@ -246,13 +246,14 @@ void INSStatePrediction(float gyro_data[3], float accel_data[3], float dT)
 	U[5] = accel_data[2];
 
 	// EKF prediction step
-	LinearizeFG(X, U, F, G);
+
 	RungeKutta(X, U, dT);
 	qmag = sqrtf(X[6] * X[6] + X[7] * X[7] + X[8] * X[8] + X[9] * X[9]);
 	X[6] /= qmag;
 	X[7] /= qmag;
 	X[8] /= qmag;
 	X[9] /= qmag;
+	LinearizeFG(X, U, F, G);
 	//CovariancePrediction(F,G,Q,dT,P);
 
 	// Update Nav solution structure
@@ -1579,6 +1580,7 @@ void LinearizeFG(float X[NUMX], float U[NUMU], float F[NUMX][NUMX],
 	G[5][4] = -2.0f * (q2 * q3 + q0 * q1);
 	G[5][5] = -q0 * q0 + q1 * q1 + q2 * q2 - q3 * q3;
 
+/*
 	// dqdot/dnw
 	G[6][0] = q1 / 2.0f;
 	G[6][1] = q2 / 2.0f;
@@ -1592,6 +1594,20 @@ void LinearizeFG(float X[NUMX], float U[NUMU], float F[NUMX][NUMX],
 	G[9][0] = q2 / 2.0f;
 	G[9][1] = -q1 / 2.0f;
 	G[9][2] = -q0 / 2.0f;
+*/
+	// dqdot/dnw was inverted. Inversion removed. - Sauparna Das 3/28/13 
+	G[6][0] = -q1 / 2.0f;
+	G[6][1] = -q2 / 2.0f;
+	G[6][2] = -q3 / 2.0f;
+	G[7][0] = q0 / 2.0f;
+	G[7][1] = -q3 / 2.0f;
+	G[7][2] = q2 / 2.0f;
+	G[8][0] = q3 / 2.0f;
+	G[8][1] = q0 / 2.0f;
+	G[8][2] = -q1 / 2.0f;
+	G[9][0] = -q2 / 2.0f;
+	G[9][1] = q1 / 2.0f;
+	G[9][2] = q0 / 2.0f;
 
 	// dwbias = random walk noise
 	G[10][6] = G[11][7] = G[12][8] = 1.0f;
