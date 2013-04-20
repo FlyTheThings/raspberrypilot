@@ -25,7 +25,7 @@
 
 # Raspberry Pilot Make File Hacks
 # this stuff should probably be defined elsewhere
-BOARD_NAME := RaspberryPilot
+BOARD_NAME := raspberrypilot
 
 WHEREAMI := $(dir $(lastword $(MAKEFILE_LIST)))
 TOP      := $(realpath $(WHEREAMI)/../../)

@@ -31,7 +31,7 @@
  */
 
 #include "openpilot.h"
-#include "uavlinkbridge.h"
+#include "UAVLinkBridge.h"
 #include "flightuavlinkstats.h"
 #include "compuavlinkstats.h"
 #include "hwsettings.h"
