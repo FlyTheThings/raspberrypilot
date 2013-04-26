@@ -98,9 +98,9 @@ namespace OP_DFU {
         eBoardUnkwn = 0,
         eBoardMainbrd = 1,
         eBoardINS,
-        eBoardPip,
-        eBoardCC,
-        eBoardPro,
+        eBoardPip = 3,
+        eBoardCC = 4,
+        eBoardRevo = 9,
     };
 
     struct device
@@ -119,7 +119,7 @@ namespace OP_DFU {
     {
         Q_OBJECT;
 
-        public:
+	public:
         static quint32 CRCFromQBArray(QByteArray array, quint32 Size);
         //DFUObject(bool debug);
         DFUObject(bool debug,bool use_serial,QString port);
@@ -129,7 +129,7 @@ namespace OP_DFU {
         // Service commands:
         bool enterDFU(int const &devNumber);
         bool findDevices();
-        int JumpToApp(bool);
+        int JumpToApp(bool safeboot, bool erase);
         int ResetDevice(void);
         OP_DFU::Status StatusRequest();
         bool EndOperation();

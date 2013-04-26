@@ -77,6 +77,7 @@ ConfigInputWidget::ConfigInputWidget(QWidget *parent) :
 
 	//Generate the rows of buttons in the input channel form GUI
     unsigned int index=0;
+    unsigned int indexRT = 0;
     foreach (QString name, manualSettingsObj->getField("ChannelNumber")->getElementNames())
     {
         Q_ASSERT(index < ManualControlSettings::CHANNELGROUPS_NUMELEM);
@@ -88,6 +89,28 @@ ConfigInputWidget::ConfigInputWidget(QWidget *parent) :
         addUAVObjectToWidgetRelation("ManualControlSettings","ChannelMin",inpForm->ui->channelMin,index);
         addUAVObjectToWidgetRelation("ManualControlSettings","ChannelNeutral",inpForm->ui->channelNeutral,index);
         addUAVObjectToWidgetRelation("ManualControlSettings","ChannelMax",inpForm->ui->channelMax,index);
+
+        // Input filter response time fields supported for some channels only
+        switch (index) {
+        case ManualControlSettings::CHANNELGROUPS_ROLL:
+        case ManualControlSettings::CHANNELGROUPS_PITCH:
+        case ManualControlSettings::CHANNELGROUPS_YAW:
+        case ManualControlSettings::CHANNELGROUPS_ACCESSORY0:
+        case ManualControlSettings::CHANNELGROUPS_ACCESSORY1:
+        case ManualControlSettings::CHANNELGROUPS_ACCESSORY2:
+            addUAVObjectToWidgetRelation("ManualControlSettings", "ResponseTime", inpForm->ui->channelResponseTime, indexRT);
+            ++indexRT;
+            break;
+        case ManualControlSettings::CHANNELGROUPS_THROTTLE:
+        case ManualControlSettings::CHANNELGROUPS_FLIGHTMODE:
+        case ManualControlSettings::CHANNELGROUPS_COLLECTIVE:
+            inpForm->ui->channelResponseTime->setEnabled(false);
+            break;
+        default:
+            Q_ASSERT(0);
+            break;
+        }
+
         ++index;
     }
 
@@ -102,23 +125,23 @@ ConfigInputWidget::ConfigInputWidget(QWidget *parent) :
     connect(m_config->wzBack,SIGNAL(clicked()),this,SLOT(wzBack()));
 
     m_config->stackedWidget->setCurrentIndex(0);
-    addUAVObjectToWidgetRelation("ManualControlSettings","FlightModePosition",m_config->fmsModePos1,0,1,true);
-    addUAVObjectToWidgetRelation("ManualControlSettings","FlightModePosition",m_config->fmsModePos2,1,1,true);
-    addUAVObjectToWidgetRelation("ManualControlSettings","FlightModePosition",m_config->fmsModePos3,2,1,true);
-    addUAVObjectToWidgetRelation("ManualControlSettings","FlightModePosition",m_config->fmsModePos4,3,1,true);
-    addUAVObjectToWidgetRelation("ManualControlSettings","FlightModePosition",m_config->fmsModePos5,4,1,true);
-    addUAVObjectToWidgetRelation("ManualControlSettings","FlightModePosition",m_config->fmsModePos6,5,1,true);
-    addUAVObjectToWidgetRelation("ManualControlSettings","FlightModeNumber",m_config->fmsPosNum);
+    addUAVObjectToWidgetRelation("ManualControlSettings", "FlightModePosition", m_config->fmsModePos1, 0, 1, true);
+    addUAVObjectToWidgetRelation("ManualControlSettings", "FlightModePosition", m_config->fmsModePos2, 1, 1, true);
+    addUAVObjectToWidgetRelation("ManualControlSettings", "FlightModePosition", m_config->fmsModePos3, 2, 1, true);
+    addUAVObjectToWidgetRelation("ManualControlSettings", "FlightModePosition", m_config->fmsModePos4, 3, 1, true);
+    addUAVObjectToWidgetRelation("ManualControlSettings", "FlightModePosition", m_config->fmsModePos5, 4, 1, true);
+    addUAVObjectToWidgetRelation("ManualControlSettings", "FlightModePosition", m_config->fmsModePos6, 5, 1, true);
+    addUAVObjectToWidgetRelation("ManualControlSettings", "FlightModeNumber", m_config->fmsPosNum);
 
-    addUAVObjectToWidgetRelation("ManualControlSettings","Stabilization1Settings",m_config->fmsSsPos1Roll,"Roll");
-    addUAVObjectToWidgetRelation("ManualControlSettings","Stabilization2Settings",m_config->fmsSsPos2Roll,"Roll");
-    addUAVObjectToWidgetRelation("ManualControlSettings","Stabilization3Settings",m_config->fmsSsPos3Roll,"Roll");
-    addUAVObjectToWidgetRelation("ManualControlSettings","Stabilization1Settings",m_config->fmsSsPos1Pitch,"Pitch");
-    addUAVObjectToWidgetRelation("ManualControlSettings","Stabilization2Settings",m_config->fmsSsPos2Pitch,"Pitch");
-    addUAVObjectToWidgetRelation("ManualControlSettings","Stabilization3Settings",m_config->fmsSsPos3Pitch,"Pitch");
-    addUAVObjectToWidgetRelation("ManualControlSettings","Stabilization1Settings",m_config->fmsSsPos1Yaw,"Yaw");
-    addUAVObjectToWidgetRelation("ManualControlSettings","Stabilization2Settings",m_config->fmsSsPos2Yaw,"Yaw");
-    addUAVObjectToWidgetRelation("ManualControlSettings","Stabilization3Settings",m_config->fmsSsPos3Yaw,"Yaw");
+    addUAVObjectToWidgetRelation("ManualControlSettings", "Stabilization1Settings", m_config->fmsSsPos1Roll, "Roll", 1, true);
+    addUAVObjectToWidgetRelation("ManualControlSettings", "Stabilization2Settings", m_config->fmsSsPos2Roll, "Roll", 1, true);
+    addUAVObjectToWidgetRelation("ManualControlSettings", "Stabilization3Settings", m_config->fmsSsPos3Roll, "Roll", 1, true);
+    addUAVObjectToWidgetRelation("ManualControlSettings", "Stabilization1Settings", m_config->fmsSsPos1Pitch, "Pitch", 1, true);
+    addUAVObjectToWidgetRelation("ManualControlSettings", "Stabilization2Settings", m_config->fmsSsPos2Pitch, "Pitch", 1, true);
+    addUAVObjectToWidgetRelation("ManualControlSettings", "Stabilization3Settings", m_config->fmsSsPos3Pitch, "Pitch", 1, true);
+    addUAVObjectToWidgetRelation("ManualControlSettings", "Stabilization1Settings", m_config->fmsSsPos1Yaw, "Yaw", 1, true);
+    addUAVObjectToWidgetRelation("ManualControlSettings", "Stabilization2Settings", m_config->fmsSsPos2Yaw, "Yaw", 1, true);
+    addUAVObjectToWidgetRelation("ManualControlSettings", "Stabilization3Settings", m_config->fmsSsPos3Yaw, "Yaw", 1, true);
 
     addUAVObjectToWidgetRelation("ManualControlSettings","Arming",m_config->armControl);
     addUAVObjectToWidgetRelation("ManualControlSettings","ArmedTimeout",m_config->armTimeout,0,1000);
