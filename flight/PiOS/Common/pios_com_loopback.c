@@ -216,7 +216,7 @@ static void PIOS_com_loopback_tx(uint16_t tx_bytes_avail,pios_com_callback tx_ou
 		if (rx_in_cb) {
 			if (rx_started) {
 				while (bytes_to_send) {
-					bytes_to_send -= (rx_in_cb)(rx_in_context, buffer, bytes_to_send, NULL, &rx_need_yield);
+						bytes_to_send -= (rx_in_cb)(rx_in_context, buffer, bytes_to_send, NULL, &rx_need_yield);
 #if defined(PIOS_INCLUDE_FREERTOS)
 					if (rx_need_yield) {
 						taskYIELD();

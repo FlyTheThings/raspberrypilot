@@ -53,14 +53,18 @@ endif
 
 FLASH_TOOL = OPENOCD
 
-# List of modules to include
-#MODULES = Sensors Attitude/revolution ManualControl Stabilization Altitude/revolution Actuator GPS FirmwareIAP  
-MODULES += Altitude FirmwareIAP
-MODULES += Actuator ManualControl GPS Sensors Stabilization Attitude
-MODULES += Guidance 
+# List of modules to include, moved these to single lines, order is somewhat important so uavobjects are created in time
+MODULES += Altitude 
+MODULES += FirmwareIAP
+MODULES += Actuator ManualControl 
+MODULES += GPS
+MODULES +=Sensors 
+MODULES += Attitude
+MODULES += Stabilization 
+#MODULES += Guidance 
 #MODULES += AltitudeHold
-##MODULES += Sensors
 #MODULES += Airspeed
+
 #these must be last
 MODULES += Telemetry
 

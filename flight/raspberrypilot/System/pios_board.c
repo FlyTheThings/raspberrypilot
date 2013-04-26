@@ -429,6 +429,7 @@ void PIOS_Board_Init(void) {
 
 	/* setup the minimum hardware needed for uavlink bridge */
 	PIOS_Board_configure_uavlink();
+	PIOS_DELAY_WaitmS(100);
 
 
 	/* Boot up uav linkbridge */

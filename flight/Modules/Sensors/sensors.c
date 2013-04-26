@@ -289,9 +289,9 @@ static void SensorsTask(void *parameters)
 			// Apply bias correction to the gyros from the state estimator
 			GyrosBiasData gyrosBias;
 			GyrosBiasGet(&gyrosBias);
-			gyrosData.x += gyrosBias.x;
-			gyrosData.y += gyrosBias.y;
-			gyrosData.z += gyrosBias.z;
+			gyrosData.x -= gyrosBias.x;
+			gyrosData.y -= gyrosBias.y;
+			gyrosData.z -= gyrosBias.z;
 		}
 
 		GyrosSet(&gyrosData);
@@ -304,8 +304,8 @@ static void SensorsTask(void *parameters)
 			PIOS_HMC5883_ReadMag(mag_values);
 			float mag_temp;
 			mag_temp = mag_values[0];
-			mag_values[0] =  -mag_values[1];
-			mag_values[1] =  -mag_temp;
+			mag_values[0] =  mag_values[0];
+			mag_values[1] =  mag_values[1];
 			mag_values[2] = -mag_values[2];
 			float mags[3] = {(float) mag_values[0] * mag_scale[0] - mag_bias[0],
 			                (float) mag_values[1] * mag_scale[1] - mag_bias[1],
