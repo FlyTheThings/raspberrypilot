@@ -73,17 +73,13 @@ static void altitudeTask(void *parameters);
 int32_t AltitudeStart()
 {
 
-	if (altitudeEnabled) {
-		BaroAltitudeInitialize();
-#if defined(PIOS_INCLUDE_HCSR04)
-		SonarAltitudeInitialze();
-#endif
+
 
 		// Start main task
 		xTaskCreate(altitudeTask, (signed char *)"Altitude", STACK_SIZE_BYTES/4, NULL, TASK_PRIORITY, &taskHandle);
 		TaskMonitorAdd(TASKINFO_RUNNING_ALTITUDE, taskHandle);
 		return 0;
-	}
+
 	return -1;
 }
 
@@ -93,7 +89,7 @@ int32_t AltitudeStart()
  */
 int32_t AltitudeInitialize()
 {
-#ifdef MODULE_Altitude_BUILTIN
+#ifdef MODULE_ALTITUDE_BUILTIN
 	altitudeEnabled = 1;
 #else
 	HwSettingsInitialize();
@@ -106,6 +102,12 @@ int32_t AltitudeInitialize()
 	}
 #endif
 
+	if (altitudeEnabled) {
+		BaroAltitudeInitialize();
+#if defined(PIOS_INCLUDE_HCSR04)
+		SonarAltitudeInitialze();
+#endif
+	}
 	return 0;
 }
 MODULE_INITCALL(AltitudeInitialize, AltitudeStart)
@@ -137,7 +139,7 @@ static void altitudeTask(void *parameters)
 			value = PIOS_HCSR04_Get();
 			if((value > 100) && (value < 15000)) //from 3.4cm to 5.1m
 			{
-				height_in = value * SPEED_OF_SOUND/1000/2; // ÷2 for the return trip!
+				height_in = value * SPEED_OF_SOUND/1000/2; // ï¿½2 for the return trip!
 				height_out = (height_out * (1 - coeff)) + (height_in * coeff);
 				sonardata.Altitude = height_out; // m/us
 			}
@@ -156,7 +158,7 @@ static void altitudeTask(void *parameters)
 #endif
 		if (!PIOS_BMP180_StartADC(TEMPERATURE)) {
 			vTaskDelay( ceil(PIOS_BMP180_Data_Ready_Time_us()/1000) / portTICK_RATE_MS); // vTaskDelay set to 1ms/tick
-			// BMP180 raw result in 0.1°C. Convert to °C.
+			// BMP180 raw result in 0.1ï¿½C. Convert to ï¿½C.
 			raw_temperature = PIOS_BMP180_GetTemperature();
 			data.Temperature = (float)(raw_temperature) / 10 * TEMP_IIR_COEFF + (data.Temperature * (1 - TEMP_IIR_COEFF));
 		}

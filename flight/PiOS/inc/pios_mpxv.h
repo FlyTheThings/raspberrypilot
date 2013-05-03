@@ -28,64 +28,39 @@
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
-#ifndef PIOS_MPXV_H__
-#define PIOS_MPXV_H__
+#ifndef PIOS_MPXV_H
+#define PIOS_MPXV_H
 
-typedef enum{ PIOS_MPXV_UNKNOWN, PIOS_MP3V5010, PIOS_MPXV_5004, PIOS_MPXV_7002 } PIOS_MPXV_sensortype;
+typedef enum{ PIOS_MPXV_UNKNOWN,PIOS_MPXV_5004,PIOS_MPXV_7002 } PIOS_MPXV_sensortype;
 typedef struct{
-	PIOS_MPXV_sensortype	type;
-	uint8_t					airspeedADCPin;
-	uint16_t				calibrationCount;
-	uint32_t				calibrationSum;
-	uint16_t				zeroPoint;
-	float					maxSpeed;
-	float					SensorSpan;		// Vout = SensorSupply × SensorSpan × P(kPa)
-	float					SensorSupply;	// Vout = SensorSupply × SensorSpan × P(kPa)
-	float					ADCRefVolts;
-	uint8_t					ADCBits;
+	PIOS_MPXV_sensortype type;
+	uint8_t airspeedADCPin;
+	uint16_t calibrationCount;
+	uint32_t calibrationSum;
+	uint16_t zeroPoint;
+	float maxSpeed;
 } PIOS_MPXV_descriptor;
 
-#define PIOS_MP3V5010_DESC(pin) 				\
-	(PIOS_MPXV_descriptor){						\
-		.type				= PIOS_MP3V5010,	\
-		.airspeedADCPin		= pin,				\
-		.calibrationCount	= 0,				\
-		.calibrationSum		= 0,				\
-		.maxSpeed			= 1000.0f,			\
-		.SensorSpan			= 0.09f,			\
-		.SensorSupply		= 3.3f,				\
-		.ADCRefVolts		= 2.5f,				\
-		.ADCBits			= 12,				\
+#define PIOS_MPXV_5004_DESC(pin) \
+	(PIOS_MPXV_descriptor){ \
+		.type           = PIOS_MPXV_5004, \
+		.airspeedADCPin = pin, \
+		.maxSpeed       = 80.0f, \
+		.calibrationCount = 0, \
+		.calibrationSum = 0, \
+	}
+#define PIOS_MPXV_7002_DESC(pin) \
+	(PIOS_MPXV_descriptor){ \
+		.type           = PIOS_MPXV_7002, \
+		.airspeedADCPin = pin, \
+		.maxSpeed       = 56.0f, \
+		.calibrationCount = 0, \
+		.calibrationSum = 0, \
 	}
 
-#define PIOS_MPXV_5004_DESC(pin)				\
-	(PIOS_MPXV_descriptor){						\
-		.type				= PIOS_MPXV_5004,	\
-		.airspeedADCPin		= pin,				\
-		.calibrationCount	= 0,				\
-		.calibrationSum		= 0,				\
-		.maxSpeed			= 80.0f,			\
-		.SensorSpan			= 0.2f,				\
-		.SensorSupply		= 5.0f,				\
-		.ADCRefVolts		= 3.3f,				\
-		.ADCBits			= 12,				\
-	}
-
-#define PIOS_MPXV_7002_DESC(pin)				\
-	(PIOS_MPXV_descriptor){						\
-		.type				= PIOS_MPXV_7002,	\
-		.airspeedADCPin		= pin,				\
-		.calibrationCount	= 0,				\
-		.calibrationSum		= 0,				\
-		.maxSpeed			= 56.0f,			\
-		.SensorSpan			= 0.2f,				\
-		.SensorSupply		= 5.0f,				\
-		.ADCRefVolts		= 3.3f,				\
-		.ADCBits			= 12,				\
-	}
 
 uint16_t PIOS_MPXV_Measure(PIOS_MPXV_descriptor *desc);
 uint16_t PIOS_MPXV_Calibrate(PIOS_MPXV_descriptor *desc, uint16_t measurement);
 float PIOS_MPXV_CalcAirspeed (PIOS_MPXV_descriptor *desc,uint16_t measurement);
 
-#endif // PIOS_MPXV_H__
+#endif /* PIOS_MPXV_H */

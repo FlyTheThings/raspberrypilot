@@ -31,16 +31,13 @@
 #ifndef PIOS_HMC5883_H
 #define PIOS_HMC5883_H
 
-#include <pios.h>
-
 /* HMC5883 Addresses */
-#define PIOS_HMC5883_I2C_ADAPTER			PIOS_I2C_MAIN_ADAPTER
-#define PIOS_HMC5883_I2C_ADDR				0x1E
-#define PIOS_HMC5883_I2C_READ_ADDR      	0x3D
-#define PIOS_HMC5883_I2C_WRITE_ADDR			0x3C
-#define PIOS_HMC5883_CONFIG_REG_A			(uint8_t)0x00
-#define PIOS_HMC5883_CONFIG_REG_B			(uint8_t)0x01
-#define PIOS_HMC5883_MODE_REG				(uint8_t)0x02
+#define PIOS_HMC5883_I2C_ADDR			0x1E
+#define PIOS_HMC5883_I2C_READ_ADDR      0x3D
+#define PIOS_HMC5883_I2C_WRITE_ADDR     0x3C
+#define PIOS_HMC5883_CONFIG_REG_A		(uint8_t)0x00
+#define PIOS_HMC5883_CONFIG_REG_B		(uint8_t)0x01
+#define PIOS_HMC5883_MODE_REG			(uint8_t)0x02
 #define PIOS_HMC5883_DATAOUT_XMSB_REG		0x03
 #define PIOS_HMC5883_DATAOUT_XLSB_REG		0x04
 #define PIOS_HMC5883_DATAOUT_ZMSB_REG		0x05
@@ -53,13 +50,13 @@
 #define PIOS_HMC5883_DATAOUT_IDC_REG		0x0C
 
 /* Output Data Rate */
-#define PIOS_HMC5883_ODR_0_75				0x00
-#define PIOS_HMC5883_ODR_1_5				0x04
-#define PIOS_HMC5883_ODR_3					0x08
-#define PIOS_HMC5883_ODR_7_5				0x0C
-#define PIOS_HMC5883_ODR_15					0x10
-#define PIOS_HMC5883_ODR_30					0x14
-#define PIOS_HMC5883_ODR_75					0x18
+#define PIOS_HMC5883_ODR_0_75		0x00
+#define PIOS_HMC5883_ODR_1_5		0x04
+#define PIOS_HMC5883_ODR_3			0x08
+#define PIOS_HMC5883_ODR_7_5		0x0C
+#define PIOS_HMC5883_ODR_15			0x10
+#define PIOS_HMC5883_ODR_30			0x14
+#define PIOS_HMC5883_ODR_75			0x18
 
 /* Measure configuration */
 #define PIOS_HMC5883_MEASCONF_NORMAL		0x00
@@ -67,20 +64,20 @@
 #define PIOS_HMC5883_MEASCONF_BIAS_NEG		0x02
 
 /* Gain settings */
-#define PIOS_HMC5883_GAIN_0_88				0x00
-#define PIOS_HMC5883_GAIN_1_3				0x20
-#define PIOS_HMC5883_GAIN_1_9				0x40
-#define PIOS_HMC5883_GAIN_2_5				0x60
-#define PIOS_HMC5883_GAIN_4_0				0x80
-#define PIOS_HMC5883_GAIN_4_7				0xA0
-#define PIOS_HMC5883_GAIN_5_6				0xC0
-#define PIOS_HMC5883_GAIN_8_1				0xE0
+#define PIOS_HMC5883_GAIN_0_88			0x00
+#define PIOS_HMC5883_GAIN_1_3			0x20
+#define PIOS_HMC5883_GAIN_1_9			0x40
+#define PIOS_HMC5883_GAIN_2_5			0x60
+#define PIOS_HMC5883_GAIN_4_0			0x80
+#define PIOS_HMC5883_GAIN_4_7			0xA0
+#define PIOS_HMC5883_GAIN_5_6			0xC0
+#define PIOS_HMC5883_GAIN_8_1			0xE0
 
 /* Modes */
-#define PIOS_HMC5883_MODE_CONTINUOUS		0x00
-#define PIOS_HMC5883_MODE_SINGLE			0x01
-#define PIOS_HMC5883_MODE_IDLE				0x02
-#define PIOS_HMC5883_MODE_SLEEP				0x03
+#define PIOS_HMC5883_MODE_CONTINUOUS	0x00
+#define PIOS_HMC5883_MODE_SINGLE		0x01
+#define PIOS_HMC5883_MODE_IDLE			0x02
+#define PIOS_HMC5883_MODE_SLEEP			0x03
 
 /* Sensitivity Conversion Values */
 #define PIOS_HMC5883_Sensitivity_0_88Ga		1370	// LSB/Ga
@@ -94,7 +91,9 @@
 
 
 struct pios_hmc5883_cfg {
+#ifdef PIOS_HMC5883_HAS_GPIOS
 	const struct pios_exti_cfg * exti_cfg; /* Pointer to the EXTI configuration */
+#endif
 	uint8_t M_ODR;		/* OUTPUT DATA RATE --> here below the relative define (See datasheet page 11 for more details) */
 	uint8_t Meas_Conf;	/* Measurement Configuration,: Normal, positive bias, or negative bias --> here below the relative define */
 	uint8_t Gain;		/* Gain Configuration, select the full scale --> here below the relative define (See datasheet page 11 for more details) */
@@ -108,7 +107,8 @@ extern bool PIOS_HMC5883_NewDataAvailable(void);
 extern int32_t PIOS_HMC5883_ReadMag(int16_t out[3]);
 extern uint8_t PIOS_HMC5883_ReadID(uint8_t out[4]);
 extern int32_t PIOS_HMC5883_Test(void);
-bool PIOS_HMC5883_IRQHandler();
+extern bool PIOS_HMC5883_IRQHandler();
+
 #endif /* PIOS_HMC5883_H */
 
 /** 

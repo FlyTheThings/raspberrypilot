@@ -73,12 +73,12 @@
 static uint32_t idleCounter;
 static uint32_t idleCounterClear;
 static xTaskHandle systemTaskHandle;
-static xQueueHandle objectPersistenceQueue;
+//static xQueueHandle objectPersistenceQueue;
 static bool stackOverflow;
 static bool mallocFailed;
 
 // Private functions
-static void objectUpdatedCb(UAVObjEvent * ev);
+//static void objectUpdatedCb(UAVObjEvent * ev);
 static void updateStats();
 static void updateSystemAlarms();
 static void systemTask(void *parameters);
@@ -114,7 +114,7 @@ int32_t SystemModInitialize(void)
 	SystemSettingsInitialize();
 	SystemStatsInitialize();
 	FlightStatusInitialize();
-	ObjectPersistenceInitialize();
+	//ObjectPersistenceInitialize(); moved to pios board due to different bootstraping
 #if defined(DIAG_TASKS)
 	TaskInfoInitialize();
 #endif
@@ -123,9 +123,9 @@ int32_t SystemModInitialize(void)
 	WatchdogStatusInitialize();
 #endif
 
-	objectPersistenceQueue = xQueueCreate(1, sizeof(UAVObjEvent));
-	if (objectPersistenceQueue == NULL)
-		return -1;
+	//objectPersistenceQueue = xQueueCreate(1, sizeof(UAVObjEvent));
+	//if (objectPersistenceQueue == NULL)
+	//	return -1;
 
 	/* Edited for raspberry pilot, the systemodstart is not automatically called
 	 * it is called just after MODULE_INITIALISE_ALL in initTask(), but the system
@@ -136,7 +136,7 @@ int32_t SystemModInitialize(void)
 	return 0;
 }
 
-MODULE_INITCALL(SystemModInitialize, 0)
+MODULE_INITCALL(SystemModInitialize, 0);
 /**
  * System task, periodically executes every SYSTEM_UPDATE_PERIOD_MS
  */
@@ -199,7 +199,7 @@ static void systemTask(void *parameters)
 		FlightStatusData flightStatus;
 		FlightStatusGet(&flightStatus);
 
-		UAVObjEvent ev;
+		//UAVObjEvent ev;
 		int delayTime = flightStatus.Armed == FLIGHTSTATUS_ARMED_ARMED ?
 			SYSTEM_UPDATE_PERIOD_MS / portTICK_RATE_MS / (LED_BLINK_RATE_HZ * 2) :
 			SYSTEM_UPDATE_PERIOD_MS / portTICK_RATE_MS;

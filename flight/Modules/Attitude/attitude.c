@@ -76,8 +76,6 @@
 #define TASK_PRIORITY (tskIDLE_PRIORITY+3)
 #define FAILSAFE_TIMEOUT_MS 10
 
-#define PI_MOD(x) (fmodf(x + M_PI_F, M_PI_F * 2) - M_PI_F)
-
 // low pass filter configuration to calculate offset
 // of barometric altitude sensor
 // reasoning: updates at: 10 Hz, tau= 300 s settle time
@@ -864,7 +862,6 @@ static int32_t updateAttitudeINSGPS(bool first_run, bool outdoor_mode)
 	velocityActual.East = Nav.Vel[1];
 	velocityActual.Down = Nav.Vel[2];
 	VelocityActualSet(&velocityActual);
-
 
 	if (revoCalibration.BiasCorrectedRaw == REVOCALIBRATION_BIASCORRECTEDRAW_TRUE && !gyroBiasSettingsUpdated) {
 		// Copy the gyro bias into the UAVO except when it was updated

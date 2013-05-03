@@ -28,10 +28,9 @@
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
-/* Project Includes */
 #include "pios.h"
 
-#if defined(PIOS_INCLUDE_HMC5883)
+#ifdef PIOS_INCLUDE_HMC5883
 
 /* Global Variables */
 
@@ -54,8 +53,10 @@ void PIOS_HMC5883_Init(const struct pios_hmc5883_cfg * cfg)
 {
 	dev_cfg = cfg; // store config before enabling interrupt
 
+#ifdef PIOS_HMC5883_HAS_GPIOS
 	PIOS_EXTI_Init(cfg->exti_cfg);
-	
+#endif
+
 	int32_t val = PIOS_HMC5883_Config(cfg);
 	
 	PIOS_Assert(val == 0);
@@ -191,7 +192,6 @@ int32_t PIOS_HMC5883_ReadMag(int16_t out[3])
 			break;
 		default:
 			PIOS_Assert(0);
-			break;
 	}
 	
 	for (int i = 0; i < 3; i++) {
@@ -266,7 +266,7 @@ static int32_t PIOS_HMC5883_Read(uint8_t address, uint8_t * buffer, uint8_t len)
 		}
 	};
 	
-	return PIOS_I2C_Transfer(PIOS_HMC5883_I2C_ADAPTER, txn_list, NELEMENTS(txn_list));
+	return PIOS_I2C_Transfer(PIOS_I2C_MAIN_ADAPTER, txn_list, NELEMENTS(txn_list));
 }
 
 /**
@@ -294,8 +294,8 @@ static int32_t PIOS_HMC5883_Write(uint8_t address, uint8_t buffer)
 		}
 		,
 	};
-
-	return PIOS_I2C_Transfer(PIOS_HMC5883_I2C_ADAPTER, txn_list, NELEMENTS(txn_list));
+	;
+	return PIOS_I2C_Transfer(PIOS_I2C_MAIN_ADAPTER, txn_list, NELEMENTS(txn_list));
 }
 
 /**
@@ -311,6 +311,7 @@ int32_t PIOS_HMC5883_Test(void)
 	uint8_t ctrl_b_read;	
 	uint8_t mode_read;
 	int16_t values[3];
+	
 	
 	
 	/* Verify that ID matches (HMC5883 ID is null-terminated ASCII string "H43") */

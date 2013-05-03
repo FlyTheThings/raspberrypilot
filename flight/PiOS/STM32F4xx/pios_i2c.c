@@ -33,7 +33,6 @@
  *       be merged.
  */
 
-
 #include "pios.h"
 
 #ifdef PIOS_INCLUDE_I2C
