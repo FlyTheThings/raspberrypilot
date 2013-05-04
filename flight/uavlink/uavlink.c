@@ -47,7 +47,6 @@ static int32_t sendSingleObject(UAVLinkConnectionData *connection, UAVObjHandle 
 static int32_t sendNack(UAVLinkConnectionData *connection, uint32_t objId);
 static int32_t receivePacket(UAVLinkConnectionData *connection, uint8_t type, uint32_t rxId, uint16_t instId, uint8_t* data, int32_t length);
 static void updateAck(UAVLinkConnectionData *connection, uint32_t rxId, uint16_t instId);
-static int32_t sendAck(UAVLinkConnectionData *connection, uint32_t Id);
 static int32_t sendStreamPacket(UAVLinkConnection connectionHandle, uint8_t Id, uint8_t length, uint8_t *buf);
 /**
  * Initialize the UAVLink library
@@ -300,7 +299,6 @@ static int32_t objectTransaction(UAVLinkConnectionData *connection, UAVObjHandle
  */
 int32_t streamStream(UAVLinkConnection connectionHandle, uint8_t Id,  uint8_t length, uint8_t *buf)
 {
-	int32_t respReceived;
 
 	UAVLinkConnectionData *connection;
 	CHECKCONHANDLE(connectionHandle,connection,return -1);
@@ -1001,48 +999,7 @@ static int32_t sendNack(UAVLinkConnectionData *connection, uint32_t objId)
 	return 0;
 }
 
-/**
- * Send a ACK through the telemetry link.
- * \param[in] connection UAVLinkConnection to be used
- * \param[in] Id of the stream for ACK
- * \return 0 Success
- * \return -1 Failure
- * This is needed because the regular send ack expects to be passed an object to ack
- */
-static int32_t sendAck(UAVLinkConnectionData *connection, uint32_t Id)
-{
-	int32_t dataOffset;
 
-	if (!connection->outStream) return -1;
-
-	connection->txBuffer[0] = UAVLINK_SYNC_VAL;  // sync byte
-	connection->txBuffer[1] = UAVLINK_TYPE_ACK;
-	// data length inserted here below
-	connection->txBuffer[4] = (uint8_t)(Id & 0xFF);
-	connection->txBuffer[5] = (uint8_t)((Id >> 8) & 0xFF);
-	connection->txBuffer[6] = (uint8_t)((Id >> 16) & 0xFF);
-	connection->txBuffer[7] = (uint8_t)((Id >> 24) & 0xFF);
-
-	dataOffset = 8;
-
-	// Store the packet length
-	connection->txBuffer[2] = (uint8_t)((dataOffset) & 0xFF);
-	connection->txBuffer[3] = (uint8_t)(((dataOffset) >> 8) & 0xFF);
-
-	// Calculate checksum
-	connection->txBuffer[dataOffset] = PIOS_CRC_updateCRC(0, connection->txBuffer, dataOffset);
-
-	uint16_t tx_msg_len = dataOffset+UAVLINK_CHECKSUM_LENGTH;
-	int32_t rc = (*connection->outStream)(connection->txBuffer, tx_msg_len);
-
-	if (rc == tx_msg_len) {
-		// Update stats
-		connection->stats.txBytes += tx_msg_len;
-	}
-
-	// Done
-	return 0;
-}
 
 /**
  * @}

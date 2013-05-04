@@ -39,6 +39,7 @@ MODULES += GPS
 MODULES +=Sensors 
 MODULES += Attitude
 MODULES += Stabilization 
+MODULES += FirmwareIAP
 #MODULES += Guidance 
 #MODULES += AltitudeHold
 #MODULES += Airspeed

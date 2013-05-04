@@ -86,7 +86,7 @@ static void resetTask(UAVObjEvent *);
  * \note
  *
  */
-MODULE_INITCALL(FirmwareIAPInitialize, 0)
+MODULE_INITCALL(FirmwareIAPInitialize, 0);
 int32_t FirmwareIAPInitialize()
 {
 	
@@ -98,14 +98,18 @@ int32_t FirmwareIAPInitialize()
 	FirmwareIAPObjGet(&data);
 
 	data.BoardType= bdinfo->board_type;
-	data.BoardType= 9;  // ZDL faking it into thinking its a revo for now
-//	PIOS_BL_HELPER_FLASH_Read_Description(data.Description,FIRMWAREIAPOBJ_DESCRIPTION_NUMELEM);
+	PIOS_BL_HELPER_FLASH_Read_Description(data.Description,FIRMWAREIAPOBJ_DESCRIPTION_NUMELEM);
 	PIOS_SYS_SerialNumberGetBinary(data.CPUSerial);
 	data.BoardRevision= bdinfo->board_rev;
 	data.ArmReset=0;
 	data.crc = 0;
 	FirmwareIAPObjSet( &data );
-//	if(bdinfo->magic==PIOS_BOARD_INFO_BLOB_MAGIC) FirmwareIAPObjConnectCallback( &FirmwareIAPCallback );
+	if(bdinfo->magic==PIOS_BOARD_INFO_BLOB_MAGIC) FirmwareIAPObjConnectCallback( &FirmwareIAPCallback );
+	return 0;
+}
+
+int32_t FirmwareIAPStart()
+{
 	return 0;
 }
 

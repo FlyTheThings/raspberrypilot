@@ -421,18 +421,17 @@ void PIOS_Board_Init(void) {
 	PIOS_Servo_Init(&pios_servo_cfg);
 #endif
 	/* IAP System Setup */
-	/*
 	PIOS_IAP_Init();
-	uint16_t boot_count = PIOS_IAP_ReadBootCount();
-	if (boot_count < 3) {
-		PIOS_IAP_WriteBootCount(++boot_count);
-		AlarmsClear(SYSTEMALARMS_ALARM_BOOTFAULT);
-	} else {
-		// Too many failed boot attempts, force hwsettings to defaults
-		HwSettingsSetDefaults(HwSettingsHandle(), 0);
-		AlarmsSet(SYSTEMALARMS_ALARM_BOOTFAULT, SYSTEMALARMS_ALARM_CRITICAL);
+	// check for safe mode commands from gcs
+	if(PIOS_IAP_ReadBootCmd(0) == PIOS_IAP_CLEAR_FLASH_CMD_0 &&
+	   PIOS_IAP_ReadBootCmd(1) == PIOS_IAP_CLEAR_FLASH_CMD_1 &&
+	   PIOS_IAP_ReadBootCmd(2) == PIOS_IAP_CLEAR_FLASH_CMD_2)
+	{
+		 //PIOS_FLASHFS_Format(fs_id);
+		 PIOS_IAP_WriteBootCmd(0,0);
+		 PIOS_IAP_WriteBootCmd(1,0);
+		 PIOS_IAP_WriteBootCmd(2,0);
 	}
-	*/
 
 	// RaspberryPilot removed large section of USB code that would not compile, don't need anyway for raspberrypilot
 	
@@ -447,7 +446,7 @@ void PIOS_Board_Init(void) {
 	const static char msg_set_update_rate[] = "$PMTK220,100*2F\r\n";
 	const static char msg_set_sentences[]  = "$PMTK314,1,1,1,1,1,5,0,0,0,0,0,0,0,0,0,0,0,0,0*2C\r\n";
 	const static char msg_change_baud[] = "$PMTK251,57600*2C\r\n";
-	const static char msg_hot_start[] = "$PMTK101*32\r\n";
+	//const static char msg_hot_start[] = "$PMTK101*32\r\n";
 	PIOS_DELAY_WaitmS(1000);  //wait a second the gps can be slow starting
 	PIOS_COM_SendBuffer(pios_com_gps_id,(uint8_t *)  &msg_change_baud, sizeof(msg_change_baud));
 	PIOS_DELAY_WaitmS(200);

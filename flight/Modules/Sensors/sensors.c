@@ -176,7 +176,6 @@ static void SensorsTask(void *parameters)
 	UAVObjEvent ev;
 	settingsUpdatedCb(&ev);
 
-	const struct pios_board_info * bdinfo = &pios_board_info_blob;	
 
 
 	//should really do the tests sometime
