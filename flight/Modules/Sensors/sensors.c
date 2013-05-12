@@ -50,7 +50,7 @@
 /*
  * Sensors on the raspberry pilot board are not mounted in alignement
  *
- * Board 	x	y	z	(x toward airspeed, y toward gps, z down through board)
+ * Board 	x	y	z	(x toward GPS, y toward airspeed, z down through board)
  * LM303	-x	y	-z
  * LSM330	-x	y	-z
  * mag3110	y	x	z
@@ -243,7 +243,7 @@ static void SensorsTask(void *parameters)
 		static float accels[3];
 		PIOS_LSM303_read_accel( (float *) accels);
 		accels[0] = -accels[0];
-		accels[1] = accels[1];
+		accels[1] =  accels[1];
 		accels[2] = -accels[2];
 						
 		static float gyros[3];
@@ -303,8 +303,8 @@ static void SensorsTask(void *parameters)
 			PIOS_HMC5883_ReadMag(mag_values);
 			float mag_temp;
 			mag_temp = mag_values[0];
-			mag_values[0] =  mag_values[0];
-			mag_values[1] =  mag_values[1];
+			mag_values[0] =  mag_values[1];
+			mag_values[1] =  mag_temp;
 			mag_values[2] = -mag_values[2];
 			float mags[3] = {(float) mag_values[0] * mag_scale[0] - mag_bias[0],
 			                (float) mag_values[1] * mag_scale[1] - mag_bias[1],
