@@ -156,7 +156,7 @@ uavobjgenerator:
 	    $(MAKE) --no-print-directory -w ; \
 	)
 
-UAVOBJ_TARGETS := gcs flight python matlab java wireshark
+UAVOBJ_TARGETS := gcs flight python matlab java wireshark pythonflight
 
 .PHONY: uavobjects
 uavobjects:  $(addprefix uavobjects_, $(UAVOBJ_TARGETS))
