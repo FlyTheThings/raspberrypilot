@@ -48,13 +48,13 @@
  
 
 /*
- * Sensors on the raspberry pilot board are not mounted in alignement
+ * Sensors on the raspberry pilot board are not mounted in alignment
  *
- * Board 	x	y	z	(x toward GPS, y toward airspeed, z down through board)
- * LM303	-x	y	-z
- * LSM330	-x	y	-z
- * mag3110	y	x	z
- * hmc5883	-x	y	-z
+ * Board 	 x  y  z   x toward GPS (aircraft nose), y toward USB (right wing), z down through board (aircraft belly)
+ * LM303	-x	y -z
+ * LSM330	 y	x -z
+ * mag3110	?y	x  z?
+ * hmc5883	 y  x -z
  *
  */
 #include "openpilot.h"
@@ -107,7 +107,7 @@ static int8_t rotate = 0;
  * Configure(xQueueHandle gyro, xQueueHandle accel, xQueueHandle mag, xQueueHandle baro)
  *   Stores all the queues the algorithm will pull data from
  * FinalizeSensors() -- before saving the sensors modifies them based on internal state (gyro bias)
- * Update() -- queries queues and updates the attitude estiamte
+ * Update() -- queries queues and updates the attitude estimate
  */
 
 
@@ -176,8 +176,6 @@ static void SensorsTask(void *parameters)
 	UAVObjEvent ev;
 	settingsUpdatedCb(&ev);
 
-
-
 	//should really do the tests sometime
 	gyro_test = 0;
 	accel_test = 0;
@@ -235,8 +233,6 @@ static void SensorsTask(void *parameters)
 			AlarmsClear(SYSTEMALARMS_ALARM_SENSORS);
 		}
 
-
-
 		AccelsData accelsData;
 		GyrosData gyrosData;
 
@@ -245,14 +241,16 @@ static void SensorsTask(void *parameters)
 		accels[0] = -accels[0];
 		accels[1] =  accels[1];
 		accels[2] = -accels[2];
+		
+		float temp;
 						
 		static float gyros[3];
-		float temp;
 		PIOS_LSM330_read_gyro( (float *) gyros);
 		temp = gyros[0];
-		gyros[0] = gyros[1];
-		gyros[1] = temp;
+		gyros[0] =  gyros[1];
+		gyros[1] =  temp;
 		gyros[2] = -gyros[2];
+		
 		// Scale the accels
 		float accels_out[3] = {accels[0] * accel_scaling * accel_scale[0] - accel_bias[0],
 		                       accels[1] * accel_scaling * accel_scale[1] - accel_bias[1],
@@ -295,17 +293,18 @@ static void SensorsTask(void *parameters)
 
 		GyrosSet(&gyrosData);
 		
-
 #if defined(PIOS_INCLUDE_HMC5883)
 		MagnetometerData mag;
 		if (PIOS_HMC5883_NewDataAvailable() || PIOS_DELAY_DiffuS(mag_update_time) > 150000) {
 			int16_t mag_values[3];
 			PIOS_HMC5883_ReadMag(mag_values);
 			float mag_temp;
-			mag_temp = mag_values[0];
+			
+			mag_temp = mag_values[0];   
 			mag_values[0] =  mag_values[1];
 			mag_values[1] =  mag_temp;
 			mag_values[2] = -mag_values[2];
+			
 			float mags[3] = {(float) mag_values[0] * mag_scale[0] - mag_bias[0],
 			                (float) mag_values[1] * mag_scale[1] - mag_bias[1],
 			                (float) mag_values[2] * mag_scale[2] - mag_bias[2]};
