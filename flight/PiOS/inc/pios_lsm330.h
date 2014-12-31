@@ -155,6 +155,76 @@
 #define PIOS_LSM330_XEN_A					(1 << 0)
 
 
+// Angular rate sensor control register 2 (r/w).
+// Table 104. CTRL_REG2_G register
+//  -------------------------------------------------------------
+// |EXTRen | LVLen | HPM1 | HPM0 | HPCF3 | HPCF2 | HPCF1 | HPCF0 |
+//  -------------------------------------------------------------
+// Table 105. CTRL_REG2_G description
+
+// EXTRen Edge-sensitive trigger enable: Default value: 0
+// (0: external trigger disabled; 1: External trigger enabled)
+#define PIOS_LSM330_EXTRen_G				(1 << 7)
+
+// LVLen Level-sensitive trigger enable: Default value: 0
+// (0: level-sensitive trigger disabled; 1: level-sensitive trigger enabled)
+#define PIOS_LSM330_LVLen_G					(1 << 6)
+
+// HPM[1:0] High-pass filter mode selection. Default value: 00
+// High-pass filter mode
+// Refer to Table 106
+// 0 0 Normal mode (reset by reading REFERENCE_G (25h) register)
+// 0 1 Reference signal for filtering
+// 1 0 Normal mode
+// 1 1 Autoreset on interrupt event
+#define PIOS_LSM330_HPM_NORMAL_RESET_G				(0 << 4)
+#define PIOS_LSM330_HPM_REFERENCE_G					(1 << 4)
+#define PIOS_LSM330_HPM_NORMAL_MODE_G				(2 << 4)
+#define PIOS_LSM330_HPM_NORMAL_AUTORESET_G			(3 << 4)
+
+// HPCF [3:0] High-pass filter cutoff frequency selection. Default value: 0000
+// Table 107. High-pass filter cutoff frequency configuration [Hz]
+
+                                         // HPCF[3:0] ODR=95Hz  ODR=190Hz  ODR=380Hz  ODR=760Hz
+#define PIOS_LSM330_HPM_HPCF0_G	(0 << 0) // 0000      7.2       13.5       27         51.4
+#define PIOS_LSM330_HPM_HPCF1_G (1 << 0) // 0001      3.5       7.2        13.5       27
+#define PIOS_LSM330_HPM_HPCF2_G (2 << 0) // 0010      1.8       3.5        7.2        13.5
+#define PIOS_LSM330_HPM_HPCF3_G (3 << 0) // 0011      0.9       1.8        3.5        7.2
+#define PIOS_LSM330_HPM_HPCF4_G (4 << 0) // 0100      0.45		0.9        1.8        3.5
+#define PIOS_LSM330_HPM_HPCF5_G (5 << 0) // 0101      0.18		0.45       0.9        1.8
+#define PIOS_LSM330_HPM_HPCF6_G (6 << 0) // 0110      0.09		0.18       0.45       0.9
+#define PIOS_LSM330_HPM_HPCF7_G (7 << 0) // 0111      0.045		0.09       0.18       0.45
+#define PIOS_LSM330_HPM_HPCF8_G (8 << 0) // 1000      0.018		0.045      0.09       0.18
+#define PIOS_LSM330_HPM_HPCF9_G (9 << 0) // 1001      0.009		0.018      0.045      0.09
+
+
+// Angular rate sensor control register 5 (r/w).
+// Table 112. CTRL_REG5_G register
+//  --------------------------------------------------------------------------
+// |BOOT  | FIFO_EN | -- | HPen | INT1_Sel1 | INT1_Sel0 | Out_Sel1 | Out_Sel0 |
+//  --------------------------------------------------------------------------
+
+// BOOT Reboot memory content. Default value: 0
+// (0: Normal mode; 1: reboot memory content)
+#define PIOS_LSM330_BOOT_G			(1 << 7)
+
+// FIFO_EN FIFO enable. Default value: 0
+// (0: FIFO disabled; 1: FIFO enabled)
+#define PIOS_LSM330_FIFO_EN_G		(1 << 6)
+   
+// HPen High-pass filter enable. Default value: 0
+// (0: HPF disabled; 1: HPF enabled, see Figure 21)
+#define PIOS_LSM330_HPen_G			(1 << 4)
+	
+// INT1_Sel[1:0] INT1 selection configuration. Default value: 0
+// (see Figure 21)
+#define PIOS_LSM330_INT1_Sel_G		(0 << 4)
+
+// Out_Sel[1:0] Out selection configuration. Default value: 0
+// (see Figure 21)
+#define PIOS_LSM330_Out_Sel_G		(0 << 4)
+
+
 // Raspberry Pilot LSM330 Gyro Register Settings
 // ------------------------------------------------------------------------------------------------
 // 380 samples, 50hz bw, all axis enabled - may want to speed this up later.
@@ -163,10 +233,19 @@
 											 PIOS_LSM330_ZEN_G		| \
 											 PIOS_LSM330_YEN_G		| \
 											 PIOS_LSM330_XEN_G)
-#define PIOS_LSM330_CTRL_REG2_G_SETTING		0x00 // default
+											 
+#define PIOS_LSM330_CTRL_REG2_G_SETTING	0x00 // default
+// When High Pass Filter Cutoff enabled, 3Hz High Pass Frequency.
+// #define PIOS_LSM330_CTRL_REG2_G_SETTING		(PIOS_LSM330_HPM_NORMAL_RESET_G
+											 // PIOS_LSM330_HPM_HPCF3_G)
+
 #define PIOS_LSM330_CTRL_REG3_G_SETTING		0x00 // default
 #define PIOS_LSM330_CTRL_REG4_G_SETTING		0xB0 // block data update between msb and lsb, 2000 deg/s fs
-#define PIOS_LSM330_CTRL_REG5_G_SETTING		0x00 // default value
+
+#define PIOS_LSM330_CTRL_REG5_G_SETTING	0x00 // default value
+// Enable the high pass filter to eliminate offsets.
+// #define PIOS_LSM330_CTRL_REG5_G_SETTING		PIOS_LSM330_HPen_G
+
 #define PIOS_LSM330_G_READ_START			PIOS_LSM330_OUT_X_L_G
 #define PIOS_LSM330_G_PER_LSB				(float) 4000.0/65535
 
