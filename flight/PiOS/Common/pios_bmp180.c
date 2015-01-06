@@ -189,7 +189,7 @@ int32_t PIOS_BMP180_GetPressure(void)
 */
 int32_t PIOS_BMP180_Data_Ready_Time_us(void)
 {
-	uint32_t waiting_time;			// In ms
+	uint32_t waiting_time;			// In us
 	int32_t return_value;
 	
 	PIOS_Assert(ADC_is_Running);	// Because you shouldn't have asked.
