@@ -235,9 +235,9 @@
 											 PIOS_LSM330_XEN_G)
 											 
 #define PIOS_LSM330_CTRL_REG2_G_SETTING	0x00 // default
-// When High Pass Filter Cutoff enabled, 3Hz High Pass Frequency.
-// #define PIOS_LSM330_CTRL_REG2_G_SETTING		(PIOS_LSM330_HPM_NORMAL_RESET_G
-											 // PIOS_LSM330_HPM_HPCF3_G)
+// When High Pass Filter Cutoff enabled, 0.18Hz High Pass Frequency.
+// #define PIOS_LSM330_CTRL_REG2_G_SETTING		(PIOS_LSM330_HPM_NORMAL_MODE_G |
+											 // PIOS_LSM330_HPM_HPCF7_G)
 
 #define PIOS_LSM330_CTRL_REG3_G_SETTING		0x00 // default
 #define PIOS_LSM330_CTRL_REG4_G_SETTING		0xB0 // block data update between msb and lsb, 2000 deg/s fs
