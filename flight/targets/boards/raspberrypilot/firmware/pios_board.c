@@ -507,14 +507,8 @@ void PIOS_Board_Init(void) {
 #if defined(PIOS_INCLUDE_LSM330)
 	//#include "pios_lsm330.h"
 	PIOS_LSM330_init_gyro(pios_i2c_mag_adapter_id);
+	PIOS_LSM330_init_accel(pios_i2c_mag_adapter_id);
 #endif
-
-#if defined(PIOS_INCLUDE_LSM303)
-	//#include "pios_lsm303.h"
-	PIOS_LSM303_init_accel(pios_i2c_mag_adapter_id);
-	PIOS_LSM303_init_mag(pios_i2c_mag_adapter_id);
-#endif
-
 
 }
 

@@ -51,8 +51,8 @@
  * Sensors on the raspberry pilot board are not mounted in alignment
  *
  * Board 	 x  y  z   x toward GPS (aircraft nose), y toward USB (right wing), z down through board (aircraft belly)
- * LM303	-x	y -z
- * LSM330	 y	x -z
+ * LSM330A	 y	x -z
+ * LSM330G	 y	x -z
  * mag3110	?y	x  z?
  * hmc5883	 y  x -z
  *
@@ -236,13 +236,15 @@ static void SensorsTask(void *parameters)
 		AccelsData accelsData;
 		GyrosData gyrosData;
 
-		static float accels[3];
-		PIOS_LSM303_read_accel( (float *) accels);
-		accels[0] = -accels[0];
-		accels[1] =  accels[1];
-		accels[2] = -accels[2];
-		
 		float temp;
+		
+		static float accels[3];
+		PIOS_LSM330_read_accel( (float *) accels);
+		temp = accels[0];
+		accels[0] =  accels[1];
+		accels[1] =  temp;
+		accels[2] = -accels[2];
+
 						
 		static float gyros[3];
 		PIOS_LSM330_read_gyro( (float *) gyros);
