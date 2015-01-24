@@ -70,43 +70,47 @@ correctSyncByte=hex2dec('3C');
 unknownObjIDList=zeros(1,2);
 
 % Parse log file, entry by entry
-% prebuf = buffer(1:12);
 
 last_print = -1e10;
 
 startTime=clock;
 
 while (1)
-	if (feof(fid)); break; end
+	if bufferIdx > length(buffer)-15; break; end
 
-	try
+	%try
 	%% Read message header
 	% get sync field (0x3C, 1 byte)
-	sync = fread(fid, 1, 'uint8');
+	sync = buffer(bufferIdx);
 	if sync ~= correctSyncByte
-		prebuf = [prebuf(2:end); sync];
+		bufferIdx+= 1;
 		wrongSyncByte = wrongSyncByte + 1;
 		continue
 	end
     
 	% get msg type (quint8 1 byte ) should be 0x20, ignore the rest?
-	msgType = fread(fid, 1, 'uint8');
+	msgType= buffer(bufferIdx+1)
 	if msgType ~= correctMsgByte && msgType ~= hex2dec('A0')
+		bufferIdx+=1
 		wrongMessageByte = wrongMessageByte + 1;	
 		continue
 	end
 
 	% get msg size (quint16 2 bytes) excludes crc, include msg header and data payload
-	msgSize = fread(fid, 1, 'uint16');
+	msgSize = typecast(uint8(buffer(bufferIdx+2:bufferIdx+3)), 'uint16');
 	% get obj id (quint32 4 bytes)
-	objID = fread(fid, 1, 'uint32');
+	%objID = fread(fid, 1, 'uint32');
+	%objID = typecast(uint32(buffer(bufferIdx+4:bufferIdx+7)), 'uint32');
+	objID = buffer(bufferIdx+4) + buffer(bufferIdx+5) * 256 + buffer(bufferIdx+6) * 65536 + buffer(bufferIdx+7) * 16777216
+	fprintf("objid = %x\n",objID)
 
 	if msgType == correctMsgByte
 		%% Process header if we are aligned
-		timestamp = typecast(uint8(prebuf(1:4)), 'uint32');
-		datasize = typecast(uint8(prebuf(5:12)), 'uint64');
-	elseif msgType == correctTimestampedByte
-		timestamp = fread(fid,1,'uint16');
+		timestamp = typecast(uint8(buffer(bufferIdx-12:bufferIdx-9)), 'uint32');
+		datasize = typecast(uint8(buffer(bufferIdx-8:bufferIdx-1)), 'uint64');
+	%elseif msgType == correctTimestampedByte
+	%	%timestamp = fread(fid,1,'uint16');
+	%	timestamp = typecast(uint8(buffer(bufferIdx+7:bufferIdx+8)), 'uint16');
 	end
 
 	if (isempty(objID)) 	%End of file
@@ -114,7 +118,7 @@ while (1)
 	end
 	
 	%% Read object
-
+	bufferIdx += 8
 	switch objID
 $(SWITCHCODE)
 		otherwise
@@ -125,7 +129,7 @@ $(SWITCHCODE)
 				unknownObjIDList(unknownObjIDListIdx,2)=unknownObjIDList(unknownObjIDListIdx,2)+1; 
 			end
 			
-			datasize = typecast(buffer(datasizeBufferIdx + 4:datasizeBufferIdx + 12-1), 'uint64');
+			datasize = typecast(buffer(bufferIdx + 4:bufferIdx + 12-1), 'uint64');
 
 			msgBytesLeft = datasize - 1 - 1 - 2 - 4;
 			if msgBytesLeft > 255
@@ -133,10 +137,7 @@ $(SWITCHCODE)
 			end
 			bufferIdx=bufferIdx+double(msgBytesLeft);
 	end
-	catch
-		% One of the reads failed - indicates EOF
-		break;
-	end
+
 
 	if (wrongSyncByte ~= lastWrongSyncByte || wrongMessageByte~=lastWrongMessageByte ) ||...
 			bufferIdx - last_print > 5e4 %Every 50,000 bytes show the status update
@@ -163,14 +164,14 @@ $(SWITCHCODE)
 
 		last_print = bufferIdx;
 		
-		fprintf([str1 str2 str3 str4 str5]);
+		fprintf([ str2 str3 str4 str5]);
 	end
 
 	%Check if at end of file. If not, load next prebuffer
 	if bufferIdx+12-1 > length(buffer)
 		break;
 	end
-% 	bufferIdx=bufferIdx+12;
+ 	%bufferIdx=bufferIdx+20;
 
 end
 
@@ -244,6 +245,7 @@ function out=mcolon(inStart, inFinish)
 % results, although his is much faster. Unfortunately, C-compiled mex
 % code would make this function non-cross-platform, so a Matlab scripted
 % version is provided here.
+	%fprintf("ins %d inf %d \n",inStart,inFinish)
 	if size(inStart,1) > 1 || size(inFinish,1) > 1
 		if size(inStart,2) > 1 || size(inFinish,2) > 1
 			error('Inputs must be vectors, i.e just one column wide.')		
