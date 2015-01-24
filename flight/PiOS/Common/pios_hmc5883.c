@@ -128,7 +128,7 @@ static int32_t PIOS_HMC5883_Config(const struct pios_hmc5883_cfg * cfg)
 {
 	uint8_t CTRLA = 0x00;
 	uint8_t MODE = 0x00;
-	CTRLB = 0;
+	//CTRLB = 0;
 	
 	CTRLA |= (uint8_t) (cfg->M_ODR | cfg->Meas_Conf);
 	CTRLB |= (uint8_t) (cfg->Gain);
@@ -166,28 +166,28 @@ int32_t PIOS_HMC5883_ReadMag(int16_t out[3])
 	}
 		
 	switch (CTRLB & 0xE0) {
-		case 0x00:
+		case PIOS_HMC5883_GAIN_0_88:
 			sensitivity =  PIOS_HMC5883_Sensitivity_0_88Ga;
 			break;
-		case 0x20:
+		case PIOS_HMC5883_GAIN_1_3:
 			sensitivity = PIOS_HMC5883_Sensitivity_1_3Ga;
 			break;
-		case 0x40:
+		case PIOS_HMC5883_GAIN_1_9:
 			sensitivity = PIOS_HMC5883_Sensitivity_1_9Ga;
 			break;
-		case 0x60:
+		case PIOS_HMC5883_GAIN_2_5:
 			sensitivity = PIOS_HMC5883_Sensitivity_2_5Ga;
 			break;
-		case 0x80:
+		case PIOS_HMC5883_GAIN_4_0:
 			sensitivity = PIOS_HMC5883_Sensitivity_4_0Ga;
 			break;
-		case 0xA0:
+		case PIOS_HMC5883_GAIN_4_7:
 			sensitivity = PIOS_HMC5883_Sensitivity_4_7Ga;
 			break;
-		case 0xC0:
+		case PIOS_HMC5883_GAIN_5_6:
 			sensitivity = PIOS_HMC5883_Sensitivity_5_6Ga;
 			break;
-		case 0xE0:
+		case PIOS_HMC5883_GAIN_8_1:
 			sensitivity = PIOS_HMC5883_Sensitivity_8_1Ga;
 			break;
 		default:
@@ -205,8 +205,7 @@ int32_t PIOS_HMC5883_ReadMag(int16_t out[3])
 	out[1] = temp;
 	
 	// This should not be necessary but for some reason it is coming out of continuous conversion mode
-	PIOS_HMC5883_Write(PIOS_HMC5883_MODE_REG, PIOS_HMC5883_MODE_CONTINUOUS);
-	
+	//PIOS_HMC5883_Write(PIOS_HMC5883_MODE_REG, PIOS_HMC5883_MODE_CONTINUOUS);// TODO try removing this, mode changed to continuous in PIOS_HMC5883_Test() may have fixed it.
 	return 0;
 }
 
@@ -345,13 +344,13 @@ int32_t PIOS_HMC5883_Test(void)
 	 * Changing measurement config back to PIOS_HMC5883_MEASCONF_NORMAL will leave self-test mode.
 	 */
 	PIOS_DELAY_WaitmS(10);
-	if (PIOS_HMC5883_Write(PIOS_HMC5883_CONFIG_REG_A, PIOS_HMC5883_MEASCONF_BIAS_POS | PIOS_HMC5883_ODR_15) != 0)
+	if (PIOS_HMC5883_Write(PIOS_HMC5883_CONFIG_REG_A, PIOS_HMC5883_MEASCONF_BIAS_POS | PIOS_HMC5883_ODR_15) != 0) // was PIOS_HMC5883_ODR_15
 		return -1;
 	PIOS_DELAY_WaitmS(10);
-	if (PIOS_HMC5883_Write(PIOS_HMC5883_CONFIG_REG_B, PIOS_HMC5883_GAIN_8_1) != 0) 
+	if (PIOS_HMC5883_Write(PIOS_HMC5883_CONFIG_REG_B, PIOS_HMC5883_GAIN_4_0) != 0) //  gain was PIOS_HMC5883_GAIN_8_1
 		return -1;
 	PIOS_DELAY_WaitmS(10);
-	if (PIOS_HMC5883_Write(PIOS_HMC5883_MODE_REG, PIOS_HMC5883_MODE_SINGLE) != 0) 
+	if (PIOS_HMC5883_Write(PIOS_HMC5883_MODE_REG, PIOS_HMC5883_MODE_CONTINUOUS) != 0) 
 		return -1;
 	
 	/* Must wait for value to be updated */

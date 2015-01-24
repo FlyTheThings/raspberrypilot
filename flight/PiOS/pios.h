@@ -198,7 +198,7 @@
 #endif
 
 #ifdef PIOS_INCLUDE_BMP180
-/* BMP085 Barometric Pressure Sensor */
+/* BMP180 Barometric Pressure Sensor */
 #include <pios_bmp180.h>
 #endif
 
