@@ -3,7 +3,7 @@ import socket
 import sqlite3
 
 from raspberrypilot import uavlink
-import raspberrypilot
+from raspberrypilot import rp_core
 
 def UAVObjLoad(cur, obj):
     cur.execute("SELECT data FROM uavObjects WHERE objId=? and instance=?" , (obj.OBJID,obj.instance))
@@ -80,7 +80,7 @@ def UAVObjDeleteAll(cur):
     cur.execute("DELETE * FROM uavObjects")
     return True
     
-class objectPersistance(raspberrypilot.raspberryPilotModule):
+class objectPersistance(rp_core.raspberryPilotModule):
     def run(self):
         #conn = uavlink.uavLinkConnection_UDP(addr="192.168.1.115",port=32001)
         #objMgr = uavlink.objManager(conn)

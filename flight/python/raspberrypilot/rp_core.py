@@ -13,7 +13,7 @@ class raspberryPilotModule(threading.Thread):
         return self.core.is_running()
 
     
-class RaspberryPilot():
+class RaspberryPilot_Server():
     def __init__(self,serv_addr,serv_port):
         '''arguments are addr and port of uavlink_udp server'''
         self.serv_addr = serv_addr
@@ -30,7 +30,7 @@ class RaspberryPilot():
             if inspect.ismodule(mod):
                 for name,obj in inspect.getmembers(mod):
                     if inspect.isclass(obj):
-                        if issubclass(obj,raspberrypilot.raspberryPilotModule):
+                        if issubclass(obj,raspberryPilotModule):
                             self.raspberrypilot_modules[name] = obj
     def get_raspberry_pilot_modules(self):
         return self.raspberrypilot_modules.values()
