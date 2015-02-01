@@ -45,8 +45,8 @@ roll = [phi]
 pitch = [theta]
 yaw = [psi]
 
-x_m = transpose(matrix([[Px, Py, Pz, Vx, Vy, Vz, q0, q1, q2, q3, 0.0, 0.0, 120*pi/180.0]])) # changed gyro starting value to 140 d/s
-X_m = transpose(matrix([[Px, Py, Pz, Vx, Vy, Vz, q0, q1, q2, q3, 0.0, 0.0, 120*pi/180.0]])) # changed gyro starting value to 140 d/s
+x_m = transpose(matrix([[Px, Py, Pz, Vx, Vy, Vz, q0, q1, q2, q3, 0.0, 0.0, 120*pi/180.0]])) # changed gyro starting value to 120 d/s
+X_m = transpose(matrix([[Px, Py, Pz, Vx, Vy, Vz, q0, q1, q2, q3, 0.0, 0.0, 120*pi/180.0]])) # changed gyro starting value to 120 d/s
 
 #x_m = transpose(matrix([[1.0, Py, -1.0, Vx, Vy, Vz, 0.707, 0.408, -0.408, 0.408, 0.0, 0.0, 0.0]]))
 #X_m = transpose(matrix([[1.0, Py, -1.0, Vx, Vy, Vz, 0.707, 0.408, -0.408, 0.408, 0.0, 0.0, 0.0]]))
