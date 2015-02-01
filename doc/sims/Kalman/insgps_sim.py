@@ -11,6 +11,7 @@ from random import *
 from numpy import *
 from insgps_lib import *
 from insgps_init import *
+import time
 
 
 x = transpose(matrix([[Px, Py, Pz, Vx, Vy, Vz, q0, q1, q2, q3, 0.0, 0.0, 0.0]]))
@@ -44,12 +45,11 @@ roll = [phi]
 pitch = [theta]
 yaw = [psi]
 
-x_m = transpose(matrix([[Px, Py, Pz, Vx, Vy, Vz, q0, q1, q2, q3, 0.0, 0.0, 0.0]]))
-X_m = transpose(matrix([[Px, Py, Pz, Vx, Vy, Vz, q0, q1, q2, q3, 0.0, 0.0, 0.0]]))
+x_m = transpose(matrix([[Px, Py, Pz, Vx, Vy, Vz, q0, q1, q2, q3, 0.0, 0.0, 120*pi/180.0]])) # changed gyro starting value to 140 d/s
+X_m = transpose(matrix([[Px, Py, Pz, Vx, Vy, Vz, q0, q1, q2, q3, 0.0, 0.0, 120*pi/180.0]])) # changed gyro starting value to 140 d/s
 
 #x_m = transpose(matrix([[1.0, Py, -1.0, Vx, Vy, Vz, 0.707, 0.408, -0.408, 0.408, 0.0, 0.0, 0.0]]))
 #X_m = transpose(matrix([[1.0, Py, -1.0, Vx, Vy, Vz, 0.707, 0.408, -0.408, 0.408, 0.0, 0.0, 0.0]]))
-
 
 Pos_xm = [x_m[0,0]]
 Pos_ym = [x_m[1,0]]
@@ -143,18 +143,17 @@ roll_k = [phi_k]
 pitch_k = [theta_k]
 yaw_k = [psi_k]
 
-
 time = [0]
 
-
-iterations = 100000 
+iterations = 5000
 dt = 0.01
 I = eye(13)
 P_m = P0
-print "\n\nRunning {}s simulation, please stand by....".format(iterations * dt)
+print "\n\nRunning {} second simulation at {} second step size, please stand by....".format(iterations * dt, dt)
 
 for i in range(iterations):
-    print "Iteration {} of {}\r".format(i,iterations),
+    print "\rIteration {} of {}...".format(i, iterations),
+    sys.stdout.flush()
     time.append(i*dt)
 
     # Ideal Simulation
@@ -326,14 +325,14 @@ for i in range(iterations):
 #legend(('q_0','q_1','q_2','q_3','q_0m','q_1m','q_2m','q_3m'))
 #grid(axis='both', color='k', linestyle='--', linewidth=1)
 #
-#figure(4)
-#plot(time,bias_wx,'-',time,bias_wy,'-',time,bias_wz,'-',time,bias_wxm,'b.',time,bias_wym,'g.',time,bias_wzm,'r.',linewidth=2)
+# figure(4)
+# plot(time,bias_wx,'-',time,bias_wy,'-',time,bias_wz,'-',time,bias_wxm,'b.',time,bias_wym,'g.',time,bias_wzm,'r.',linewidth=2)
 ##axis([0, iterations*dt, -1, 2])
-#xlabel('time')
-#ylabel('Bias')
-#title('Gyro Bias vs. Time')
-#legend(('b_wx','b_wy','b_wz','b_wxm','b_wym','b_wzm'))
-#grid(axis='both', color='k', linestyle='--', linewidth=1)
+# xlabel('time')
+# ylabel('Bias')
+# title('Gyro Bias vs. Time')
+# legend(('b_wx','b_wy','b_wz','b_wxm','b_wym','b_wzm'))
+# grid(axis='both', color='k', linestyle='--', linewidth=1)
 #
 #figure(5)
 #plot(time,Wx,'-',time,Wy,'-',time,Wz,'-',time,Wxm,'b.',time,Wym,'g.',time,Wzm,'r.',linewidth=2)
@@ -353,14 +352,14 @@ for i in range(iterations):
 #legend(('Ax','Ay','Az','Axm','Aym','Azm'))
 #grid(axis='both', color='k', linestyle='--', linewidth=1)
 #
-figure(7)
-plot(time,B_bx,'-',time,B_by,'-',time,B_bz,'-',time,B_bxm,'b-.',time,B_bym,'g-.',time,B_bzm,'r-.',linewidth=2)
-#axis([0, iterations*dt, -1, 2])
-xlabel('time')
-ylabel('Magnetic Field')
-title('Magnetic field estimate vs. Time')
-legend(('B_bx','B_by','B_bz','B_bxm','B_bym','B_bzm'))
-grid(axis='both', color='k', linestyle='--', linewidth=1)
+# figure(7)
+# plot(time,B_bx,'-',time,B_by,'-',time,B_bz,'-',time,B_bxm,'b-.',time,B_bym,'g-.',time,B_bzm,'r-.',linewidth=2)
+##axis([0, iterations*dt, -1, 2])
+# xlabel('time')
+# ylabel('Magnetic Field')
+# title('Magnetic field estimate vs. Time')
+# legend(('B_bx','B_by','B_bz','B_bxm','B_bym','B_bzm'))
+# grid(axis='both', color='k', linestyle='--', linewidth=1)
 #
 #
 #figure(8)
@@ -381,15 +380,23 @@ grid(axis='both', color='k', linestyle='--', linewidth=1)
 #legend(('V_x','V_y','V_z','GPS_Vx','GPS_Vy','GPS_Vz'))
 #grid(axis='both', color='k', linestyle='--', linewidth=1)
 #
-figure(10)
-plot(time,B_bx,'-',time,B_by,'-',time,B_bz,'-',time,Mag_Bx,'b.',time,Mag_By,'g.',time,Mag_Bz,'r.',linewidth=2)
-#axis([0, iterations*dt, -1, 2])
-xlabel('time')
-ylabel('Magnetic Field')
-title('Magnetometer output vs. Time')
-legend(('B_bx','B_by','B_bz','Mag_Bx','Mag_By','Mag_Bz'))
-grid(axis='both', color='k', linestyle='--', linewidth=1)
+# figure(10)
+# plot(time,B_bx,'-',time,B_by,'-',time,B_bz,'-',time,Mag_Bx,'b.',time,Mag_By,'g.',time,Mag_Bz,'r.',linewidth=2)
+##axis([0, iterations*dt, -1, 2])
+# xlabel('time')
+# ylabel('Magnetic Field')
+# title('Magnetometer output vs. Time')
+# legend(('B_bx','B_by','B_bz','Mag_Bx','Mag_By','Mag_Bz'))
+# grid(axis='both', color='k', linestyle='--', linewidth=1)
 
+rad2deg = float(180.0)/pi
+
+bias_wx = [x*rad2deg for x in bias_wx]
+bias_wy = [x*rad2deg for x in bias_wy]
+bias_wz = [x*rad2deg for x in bias_wz]
+bias_wxk = [x*rad2deg for x in bias_wxk]
+bias_wyk = [x*rad2deg for x in bias_wyk]
+bias_wzk = [x*rad2deg for x in bias_wzk]
 
 figure(11)
 plot(time,bias_wx,'-',time,bias_wy,'-',time,bias_wz,'-',time,bias_wxk,'b-.',time,bias_wyk,'g-.',time,bias_wzk,'r-.',linewidth=2)
@@ -398,7 +405,7 @@ xlabel('time')
 ylabel('Bias')
 title('Gyro Bias vs. Time')
 legend(('b_wx','b_wy','b_wz','b_wxk','b_wyk','b_wzk'))
-grid(axis='both', color='k', linestyle='--', linewidth=1)
+grid(axis='both', color='k', linestyle='-', linewidth=1)
 
 
 #figure(12)
@@ -430,6 +437,12 @@ grid(axis='both', color='k', linestyle='--', linewidth=1)
 #legend(('q_0','q_1','q_2','q_3','q_0m','q_1m','q_2m','q_3m'))
 #grid(axis='both', color='k', linestyle='--', linewidth=1)
 
+roll = [x*rad2deg for x in roll]
+pitch = [x*rad2deg for x in pitch]
+yaw = [x*rad2deg for x in yaw]
+roll_k = [x*rad2deg for x in roll_k]
+pitch_k = [x*rad2deg for x in pitch_k]
+yaw_k = [x*rad2deg for x in yaw_k]
 
 figure(15)
 plot(time,roll,'-',time,pitch,'-',time,yaw,'-',time,roll_k,'b-.',time,pitch_k,'g-.',time,yaw_k,'r-.',linewidth=2)
