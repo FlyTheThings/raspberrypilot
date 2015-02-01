@@ -11,5 +11,6 @@ build_package: clean
 	awk '{ sub("\r", ""); print }'  < raspberrypilot_init > ../../build/raspberrypi/raspberrypilot_init
 	awk '{ sub("\r", ""); print }'  < uavlinkserver_init > ../../build/raspberrypi/uavlinkserver_init
 	awk '{ sub("\r", ""); print }'  < install.sh > ../../build/raspberrypi/install.sh
+	tar zcf ../../build/rp.tar.gz ../../build/raspberrypi 
 clean:
 	rm -Rf ../../build/raspberrypi

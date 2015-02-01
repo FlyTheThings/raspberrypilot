@@ -34,9 +34,9 @@ int32_t serial_open(void) {
 	struct termios options;
 	//tcgetattr(serial_fd, &options);
 	memset(&options, 0, sizeof(options));
-	cfsetispeed(&options,B57600);
-	cfsetospeed(&options,B57600);
-	options.c_cflag = B57600 | CS8 | CLOCAL | CREAD;
+	cfsetispeed(&options,B115200);
+	cfsetospeed(&options,B115200);
+	options.c_cflag = B115200 | CS8 | CLOCAL | CREAD;
 	options.c_iflag = IGNPAR | ICRNL;
 	options.c_oflag = 0;
 	tcflush(serial_fd, TCIFLUSH);
