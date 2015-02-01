@@ -20,10 +20,10 @@ q0 = 1.0
 q1 = 0.0
 q2 = 0.0
 q3 = 0.0
-b_wx = -0.2
-b_wy = 0.4
-b_wz = -0.3
-g = 9.8     #m/s^2
+b_wx = -0.2 * pi / 180.0# Simulated gyro offset Xaxis
+b_wy = +0.4 * pi / 180.0# Simulated gyro offset Yaxis
+b_wz = -0.3 * pi / 180.0# Simulated gyro offset Zaxis
+g = 9.81     #m/s^2
 
 sigma2_wx = 50e-8
 sigma2_wy = 50e-8
@@ -55,9 +55,9 @@ sigma2_Pz = 0.036
 sigma2_Vx = 0.004
 sigma2_Vy = 0.004
 sigma2_Vz = 100
-sigma2_Bx = 0.005
-sigma2_By = 0.005
-sigma2_Bz = 0.005
+sigma2_Bx = 0.00025 # Magnetometer noise, this simulation
+sigma2_By = 0.00025 # Magnetometer noise, this simulation
+sigma2_Bz = 0.00025 # Magnetometer noise, this simulation
 sigma2_Alt = 0.05
 
 R = diag([sigma2_Px, sigma2_Py, sigma2_Pz, sigma2_Vx, sigma2_Vy, sigma2_Vz, sigma2_Bx, sigma2_By, sigma2_Bz, sigma2_Alt])
